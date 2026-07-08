@@ -30,7 +30,7 @@ jobs:
         run: |
           python3 core/scripts/reverse_rbf.py \
             core/projects/output_files/pocket_tunes.rbf \
-            core/pkg/Cores/jh.PocketTunes/pocket_tunes.rev
+            core/pkg/Cores/jh.Tunes/pocket_tunes.rev
 
       - name: Assemble SD package
         run: |

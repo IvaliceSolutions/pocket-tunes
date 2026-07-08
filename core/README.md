@@ -24,7 +24,7 @@ Simulated frame (iverilog, real library.json preloaded): `sim/out_frame.png`.
   - `data_loader.sv`, `sound_i2s.sv`, `sync_fifo.sv` — agg23 (MIT)
   - `core_bridge_cmd.v` — Analogue host/target command handler
 - `projects/` — Quartus project (`pocket_tunes.qpf`, top = `apf_top`)
-- `pkg/` — SD-card metadata (`Cores/jh.PocketTunes/`, `Platforms/`)
+- `pkg/` — SD-card metadata (`Cores/jh.Tunes/`, `Platforms/`)
 - `sim/` — iverilog testbenches + vendor stubs (never synthesized)
 - `scripts/reverse_rbf.py` — .rbf → .rev (Pocket bit order)
 
@@ -40,13 +40,13 @@ docker image, reverses the bitstream, and uploads an SD-ready package.
 cd core/projects
 quartus_sh --flow compile pocket_tunes
 python3 ../scripts/reverse_rbf.py output_files/pocket_tunes.rbf \
-    ../pkg/Cores/jh.PocketTunes/pocket_tunes.rev
+    ../pkg/Cores/jh.Tunes/pocket_tunes.rev
 ```
 
 ## Deploy to SD
 
 ```
-/Cores/jh.PocketTunes/          ← core/pkg/Cores/jh.PocketTunes/* + pocket_tunes.rev
+/Cores/jh.Tunes/          ← core/pkg/Cores/jh.Tunes/* + pocket_tunes.rev
 /Platforms/pockettunes.json     ← core/pkg/Platforms/pockettunes.json
 /Assets/pockettunes/common/     ← library.json + covers/ (from the indexer)
 ```
