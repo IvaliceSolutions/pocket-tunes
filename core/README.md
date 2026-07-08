@@ -40,13 +40,13 @@ docker image, reverses the bitstream, and uploads an SD-ready package.
 cd core/projects
 quartus_sh --flow compile pocket_tunes
 python3 ../scripts/reverse_rbf.py output_files/pocket_tunes.rbf \
-    ../pkg/Cores/jh.Tunes/pocket_tunes.rev
+    ../pkg/Cores/jh.Tunes/pocket_tunes.rbf_r
 ```
 
 ## Deploy to SD
 
 ```
-/Cores/jh.Tunes/          ← core/pkg/Cores/jh.Tunes/* + pocket_tunes.rev
+/Cores/jh.Tunes/          ← core/pkg/Cores/jh.Tunes/* + pocket_tunes.rbf_r
 /Platforms/pockettunes.json     ← core/pkg/Platforms/pockettunes.json
 /Assets/pockettunes/common/     ← library.json + covers/ (from the indexer)
 ```
