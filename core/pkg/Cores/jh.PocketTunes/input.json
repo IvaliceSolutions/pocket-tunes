@@ -1,0 +1,14 @@
+{
+  "input": {
+    "magic": "APF_VER_1",
+    "controllers": [
+      {
+        "type": "default",
+        "mappings": [
+          { "id": 0, "name": "Play/Pause", "key": "pad_btn_a" },
+          { "id": 1, "name": "Back/Close", "key": "pad_btn_b" }
+        ]
+      }
+    ]
+  }
+}

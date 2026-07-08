@@ -1,0 +1,6 @@
+sim/*.vvp
+sim/*.ppm
+sim/library_bytes.hex
+projects/output_files/
+projects/db/
+projects/incremental_db/

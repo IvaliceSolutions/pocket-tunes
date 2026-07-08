@@ -1,0 +1,17 @@
+{
+  "data": {
+    "magic": "APF_VER_1",
+    "data_slots": [
+      {
+        "name": "Library",
+        "id": 0,
+        "required": false,
+        "parameters": "0x9",
+        "filename": "library.json",
+        "extensions": ["json"],
+        "address": "0x10000000",
+        "size_maximum": "0x20000"
+      }
+    ]
+  }
+}

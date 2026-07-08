@@ -1,0 +1,5 @@
+*.elf
+*.o
+mp3_data.c
+test*.mp3
+/tmp/

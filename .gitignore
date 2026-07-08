@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+# derisk-m4: third-party clone + generated artifacts (see derisk-m4 docs)
+derisk-m4/helix/
+derisk-m4/*.elf
+derisk-m4/*.o
+derisk-m4/mp3_data.c
+derisk-m4/test*.mp3

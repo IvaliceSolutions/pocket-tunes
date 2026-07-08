@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background: oklch(0.93 0.005 90); font-family: system-ui, sans-serif; }
+  @keyframes barPulse { 0%,100% { transform: scaleY(0.5); } 50% { transform: scaleY(1); } }
+  @keyframes blinkRing { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+  @keyframes spinReel { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+</helmet>
+
+<section id="t2" style="padding:44px 44px 0;">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 8px;">
+    <a href="#t2" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none;">2</a>
+    <span style="font:600 14px system-ui,sans-serif;color:#1a1a1a;">Deux autres styles, même structure que 1b (sidebar artistes + tiroir lecteur)</span>
+  </div>
+  <p style="font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:620px;margin:0 0 28px;">Même modèle d'interaction (▲▼ + A/B, tiroir bas), habillage visuel différent.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+    <!-- OPTION 2A: Cassette deck -->
+    <div id="2a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <a href="#2a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">2a</a>
+        <span style="font:400 11px system-ui,sans-serif;color:rgba(0,0,0,.55);">Cassette deck — plastique crème/orange, bobines qui tournent</span>
+      </div>
+
+      <div style="width:300px;background:linear-gradient(160deg, oklch(0.34 0.01 250), oklch(0.2 0.01 250));border-radius:34px;padding:22px 18px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 20px 40px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.06);">
+
+        <div style="width:100%;display:flex;justify-content:space-between;">
+          <div style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;"><span style="font-size:8px;color:#666;font-family:monospace;">L</span></div>
+          <div style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;"><span style="font-size:8px;color:#666;font-family:monospace;">R</span></div>
+        </div>
+
+        <div style="background:#050505;border-radius:10px;padding:8px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04);">
+          <div style="width:264px;height:238px;border-radius:4px;overflow:hidden;position:relative;background:oklch(0.93 0.03 75);font-family:'Quicksand',sans-serif;">
+
+            <div style="display:flex;height:100%;">
+              <div style="width:76px;flex:none;background:oklch(0.86 0.05 55);border-right:2px solid oklch(0.6 0.06 55);overflow:auto;padding:6px 0;">
+                <sc-for list="{{ c2.sidebarItems }}" as="art" hint-placeholder-count="4">
+                  <div onClick="{{ art.onActivate }}" style="padding:5px 8px;font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:{{ art.current }};border-left:3px solid transparent;">{{ art.name }}</div>
+                </sc-for>
+              </div>
+
+              <div style="flex:1;min-width:0;position:relative;padding:8px;overflow:auto;">
+                <div style="font-size:9px;font-weight:700;color:oklch(0.55 0.08 45);margin-bottom:6px;letter-spacing:0.5px;">{{ c2.artist.name }}</div>
+                <sc-for list="{{ c2.albums }}" as="al" hint-placeholder-count="2">
+                  <div onClick="{{ al.onActivate }}" style="display:flex;align-items:center;gap:8px;padding:5px;margin-bottom:5px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);cursor:pointer;">
+                    <div style="width:30px;height:30px;flex:none;border-radius:6px;background:{{ al.bg }};"></div>
+                    <div style="min-width:0;">
+                      <div style="font-size:10.5px;font-weight:700;color:oklch(0.32 0.03 50);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ al.title }}</div>
+                      <div style="font-size:9px;color:oklch(0.5 0.02 60);">{{ al.year }} · {{ al.genre }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ c2.sheetOpen }}">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:70%;background:linear-gradient(180deg, oklch(0.97 0.02 75), oklch(0.9 0.03 65));border-top:3px solid oklch(0.62 0.15 45);z-index:2;display:flex;flex-direction:column;padding:10px;box-shadow:0 -4px 10px rgba(0,0,0,.1);">
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <div style="width:52px;height:52px;border-radius:50%;background:radial-gradient(circle, #2b2b2e 0 8px, {{ c2.coverBg }} 9px 24px, #2b2b2e 25px 26px, transparent 27px);flex:none;animation:spinReel 3s linear infinite;animation-play-state:{{ c2Spin }};"></div>
+                  <div style="min-width:0;flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:oklch(0.3 0.03 50);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c2.trackObj.title }}</div>
+                    <div style="font-size:9px;color:oklch(0.5 0.02 60);">{{ c2.album.title }} · piste {{ c2.trackIndexLabel }}</div>
+                  </div>
+                </div>
+
+                <div style="margin-top:9px;height:6px;border-radius:3px;background:oklch(0.85 0.02 75);overflow:hidden;">
+                  <div style="height:100%;background:oklch(0.62 0.15 45);width:{{ c2.progressPct }}%;"></div>
+                </div>
+
+                <div style="display:flex;align-items:flex-end;gap:2px;height:22px;margin-top:8px;">
+                  <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="12">
+                    <div style="width:5px;height:{{ bar.h }}%;background:oklch(0.62 0.15 45 / 0.7);border-radius:2px;transform-origin:bottom;animation:barPulse 1s ease-in-out infinite;animation-delay:{{ bar.delay }};animation-play-state:{{ c2Spin }};"></div>
+                  </sc-for>
+                </div>
+
+                <div style="margin-top:9px;font-size:9px;color:oklch(0.45 0.02 60);line-height:1.4;">
+                  <div>{{ c2.trackObj.dur }} total · {{ c2.remain }} restant</div>
+                  <div>{{ c2.album.genre }} · {{ c2.album.year }}</div>
+                </div>
+                <div style="margin-top:auto;font-size:9px;color:oklch(0.5 0.03 55);">▲▼ piste · A lecture/pause · B fermer</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 6px;">
+          <div style="width:100px;height:100px;position:relative;">
+            <div onClick="{{ c2.dpadUp }}" style="position:absolute;top:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▲</span></div>
+            <div onClick="{{ c2.dpadDown }}" style="position:absolute;bottom:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▼</span></div>
+            <div style="position:absolute;top:32px;left:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;"><span style="color:#555;font-size:11px;">◀</span></div>
+            <div style="position:absolute;top:32px;right:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;"><span style="color:#555;font-size:11px;">▶</span></div>
+          </div>
+          <div style="width:90px;height:70px;position:relative;">
+            <div onClick="{{ c2.pressB }}" style="position:absolute;bottom:0;left:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">B</span></div>
+            <div onClick="{{ c2.pressA }}" style="position:absolute;top:0;right:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">A</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="font:11px/1.4 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:300px;margin:0;">Sidebar = artistes, panneau central = albums de l'artiste sélectionné, A ouvre le tiroir bas façon platine cassette (bobines animées en lecture).</p>
+    </div>
+
+    <!-- OPTION 2B: CRT terminal green -->
+    <div id="2b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <a href="#2b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">2b</a>
+        <span style="font:400 11px system-ui,sans-serif;color:rgba(0,0,0,.55);">Terminal CRT vert — phosphore monochrome, scanlines marquées</span>
+      </div>
+
+      <div style="width:300px;background:linear-gradient(160deg, oklch(0.34 0.01 250), oklch(0.2 0.01 250));border-radius:34px;padding:22px 18px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 20px 40px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.06);">
+
+        <div style="width:100%;display:flex;justify-content:space-between;">
+          <div style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;"><span style="font-size:8px;color:#666;font-family:monospace;">L</span></div>
+          <div style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;"><span style="font-size:8px;color:#666;font-family:monospace;">R</span></div>
+        </div>
+
+        <div style="background:#050505;border-radius:10px;padding:8px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04);">
+          <div style="width:264px;height:238px;border-radius:4px;overflow:hidden;position:relative;background:#020a02;font-family:'Share Tech Mono',monospace;">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg, rgba(0,0,0,.5) 0 1px, transparent 1px 3px);pointer-events:none;z-index:3;"></div>
+            <div style="position:absolute;inset:0;box-shadow:inset 0 0 30px rgba(0,0,0,.7);pointer-events:none;z-index:4;"></div>
+
+            <div style="display:flex;height:100%;">
+              <div style="width:74px;flex:none;border-right:1px solid oklch(0.4 0.14 145);overflow:auto;padding:6px 0;">
+                <sc-for list="{{ d2.sidebarItems }}" as="art" hint-placeholder-count="4">
+                  <div onClick="{{ art.onActivate }}" style="padding:4px 7px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:{{ art.current }};text-shadow:0 0 4px currentColor;">{{ art.name }}</div>
+                </sc-for>
+              </div>
+
+              <div style="flex:1;min-width:0;position:relative;padding:7px;overflow:auto;">
+                <div style="font-size:10px;color:oklch(0.55 0.14 145);margin-bottom:5px;">&gt; {{ d2.artist.name }}</div>
+                <sc-for list="{{ d2.albums }}" as="al" hint-placeholder-count="2">
+                  <div onClick="{{ al.onActivate }}" style="padding:4px;margin-bottom:4px;border:1px solid oklch(0.35 0.1 145);cursor:pointer;">
+                    <div style="font-size:11px;color:oklch(0.8 0.16 145);text-shadow:0 0 4px currentColor;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ al.title }}</div>
+                    <div style="font-size:9px;color:oklch(0.5 0.12 145);">{{ al.year }} · {{ al.genre }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ d2.sheetOpen }}">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:64%;background:#010601;border-top:1px solid oklch(0.55 0.14 145);z-index:2;display:flex;flex-direction:column;padding:8px;">
+                <div style="font-size:12px;color:oklch(0.85 0.17 145);text-shadow:0 0 5px currentColor;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&gt; {{ d2.trackObj.title }}</div>
+                <div style="font-size:9px;color:oklch(0.5 0.12 145);">{{ d2.album.title }} · piste {{ d2.trackIndexLabel }}</div>
+
+                <div style="margin-top:6px;height:4px;background:oklch(0.25 0.06 145);"><div style="height:100%;background:oklch(0.75 0.18 145);width:{{ d2.progressPct }}%;"></div></div>
+
+                <div style="display:flex;align-items:flex-end;gap:2px;height:22px;margin-top:7px;">
+                  <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="12">
+                    <div style="width:5px;height:{{ bar.h }}%;background:oklch(0.7 0.16 145 / 0.8);transform-origin:bottom;animation:barPulse 1s ease-in-out infinite;animation-delay:{{ bar.delay }};animation-play-state:{{ d2Spin }};"></div>
+                  </sc-for>
+                </div>
+
+                <div style="margin-top:7px;font-size:9.5px;color:oklch(0.55 0.13 145);line-height:1.4;">
+                  <div>{{ d2.trackObj.dur }} total · {{ d2.remain }} restant</div>
+                  <div>{{ d2.album.genre }} · {{ d2.album.year }}</div>
+                </div>
+                <div style="margin-top:auto;font-size:9px;color:oklch(0.45 0.1 145);">▲▼ PISTE · A LECTURE/PAUSE · B FERMER_</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 6px;">
+          <div style="width:100px;height:100px;position:relative;">
+            <div onClick="{{ d2.dpadUp }}" style="position:absolute;top:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▲</span></div>
+            <div onClick="{{ d2.dpadDown }}" style="position:absolute;bottom:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▼</span></div>
+            <div style="position:absolute;top:32px;left:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;"><span style="color:#555;font-size:11px;">◀</span></div>
+            <div style="position:absolute;top:32px;right:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;"><span style="color:#555;font-size:11px;">▶</span></div>
+          </div>
+          <div style="width:90px;height:70px;position:relative;">
+            <div onClick="{{ d2.pressB }}" style="position:absolute;bottom:0;left:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">B</span></div>
+            <div onClick="{{ d2.pressA }}" style="position:absolute;top:0;right:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">A</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="font:11px/1.4 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:300px;margin:0;">Même structure que 1b, rendu terminal phosphore vert avec scanlines et halo, prompts façon ligne de commande.</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="t1" style="padding:44px;">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 8px;">
+    <a href="#t1" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none;">1</a>
+    <span style="font:600 14px system-ui,sans-serif;color:#1a1a1a;">Pocket Tunes — 2 concepts d'OS pour Analogue Pocket</span>
+  </div>
+  <p style="font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:620px;margin:0 0 28px;">Navigation basée sur l'arborescence des dossiers (Artiste → Album → Morceau). Boutons mappés : D-pad, A, B, L/R. Cliquez les boutons du hardware pour naviguer réellement.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+    <!-- OPTION 1A -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <a href="#1a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1a</a>
+        <span style="font:400 11px system-ui,sans-serif;color:rgba(0,0,0,.55);">Cover Grid — parcours plein écran, thème sélectionnable (L/R)</span>
+      </div>
+
+      <!-- device shell A -->
+      <div style="width:300px;background:linear-gradient(160deg, oklch(0.34 0.01 250), oklch(0.2 0.01 250));border-radius:34px;padding:22px 18px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 20px 40px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.06);">
+
+        <div style="width:100%;display:flex;justify-content:space-between;">
+          <div onClick="{{ aSkinPrev }}" style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <span style="font-size:8px;color:#888;font-family:monospace;">L</span>
+          </div>
+          <div onClick="{{ aSkinNext }}" style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <span style="font-size:8px;color:#888;font-family:monospace;">R</span>
+          </div>
+        </div>
+
+        <div style="background:#050505;border-radius:10px;padding:8px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04);">
+          <div style="width:264px;height:238px;border-radius:4px;overflow:hidden;position:relative;">
+
+            <sc-if value="{{ isSkeuoA }}" hint-placeholder-val="{{ true }}">
+              <div style="width:264px;height:238px;background:oklch(0.95 0.02 75);font-family:'Quicksand',sans-serif;display:flex;flex-direction:column;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:linear-gradient(180deg,oklch(0.91 0.02 75),oklch(0.86 0.02 75));border-bottom:1px solid oklch(0.8 0.02 75);">
+                  <span style="font-size:11px;font-weight:700;color:oklch(0.3 0.03 50);">{{ crumbA }}</span>
+                  <span style="font-size:8px;color:oklch(0.55 0.02 60);">SKIN 1/2</span>
+                </div>
+
+                <sc-if value="{{ isBrowseA }}" hint-placeholder-val="{{ true }}">
+                  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:9px;overflow:auto;align-content:start;">
+                    <sc-for list="{{ itemsA }}" as="item" hint-placeholder-count="4">
+                      <div onClick="{{ item.onActivate }}" style="position:relative;border-radius:12px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);overflow:hidden;cursor:pointer;">
+                        <div style="height:62px;position:relative;background:{{ item.bg }};">
+                          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg, rgba(255,255,255,.1) 0 6px, transparent 6px 12px);"></div>
+                          <div style="position:absolute;right:4px;bottom:2px;font-family:monospace;font-size:7px;color:rgba(255,255,255,.6);">art</div>
+                        </div>
+                        <div style="padding:5px 7px 7px;">
+                          <div style="font-size:10px;font-weight:700;color:oklch(0.3 0.03 50);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ item.label }}</div>
+                          <div style="font-size:8.5px;color:oklch(0.5 0.02 60);margin-top:1px;">{{ item.sub }}</div>
+                        </div>
+                        <sc-if value="{{ item.selected }}">
+                          <div style="position:absolute;inset:0;border:2.5px solid oklch(0.62 0.15 45);border-radius:12px;pointer-events:none;"></div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ isPlayerA }}">
+                  <div style="flex:1;display:flex;flex-direction:column;padding:9px;overflow:hidden;">
+                    <div style="display:flex;gap:9px;">
+                      <div style="width:64px;height:64px;border-radius:10px;position:relative;flex:none;background:{{ coverBgA }};">
+                        <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg, rgba(255,255,255,.1) 0 6px, transparent 6px 12px);border-radius:10px;"></div>
+                      </div>
+                      <div style="min-width:0;flex:1;">
+                        <div style="font-size:11px;font-weight:700;color:oklch(0.28 0.03 50);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ trackObjA.title }}</div>
+                        <div style="font-size:8.5px;color:oklch(0.5 0.02 60);margin-top:2px;">{{ artistNameA }} · {{ albumA.title }}</div>
+                        <div style="font-size:8px;color:oklch(0.55 0.02 60);margin-top:3px;">Piste {{ trackIndexLabelA }}</div>
+                      </div>
+                    </div>
+
+                    <div style="margin-top:8px;height:5px;border-radius:3px;background:oklch(0.85 0.02 75);overflow:hidden;">
+                      <div style="height:100%;background:oklch(0.62 0.15 45);width:{{ progressPctA }}%;"></div>
+                    </div>
+
+                    <div style="display:flex;align-items:flex-end;gap:2px;height:26px;margin-top:8px;">
+                      <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="12">
+                        <div style="width:6px;height:{{ bar.h }}%;background:oklch(0.62 0.15 45 / 0.7);border-radius:2px;transform-origin:bottom;animation:barPulse 1s ease-in-out infinite;animation-delay:{{ bar.delay }};animation-play-state:{{ barPlayState }};"></div>
+                      </sc-for>
+                    </div>
+
+                    <sc-if value="{{ showMetaA }}" hint-placeholder-val="{{ true }}">
+                      <div style="margin-top:8px;font-size:8.5px;color:oklch(0.4 0.02 60);display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;">
+                        <span>Année · {{ albumA.year }}</span><span>Genre · {{ albumA.genre }}</span>
+                        <span>Durée · {{ trackObjA.dur }}</span><span>Restant · {{ remainA }}</span>
+                        <span>Format · {{ trackObjA.format }}</span><span>Débit · {{ trackObjA.bitrate }}</span>
+                      </div>
+                    </sc-if>
+
+                    <div style="margin-top:auto;display:flex;justify-content:center;">
+                      <sc-if value="{{ playingA }}">
+                        <div style="display:flex;gap:3px;"><div style="width:4px;height:12px;background:oklch(0.3 0.03 50);"></div><div style="width:4px;height:12px;background:oklch(0.3 0.03 50);"></div></div>
+                      </sc-if>
+                      <sc-if value="{{ notPlayingA }}">
+                        <div style="width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid oklch(0.3 0.03 50);"></div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isMonoA }}">
+              <div style="width:264px;height:238px;background:oklch(0.86 0.03 135);font-family:'VT323',monospace;display:flex;flex-direction:column;position:relative;">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 2px, transparent 2px 4px);pointer-events:none;"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 9px;border-bottom:1px solid oklch(0.6 0.03 130);">
+                  <span style="font-size:15px;color:oklch(0.26 0.04 130);letter-spacing:0.5px;">{{ crumbAUpper }}</span>
+                  <span style="font-size:12px;color:oklch(0.45 0.03 130);">SKIN 2/2</span>
+                </div>
+
+                <sc-if value="{{ isBrowseA }}" hint-placeholder-val="{{ true }}">
+                  <div style="flex:1;display:flex;flex-direction:column;overflow:auto;">
+                    <sc-for list="{{ itemsA }}" as="item" hint-placeholder-count="4">
+                      <div onClick="{{ item.onActivate }}" style="display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid oklch(0.78 0.02 130);cursor:pointer;">
+                        <div style="width:22px;height:22px;flex:none;position:relative;background:{{ item.bg }};filter:grayscale(0.6) contrast(1.2);border:1px solid oklch(0.4 0.03 130);"></div>
+                        <div style="min-width:0;flex:1;">
+                          <div style="font-size:15px;color:oklch(0.26 0.04 130);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1;">{{ item.label }}</div>
+                          <div style="font-size:11px;color:oklch(0.45 0.03 130);line-height:1;">{{ item.sub }}</div>
+                        </div>
+                        <sc-if value="{{ item.selected }}"><span style="font-size:14px;color:oklch(0.26 0.04 130);">◀</span></sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ isPlayerA }}">
+                  <div style="flex:1;display:flex;flex-direction:column;padding:8px 9px;overflow:hidden;">
+                    <div style="font-size:16px;color:oklch(0.26 0.04 130);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ trackObjA.title }}</div>
+                    <div style="font-size:12px;color:oklch(0.45 0.03 130);">{{ artistNameA }} / {{ albumA.title }} · {{ trackIndexLabelA }}</div>
+
+                    <div style="display:flex;gap:1px;margin-top:6px;">
+                      <sc-for list="{{ monoCells }}" as="cell" hint-placeholder-count="16">
+                        <div style="width:14px;height:12px;background:{{ cell.on }};border:1px solid oklch(0.5 0.03 130);"></div>
+                      </sc-for>
+                    </div>
+
+                    <div style="display:flex;align-items:flex-end;gap:2px;height:24px;margin-top:6px;">
+                      <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="12">
+                        <div style="width:6px;height:{{ bar.h }}%;background:oklch(0.26 0.04 130 / 0.75);transform-origin:bottom;animation:barPulse 1s ease-in-out infinite;animation-delay:{{ bar.delay }};animation-play-state:{{ barPlayState }};"></div>
+                      </sc-for>
+                    </div>
+
+                    <sc-if value="{{ showMetaA }}" hint-placeholder-val="{{ true }}">
+                      <div style="margin-top:6px;font-size:12px;color:oklch(0.3 0.03 130);line-height:1.35;">
+                        <div>{{ albumA.year }} · {{ albumA.genre }}</div>
+                        <div>{{ trackObjA.dur }} total · {{ remainA }} restant</div>
+                        <div>{{ trackObjA.format }} · {{ trackObjA.bitrate }}</div>
+                      </div>
+                    </sc-if>
+
+                    <div style="margin-top:auto;font-size:14px;color:oklch(0.26 0.04 130);">{{ playStateLabelA }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 6px;">
+          <div style="width:100px;height:100px;position:relative;">
+            <div onClick="{{ aDpadUp }}" style="position:absolute;top:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▲</span></div>
+            <div onClick="{{ aDpadDown }}" style="position:absolute;bottom:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▼</span></div>
+            <div onClick="{{ aDpadLeft }}" style="position:absolute;top:32px;left:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">◀</span></div>
+            <div onClick="{{ aDpadRight }}" style="position:absolute;top:32px;right:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▶</span></div>
+          </div>
+          <div style="width:90px;height:70px;position:relative;">
+            <div onClick="{{ aPressB }}" style="position:absolute;bottom:0;left:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">B</span></div>
+            <div onClick="{{ aPressA }}" style="position:absolute;top:0;right:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">A</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="font:11px/1.4 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:300px;margin:0;">D-pad déplace/change de piste · A ouvre ou lance/pause · B revient en arrière · L/R change de thème (partout) · dans le lecteur, ◀▶ masque/affiche les métadonnées.</p>
+    </div>
+
+    <!-- OPTION 1B -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <a href="#1b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none;">1b</a>
+        <span style="font:400 11px system-ui,sans-serif;color:rgba(0,0,0,.55);">Explorateur à onglets — arbre de dossiers persistant + tiroir lecteur</span>
+      </div>
+
+      <div style="width:300px;background:linear-gradient(160deg, oklch(0.34 0.01 250), oklch(0.2 0.01 250));border-radius:34px;padding:22px 18px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 20px 40px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.06);">
+
+        <div style="width:100%;display:flex;justify-content:space-between;">
+          <div style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;"><span style="font-size:8px;color:#666;font-family:monospace;">L</span></div>
+          <div style="width:46px;height:16px;background:#111;border-radius:8px 8px 3px 3px;display:flex;align-items:center;justify-content:center;"><span style="font-size:8px;color:#666;font-family:monospace;">R</span></div>
+        </div>
+
+        <div style="background:#050505;border-radius:10px;padding:8px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04);">
+          <div style="width:264px;height:238px;border-radius:4px;overflow:hidden;position:relative;background:#0b0904;font-family:'Share Tech Mono',monospace;">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg, rgba(0,0,0,.35) 0 2px, transparent 2px 4px);pointer-events:none;z-index:3;"></div>
+
+            <div style="display:flex;height:100%;">
+              <div style="width:78px;flex:none;border-right:1px solid oklch(0.35 0.1 55);overflow:auto;padding:6px 0;">
+                <sc-for list="{{ sidebarItemsB }}" as="art" hint-placeholder-count="4">
+                  <div onClick="{{ art.onActivate }}" style="padding:4px 7px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:{{ art.color }};background:{{ art.bg }};">{{ art.name }}</div>
+                </sc-for>
+              </div>
+
+              <div style="flex:1;min-width:0;position:relative;padding:7px;overflow:auto;">
+                <div style="font-size:10px;color:oklch(0.65 0.15 55);margin-bottom:5px;letter-spacing:0.5px;">{{ artistB.name }}/</div>
+                <sc-for list="{{ albumsB }}" as="al" hint-placeholder-count="2">
+                  <div onClick="{{ al.onActivate }}" style="display:flex;align-items:center;gap:7px;padding:4px;margin-bottom:4px;border:1px solid {{ al.borderColor }};cursor:pointer;">
+                    <div style="width:26px;height:26px;flex:none;position:relative;background:{{ al.bg }};filter:saturate(1.3);"></div>
+                    <div style="min-width:0;">
+                      <div style="font-size:11px;color:oklch(0.85 0.1 55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ al.title }}</div>
+                      <div style="font-size:9px;color:oklch(0.55 0.1 55);">{{ al.year }} · {{ al.genre }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ sheetOpenB }}">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:64%;background:#120e07;border-top:1px solid oklch(0.6 0.15 55);z-index:2;display:flex;flex-direction:column;padding:8px;">
+                <div style="display:flex;gap:8px;">
+                  <div style="width:46px;height:46px;flex:none;position:relative;background:{{ coverBgB }};"></div>
+                  <div style="min-width:0;flex:1;">
+                    <div style="font-size:12px;color:oklch(0.88 0.1 55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ trackObjB.title }}</div>
+                    <div style="font-size:9px;color:oklch(0.6 0.1 55);">{{ albumB.title }} · piste {{ trackIndexLabelB }}</div>
+                  </div>
+                  <div style="font-size:9px;color:oklch(0.7 0.15 55);align-self:flex-start;">{{ playStateLabelB }}</div>
+                </div>
+                <div style="margin-top:6px;height:4px;background:oklch(0.3 0.05 55);"><div style="height:100%;background:oklch(0.7 0.18 55);width:{{ progressPctB }}%;"></div></div>
+                <div style="margin-top:6px;font-size:9.5px;color:oklch(0.65 0.1 55);line-height:1.4;">
+                  <div>{{ trackObjB.dur }} total · {{ albumB.genre }} · {{ albumB.year }}</div>
+                  <div>{{ trackObjB.format }} · {{ trackObjB.bitrate }}</div>
+                </div>
+                <div style="margin-top:auto;font-size:9px;color:oklch(0.55 0.1 55);">▲▼ piste · A lecture/pause · B fermer</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 6px;">
+          <div style="width:100px;height:100px;position:relative;">
+            <div onClick="{{ bDpadUp }}" style="position:absolute;top:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▲</span></div>
+            <div onClick="{{ bDpadDown }}" style="position:absolute;bottom:0;left:32px;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="color:#999;font-size:11px;">▼</span></div>
+            <div style="position:absolute;top:32px;left:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;"><span style="color:#555;font-size:11px;">◀</span></div>
+            <div style="position:absolute;top:32px;right:0;width:34px;height:34px;border-radius:7px;background:#2b2b2e;display:flex;align-items:center;justify-content:center;"><span style="color:#555;font-size:11px;">▶</span></div>
+          </div>
+          <div style="width:90px;height:70px;position:relative;">
+            <div onClick="{{ bPressB }}" style="position:absolute;bottom:0;left:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">B</span></div>
+            <div onClick="{{ bPressA }}" style="position:absolute;top:0;right:2px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #3a3a3e, #1c1c1e);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.4);"><span style="color:#bbb;font-size:12px;font-weight:700;">A</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="font:11px/1.4 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:300px;margin:0;">Colonne de gauche = dossiers artistes (toujours visible) · D-pad ▲▼ + A ouvre un album dans le tiroir du bas · B remonte d'un niveau ou ferme le tiroir. L/R inactifs ici (démo mono-thème).</p>
+    </div>
+
+  </div>
+
+  <p style="font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:640px;margin:26px 0 0;">Essayez ensuite : « garde la navigation de <a href="#1a" style="color:inherit;">1a</a> mais le tiroir bas de <a href="#1b" style="color:inherit;">1b</a> » · « ajoute un 3e thème pixel-art » · « affiche une pochette réelle dans les cases ».</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    skinA: 0,
+    pathA: [],
+    viewA: 'browse',
+    cursorA: 0,
+    trackA: 0,
+    playingA: false,
+    showMetaA: true,
+    progressA: 0.25,
+
+    focusB: 'sidebar',
+    sidebarCursorB: 0,
+    artistIdB: null,
+    mainCursorB: 0,
+    sheetOpenB: false,
+    trackB: 0,
+    playingB: false,
+    progressB: 0.4,
+
+    focusC: 'sidebar', sidebarCursorC: 0, artistIdC: null, mainCursorC: 0, sheetOpenC: false, trackC: 0, playingC: false, progressC: 0.55,
+    focusD: 'sidebar', sidebarCursorD: 0, artistIdD: null, mainCursorD: 0, sheetOpenD: false, trackD: 0, playingD: false, progressD: 0.15,
+  };
+
+  library = [
+    { id:'a1', name:'Amber Wolves', albums:[
+      { id:'al1', title:'Low Tide', year:2019, genre:'Indie Rock', hue:18,
+        tracks:[
+          { title:'Harbor Lights', dur:'3:24', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Salt & Static', dur:'4:02', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Driftwood', dur:'2:51', format:'MP3', bitrate:'320 kbps' },
+        ]},
+      { id:'al2', title:'Paper Moths', year:2021, genre:'Dream Pop', hue:265,
+        tracks:[
+          { title:'Cathode', dur:'3:47', format:'MP3', bitrate:'256 kbps' },
+          { title:'Slow Static', dur:'5:10', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Glasshouse', dur:'3:02', format:'MP3', bitrate:'320 kbps' },
+        ]},
+    ]},
+    { id:'a2', name:'Night Bus', albums:[
+      { id:'al3', title:'Terminal 4', year:2017, genre:'Synthwave', hue:200,
+        tracks:[
+          { title:'Overpass', dur:'4:20', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Sodium Light', dur:'3:33', format:'MP3', bitrate:'320 kbps' },
+        ]},
+      { id:'al4', title:'Departures', year:2023, genre:'Ambient', hue:140,
+        tracks:[
+          { title:'Gate 12', dur:'6:15', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Holding Pattern', dur:'4:44', format:'MP3', bitrate:'256 kbps' },
+          { title:'Runway', dur:'3:58', format:'MP3', bitrate:'320 kbps' },
+        ]},
+    ]},
+    { id:'a3', name:'Kite & Compass', albums:[
+      { id:'al5', title:'North Fields', year:2015, genre:'Folk', hue:45,
+        tracks:[
+          { title:'Wheat & Wire', dur:'3:12', format:'MP3', bitrate:'320 kbps' },
+          { title:'Old Barn', dur:'4:05', format:'FLAC', bitrate:'1411 kbps' },
+        ]},
+      { id:'al6', title:'Compass Rose', year:2020, genre:'Folk Rock', hue:340,
+        tracks:[
+          { title:'Due North', dur:'3:39', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Magnetic', dur:'2:58', format:'MP3', bitrate:'320 kbps' },
+          { title:'Anchor Point', dur:'4:31', format:'FLAC', bitrate:'1411 kbps' },
+        ]},
+    ]},
+    { id:'a4', name:'Marble Season', albums:[
+      { id:'al7', title:'Quarry', year:2022, genre:'Post-Rock', hue:280,
+        tracks:[
+          { title:'Vein', dur:'5:44', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'White Marble', dur:'6:02', format:'FLAC', bitrate:'1411 kbps' },
+        ]},
+      { id:'al8', title:'Erosion', year:2024, genre:'Ambient', hue:95,
+        tracks:[
+          { title:'Silt', dur:'4:18', format:'MP3', bitrate:'256 kbps' },
+          { title:'Bedrock', dur:'5:02', format:'FLAC', bitrate:'1411 kbps' },
+          { title:'Sediment', dur:'3:47', format:'MP3', bitrate:'320 kbps' },
+        ]},
+    ]},
+  ];
+
+  constructor(props) {
+    super(props);
+    this.state.artistIdB = this.library[0].id;
+    this.state.artistIdC = this.library[0].id;
+    this.state.artistIdD = this.library[0].id;
+  }
+
+  componentDidMount() {
+    this._timer = setInterval(() => {
+      this.setState(s => ({
+        progressA: s.playingA ? (s.progressA + 0.006) % 1 : s.progressA,
+        progressB: s.playingB ? (s.progressB + 0.006) % 1 : s.progressB,
+        progressC: s.playingC ? (s.progressC + 0.006) % 1 : s.progressC,
+        progressD: s.playingD ? (s.progressD + 0.006) % 1 : s.progressD,
+      }));
+    }, 200);
+  }
+  componentWillUnmount() {
+    clearInterval(this._timer);
+  }
+
+  coverBg(hue) {
+    return `linear-gradient(150deg, hsl(${hue} 72% 56%), hsl(${(hue + 35) % 360} 55% 30%))`;
+  }
+  parseDur(str) {
+    const [m, s] = str.split(':').map(Number);
+    return m * 60 + s;
+  }
+  formatDur(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.round(sec % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  aItemsRaw() {
+    const path = this.state.pathA;
+    if (path.length === 0) {
+      return this.library.map(a => ({ id: a.id, label: a.name, sub: `${a.albums.length} albums`, hue: a.albums[0].hue }));
+    }
+    const artist = this.library.find(a => a.id === path[0]);
+    return artist.albums.map(al => ({ id: al.id, label: al.title, sub: `${al.year} · ${al.genre}`, hue: al.hue }));
+  }
+  aArtist() { return this.library.find(a => a.id === this.state.pathA[0]); }
+  aAlbum() { const artist = this.aArtist(); return artist ? artist.albums.find(al => al.id === this.state.pathA[1]) : null; }
+
+  aDpad(dir) {
+    const { viewA } = this.state;
+    if (viewA === 'player') {
+      if (dir === 'up' || dir === 'down') {
+        const album = this.aAlbum();
+        const n = album.tracks.length;
+        this.setState(s => ({ trackA: dir === 'up' ? (s.trackA - 1 + n) % n : (s.trackA + 1) % n, playingA: false, progressA: 0 }));
+      } else {
+        this.setState(s => ({ showMetaA: !s.showMetaA }));
+      }
+      return;
+    }
+    const items = this.aItemsRaw();
+    const cols = 2;
+    this.setState(s => {
+      let c = s.cursorA;
+      if (dir === 'left') c = Math.max(0, c - 1);
+      if (dir === 'right') c = Math.min(items.length - 1, c + 1);
+      if (dir === 'up') c = Math.max(0, c - cols);
+      if (dir === 'down') c = Math.min(items.length - 1, c + cols);
+      return { cursorA: c };
+    });
+  }
+
+  aOpenIndex(i) {
+    const { pathA } = this.state;
+    const items = this.aItemsRaw();
+    const picked = items[i];
+    if (pathA.length === 0) {
+      this.setState({ pathA: [picked.id], cursorA: 0 });
+    } else if (pathA.length === 1) {
+      this.setState({ pathA: [pathA[0], picked.id], viewA: 'player', trackA: 0, playingA: false, showMetaA: true, progressA: 0 });
+    }
+  }
+
+  aPressA() {
+    const { viewA, cursorA } = this.state;
+    if (viewA === 'player') { this.setState(s => ({ playingA: !s.playingA })); return; }
+    this.aOpenIndex(cursorA);
+  }
+  aPressB() {
+    const { viewA, pathA } = this.state;
+    if (viewA === 'player') { this.setState({ viewA: 'browse', pathA: [pathA[0]], cursorA: 0 }); return; }
+    if (pathA.length === 1) { this.setState({ pathA: [], cursorA: 0 }); }
+  }
+  aSkin(delta) { this.setState(s => ({ skinA: (s.skinA + delta + 2) % 2 })); }
+
+  bArtist() { return this.library.find(a => a.id === this.state.artistIdB); }
+  bAlbum() { const artist = this.bArtist(); return artist.albums[this.state.mainCursorB]; }
+
+  bDpad(dir) {
+    const { focusB, sheetOpenB } = this.state;
+    if (sheetOpenB) {
+      if (dir === 'up' || dir === 'down') {
+        const album = this.bAlbum();
+        const n = album.tracks.length;
+        this.setState(s => ({ trackB: dir === 'up' ? (s.trackB - 1 + n) % n : (s.trackB + 1) % n, playingB: false, progressB: 0 }));
+      }
+      return;
+    }
+    if (focusB === 'sidebar') {
+      if (dir === 'up' || dir === 'down') {
+        const n = this.library.length;
+        this.setState(s => ({ sidebarCursorB: dir === 'up' ? (s.sidebarCursorB - 1 + n) % n : (s.sidebarCursorB + 1) % n }));
+      }
+      return;
+    }
+    const artist = this.bArtist();
+    const n = artist.albums.length;
+    if (dir === 'up' || dir === 'down') {
+      this.setState(s => ({ mainCursorB: dir === 'up' ? Math.max(0, s.mainCursorB - 1) : Math.min(n - 1, s.mainCursorB + 1) }));
+    }
+  }
+
+  bSelectArtist(i) {
+    this.setState({ artistIdB: this.library[i].id, focusB: 'main', mainCursorB: 0, sidebarCursorB: i });
+  }
+  bOpenAlbum(i) {
+    this.setState({ mainCursorB: i, sheetOpenB: true, trackB: 0, playingB: false, progressB: 0 });
+  }
+
+  bPressA() {
+    const { focusB, sheetOpenB, sidebarCursorB } = this.state;
+    if (sheetOpenB) { this.setState(s => ({ playingB: !s.playingB })); return; }
+    if (focusB === 'sidebar') { this.bSelectArtist(sidebarCursorB); return; }
+    this.setState({ sheetOpenB: true, trackB: 0, playingB: false, progressB: 0 });
+  }
+  bPressB() {
+    const { sheetOpenB, focusB } = this.state;
+    if (sheetOpenB) { this.setState({ sheetOpenB: false }); return; }
+    if (focusB === 'main') { this.setState({ focusB: 'sidebar' }); }
+  }
+
+  // Generic browser logic reused by variants C and D (same interaction model as B).
+  genArtist(k) { return this.library.find(a => a.id === this.state['artistId' + k]); }
+  genAlbum(k) { const artist = this.genArtist(k); return artist.albums[this.state['mainCursor' + k]]; }
+  genDpad(k, dir) {
+    const focus = this.state['focus' + k];
+    const sheetOpen = this.state['sheetOpen' + k];
+    if (sheetOpen) {
+      if (dir === 'up' || dir === 'down') {
+        const album = this.genAlbum(k);
+        const n = album.tracks.length;
+        this.setState(s => ({ ['track' + k]: dir === 'up' ? (s['track' + k] - 1 + n) % n : (s['track' + k] + 1) % n, ['playing' + k]: false, ['progress' + k]: 0 }));
+      }
+      return;
+    }
+    if (focus === 'sidebar') {
+      if (dir === 'up' || dir === 'down') {
+        const n = this.library.length;
+        this.setState(s => ({ ['sidebarCursor' + k]: dir === 'up' ? (s['sidebarCursor' + k] - 1 + n) % n : (s['sidebarCursor' + k] + 1) % n }));
+      }
+      return;
+    }
+    const artist = this.genArtist(k);
+    const n = artist.albums.length;
+    if (dir === 'up' || dir === 'down') {
+      this.setState(s => ({ ['mainCursor' + k]: dir === 'up' ? Math.max(0, s['mainCursor' + k] - 1) : Math.min(n - 1, s['mainCursor' + k] + 1) }));
+    }
+  }
+  genSelectArtist(k, i) {
+    this.setState({ ['artistId' + k]: this.library[i].id, ['focus' + k]: 'main', ['mainCursor' + k]: 0, ['sidebarCursor' + k]: i });
+  }
+  genOpenAlbum(k, i) {
+    this.setState({ ['mainCursor' + k]: i, ['sheetOpen' + k]: true, ['track' + k]: 0, ['playing' + k]: false, ['progress' + k]: 0 });
+  }
+  genPressA(k) {
+    const focus = this.state['focus' + k], sheetOpen = this.state['sheetOpen' + k], sidebarCursor = this.state['sidebarCursor' + k];
+    if (sheetOpen) { this.setState(s => ({ ['playing' + k]: !s['playing' + k] })); return; }
+    if (focus === 'sidebar') { this.genSelectArtist(k, sidebarCursor); return; }
+    this.setState({ ['sheetOpen' + k]: true, ['track' + k]: 0, ['playing' + k]: false, ['progress' + k]: 0 });
+  }
+  genPressB(k) {
+    const sheetOpen = this.state['sheetOpen' + k], focus = this.state['focus' + k];
+    if (sheetOpen) { this.setState({ ['sheetOpen' + k]: false }); return; }
+    if (focus === 'main') { this.setState({ ['focus' + k]: 'sidebar' }); }
+  }
+  genRenderVals(k) {
+    const s = this.state;
+    const artist = this.genArtist(k);
+    const album = this.genAlbum(k);
+    const trackObj = s['sheetOpen' + k] ? album.tracks[s['track' + k]] : null;
+    const sidebarItems = this.library.map((a, i) => ({
+      id: a.id, name: a.name,
+      onActivate: () => this.genSelectArtist(k, i),
+      current: a.id === s['artistId' + k]
+        ? (k === 'C' ? 'oklch(0.4 0.1 45)' : 'oklch(0.85 0.17 145)')
+        : (k === 'C' ? 'oklch(0.55 0.03 55)' : 'oklch(0.4 0.08 145)'),
+      selected: i === s['sidebarCursor' + k] && s['focus' + k] === 'sidebar',
+    }));
+    const albums = artist.albums.map((al, i) => ({
+      ...al,
+      bg: this.coverBg(al.hue),
+      onActivate: () => this.genOpenAlbum(k, i),
+      selected: i === s['mainCursor' + k] && s['focus' + k] === 'main',
+    }));
+    const progress = s['progress' + k];
+    return {
+      artist, album, trackObj, sidebarItems, albums,
+      sheetOpen: s['sheetOpen' + k], playing: s['playing' + k],
+      coverBg: album ? this.coverBg(album.hue) : '',
+      trackIndexLabel: s['sheetOpen' + k] ? `${s['track' + k] + 1}/${album.tracks.length}` : '',
+      progressPct: Math.round(progress * 100),
+      remain: trackObj ? this.formatDur(this.parseDur(trackObj.dur) * (1 - progress)) : '',
+      dpadUp: () => this.genDpad(k, 'up'), dpadDown: () => this.genDpad(k, 'down'),
+      pressA: () => this.genPressA(k), pressB: () => this.genPressB(k),
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const rawItemsA = this.aItemsRaw();
+    const itemsA = rawItemsA.map((it, i) => ({
+      ...it,
+      selected: i === s.cursorA,
+      bg: this.coverBg(it.hue),
+      onActivate: () => this.aOpenIndex(i),
+    }));
+    const artistA = this.aArtist();
+    const albumA = this.aAlbum();
+    const trackObjA = albumA ? albumA.tracks[s.trackA] : null;
+    const isBrowseA = s.viewA === 'browse';
+    const isPlayerA = s.viewA === 'player';
+    const crumbA = s.pathA.length === 0 ? 'Bibliothèque' : (isPlayerA ? `${artistA.name} / ${albumA.title}` : artistA.name);
+    const bars = Array.from({ length: 12 }, (_, i) => ({ h: 30 + ((i * 37) % 60), delay: (i * 0.09).toFixed(2) + 's' }));
+    const monoCells = Array.from({ length: 16 }, (_, i) => ({ on: (i / 16) < s.progressA ? 'oklch(0.26 0.04 130)' : 'transparent' }));
+
+    const artistB = this.bArtist();
+    const albumB = this.bAlbum();
+    const trackObjB = s.sheetOpenB ? albumB.tracks[s.trackB] : null;
+    const sidebarItemsB = this.library.map((a, i) => {
+      const current = a.id === s.artistIdB;
+      const sel = i === s.sidebarCursorB && s.focusB === 'sidebar';
+      return {
+        id: a.id, name: a.name,
+        onActivate: () => this.bSelectArtist(i),
+        color: current ? 'oklch(0.85 0.15 55)' : 'oklch(0.55 0.1 55)',
+        bg: sel ? 'rgba(255,150,50,.15)' : 'transparent',
+      };
+    });
+    const albumsB = artistB.albums.map((al, i) => ({
+      ...al,
+      bg: this.coverBg(al.hue),
+      onActivate: () => this.bOpenAlbum(i),
+      borderColor: (i === s.mainCursorB && s.focusB === 'main') ? 'oklch(0.7 0.18 55)' : 'transparent',
+    }));
+
+    return {
+      isSkeuoA: s.skinA === 0, isMonoA: s.skinA === 1,
+      itemsA, isBrowseA, isPlayerA, crumbA,
+      crumbAUpper: crumbA.toUpperCase(),
+      albumA, trackObjA,
+      artistNameA: artistA ? artistA.name : '',
+      playingA: s.playingA, notPlayingA: !s.playingA,
+      showMetaA: s.showMetaA,
+      trackIndexLabelA: albumA ? `${s.trackA + 1}/${albumA.tracks.length}` : '',
+      coverBgA: albumA ? this.coverBg(albumA.hue) : '',
+      progressPctA: Math.round(s.progressA * 100),
+      remainA: trackObjA ? this.formatDur(this.parseDur(trackObjA.dur) * (1 - s.progressA)) : '',
+      playStateLabelA: s.playingA ? '► LECTURE' : '❚❚ PAUSE',
+      bars, monoCells,
+      barPlayState: s.playingA || s.playingB ? 'running' : 'paused',
+      aDpadUp: () => this.aDpad('up'), aDpadDown: () => this.aDpad('down'),
+      aDpadLeft: () => this.aDpad('left'), aDpadRight: () => this.aDpad('right'),
+      aPressA: () => this.aPressA(), aPressB: () => this.aPressB(),
+      aSkinPrev: () => this.aSkin(-1), aSkinNext: () => this.aSkin(1),
+
+      sidebarItemsB, artistB, albumsB, sheetOpenB: s.sheetOpenB, trackObjB, playingB: s.playingB,
+      coverBgB: albumB ? this.coverBg(albumB.hue) : '',
+      trackIndexLabelB: s.sheetOpenB ? `${s.trackB + 1}/${albumB.tracks.length}` : '',
+      progressPctB: Math.round(s.progressB * 100),
+      playStateLabelB: s.playingB ? '► LECTURE' : '❚❚ PAUSE',
+      bDpadUp: () => this.bDpad('up'), bDpadDown: () => this.bDpad('down'),
+      bPressA: () => this.bPressA(), bPressB: () => this.bPressB(),
+
+      c2: this.genRenderVals('C'),
+      d2: this.genRenderVals('D'),
+      c2Spin: s.playingC ? 'running' : 'paused',
+      d2Spin: s.playingD ? 'running' : 'paused',
+    };
+  }
+}
+
+</script>
+</body>
+</html>
