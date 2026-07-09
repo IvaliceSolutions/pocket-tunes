@@ -5,9 +5,16 @@
 
 #include <stdint.h>
 
+#ifdef PT_HOST_TEST
+extern uint8_t rx_ram[];
+#define RX_BASE  ((const uint32_t *)rx_ram)
+#define RX_BYTES ((const uint8_t *)rx_ram)
+#define RX_SIZE 16384
+#else
 #define RX_BASE ((volatile const uint32_t *)0x10000000)
 #define RX_BYTES ((volatile const uint8_t *)0x10000000)
 #define RX_SIZE 16384
+#endif
 
 #define SLOT_LIBRARY 0
 

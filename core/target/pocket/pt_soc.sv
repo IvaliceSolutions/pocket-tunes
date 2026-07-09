@@ -160,11 +160,16 @@ module pt_soc #(
   // ------------------------------------------------------------------- CPU
   wire        mem_valid;
   wire        mem_instr;
-  reg         mem_ready;
+  wire        mem_ready;
   wire [31:0] mem_addr;
   wire [31:0] mem_wdata;
   wire [ 3:0] mem_wstrb;
   wire [31:0] mem_rdata;
+  wire        mem_la_read;
+  wire        mem_la_write;
+  wire [31:0] mem_la_addr;
+  wire [31:0] mem_la_wdata;
+  wire [ 3:0] mem_la_wstrb;
 
   picorv32 #(
       .ENABLE_COUNTERS  (1),
@@ -189,11 +194,11 @@ module pt_soc #(
       .mem_wstrb(mem_wstrb),
       .mem_rdata(mem_rdata),
 
-      .mem_la_read (),
-      .mem_la_write(),
-      .mem_la_addr (),
-      .mem_la_wdata(),
-      .mem_la_wstrb(),
+      .mem_la_read (mem_la_read),
+      .mem_la_write(mem_la_write),
+      .mem_la_addr (mem_la_addr),
+      .mem_la_wdata(mem_la_wdata),
+      .mem_la_wstrb(mem_la_wstrb),
 
       .pcpi_valid(),
       .pcpi_insn (),
@@ -211,15 +216,16 @@ module pt_soc #(
       .trace_data ()
   );
 
-  // one-wait-state handshake: ready pulses the cycle after valid
-  always @(posedge clk_sys) begin
-    if (!reset_n_sys) mem_ready <= 0;
-    else mem_ready <= mem_valid && !mem_ready;
-  end
+  // zero wait states: memories are addressed by the look-ahead interface one
+  // cycle early, so every access completes in a single cycle. Writes fire on
+  // mem_la_write (exactly one pulse per store).
+  assign mem_ready = 1'b1;
 
-  wire [3:0] region = mem_addr[31:28];
-  wire wr_phase = mem_valid && !mem_ready;  // write exactly once
-  wire mmio_wr = wr_phase && region == 4'hF && mem_wstrb == 4'hF;
+  wire [3:0] la_region = mem_la_addr[31:28];
+  reg  [3:0] region_q;  // region of the op completing this cycle
+  always @(posedge clk_sys) region_q <= la_region;
+
+  wire mmio_wr = mem_la_write && la_region == 4'hF && mem_la_wstrb == 4'hF;
 
   // ------------------------------------------------------------- memories
   wire [31:0] ram_rdata;
@@ -231,10 +237,10 @@ module pt_soc #(
       .INIT_B3(FIRMWARE_B3)
   ) ram (
       .clk  (clk_sys),
-      .sel  (wr_phase && region == 4'h0),
-      .wstrb(mem_wstrb),
-      .addr (mem_addr),
-      .wdata(mem_wdata),
+      .sel  (mem_la_write && la_region == 4'h0),
+      .wstrb(mem_la_wstrb),
+      .addr (mem_la_addr),
+      .wdata(mem_la_wdata),
       .rdata(ram_rdata)
   );
 
@@ -251,16 +257,16 @@ module pt_soc #(
       .bridge_addr         (bridge_addr),
       .bridge_wr_data      (bridge_wr_data),
 
-      .rd_word_addr(mem_addr[13:2]),
+      .rd_word_addr(mem_la_addr[13:2]),
       .rd_data     (rx_rdata)
   );
 
   pt_framebuffer fb (
       .a_clk  (clk_sys),
-      .a_sel  (wr_phase && region == 4'h2),
-      .a_wstrb(mem_wstrb),
-      .a_addr (mem_addr),
-      .a_wdata(mem_wdata),
+      .a_sel  (mem_la_write && la_region == 4'h2),
+      .a_wstrb(mem_la_wstrb),
+      .a_addr (mem_la_addr),
+      .a_wdata(mem_la_wdata),
 
       .b_clk      (clk_vid),
       .b_word_addr(fb_word_addr),
@@ -300,8 +306,8 @@ module pt_soc #(
   reg [31:0] param_ram[0:127];
   reg [31:0] param_q_74;
   always @(posedge clk_sys) begin
-    if (mmio_wr && mem_addr[9:8] != 2'b00)  // 0x100..0x3FC
-      param_ram[mem_addr[8:2]] <= mem_wdata;
+    if (mmio_wr && mem_la_addr[9:8] != 2'b00)  // 0x100..0x3FC
+      param_ram[mem_la_addr[8:2]] <= mem_la_wdata;
   end
   always @(posedge clk_74a) begin
     param_q_74 <= param_ram[bridge_addr[8:2]];
@@ -334,8 +340,8 @@ module pt_soc #(
       audio_l <= 0;
       audio_r <= 0;
     end else begin
-      if (mmio_wr && mem_addr[9:0] == 10'h040 && pcm_free != 0) begin
-        pcm_mem[pcm_wr[10:0]] <= mem_wdata;
+      if (mmio_wr && mem_la_addr[9:0] == 10'h040 && pcm_free != 0) begin
+        pcm_mem[pcm_wr[10:0]] <= mem_la_wdata;
         pcm_wr <= pcm_wr + 1'b1;
       end
 
@@ -352,14 +358,14 @@ module pt_soc #(
 
   // ---------------------------------------------------------------- MMIO
   always @(posedge clk_sys) begin
-    if (mmio_wr && mem_addr[9:8] == 2'b00) begin
-      case (mem_addr[7:0])
-        8'h20: tgt_id <= mem_wdata[15:0];
-        8'h24: tgt_offset <= mem_wdata;
-        8'h28: tgt_bridgeaddr <= mem_wdata;
-        8'h2C: tgt_length <= mem_wdata;
-        8'h30: tgt_cmd <= mem_wdata[1:0];
-        8'h50: dt_addr <= mem_wdata[9:0];
+    if (mmio_wr && mem_la_addr[9:8] == 2'b00) begin
+      case (mem_la_addr[7:0])
+        8'h20: tgt_id <= mem_la_wdata[15:0];
+        8'h24: tgt_offset <= mem_la_wdata;
+        8'h28: tgt_bridgeaddr <= mem_la_wdata;
+        8'h2C: tgt_length <= mem_la_wdata;
+        8'h30: tgt_cmd <= mem_la_wdata[1:0];
+        8'h50: dt_addr <= mem_la_wdata[9:0];
         default: ;
       endcase
     end
@@ -367,7 +373,7 @@ module pt_soc #(
 
   reg [31:0] mmio_rdata;
   always @(posedge clk_sys) begin
-    case (mem_addr[7:0])
+    case (mem_la_addr[7:0])
       8'h00:   mmio_rdata <= {16'd0, cont1_key_s};
       8'h04:   mmio_rdata <= frame_count;
       8'h0C:   mmio_rdata <= {31'd0, in_vblank_s};
@@ -384,9 +390,9 @@ module pt_soc #(
     endcase
   end
 
-  assign mem_rdata = (region == 4'h0) ? ram_rdata
-                   : (region == 4'h1) ? rx_rdata
-                   : (region == 4'h2) ? 32'd0
+  assign mem_rdata = (region_q == 4'h0) ? ram_rdata
+                   : (region_q == 4'h1) ? rx_rdata
+                   : (region_q == 4'h2) ? 32'd0
                    : mmio_rdata;
 
 endmodule

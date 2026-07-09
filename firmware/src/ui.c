@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "lib.h"
 #include "palette.h"
+#include "mp3.h"
 
 // ----------------------------------------------------------------- layout
 #define SIDEBAR_W 95
@@ -27,6 +28,8 @@ static int focus, sb_cursor, sb_scroll;
 static int cur_artist, main_cursor, main_scroll;
 static int drawer_open, cur_track, playing;   // cur_track relative to album
 static uint32_t pos_frames;
+static char pathbuf[288];
+static void start_current_track(void);
 
 // ------------------------------------------------------------ small utils
 static char *s_append(char *d, const char *s) {
@@ -55,6 +58,18 @@ static const album_t *cur_album(void) {
 static const track_t *cur_track_p(void) {
   const album_t *al = cur_album();
   return &lib_tracks[al->first_track + cur_track];
+}
+
+static void start_current_track(void) {
+  const track_t *t = cur_track_p();
+  int n = lib_fetch_path(t, pathbuf, sizeof pathbuf);
+  pos_frames = 0;
+  if (n > 0 && t->format == FMT_MP3) {
+    playing = (mp3_start(pathbuf, n, t->fsize) == 0);
+  } else {
+    playing = 0;  // non-MP3 formats arrive later
+    mp3_stop();
+  }
 }
 
 // hue (0..359) → two-tone placeholder colors from the 6x6x6 cube
@@ -95,12 +110,20 @@ int ui_input(uint16_t pressed) {
       int n = al->n_tracks;
       cur_track += (pressed & KEY_DOWN) ? 1 : n - 1;
       cur_track %= n;
-      pos_frames = 0;
-      playing = 1;  // real player: auto-play on skip (per handoff)
+      start_current_track();
       return 1;
     }
-    if (pressed & KEY_A) { playing = !playing; return 1; }
-    if (pressed & KEY_B) { drawer_open = 0; playing = 0; return 1; }
+    if (pressed & KEY_A) {
+      playing = !playing;
+      mp3_set_paused(!playing);
+      return 1;
+    }
+    if (pressed & KEY_B) {
+      drawer_open = 0;
+      playing = 0;
+      mp3_stop();
+      return 1;
+    }
     return 0;
   }
 
@@ -135,8 +158,7 @@ int ui_input(uint16_t pressed) {
   if (pressed & KEY_A) {
     drawer_open = 1;
     cur_track = 0;
-    pos_frames = 0;
-    playing = 1;  // real player: auto-start on open (per handoff)
+    start_current_track();
     return 1;
   }
   if (pressed & KEY_B) { focus = FOC_SIDEBAR; return 1; }
@@ -145,11 +167,10 @@ int ui_input(uint16_t pressed) {
 
 int ui_tick(void) {
   if (drawer_open && playing) {
-    pos_frames++;
-    const track_t *t = cur_track_p();
-    if (t->dur_s && pos_frames / 60 >= t->dur_s) {  // track ended → next, wrap
+    pos_frames = mp3_pos_seconds() * 60u;  // progress driven by real samples
+    if (mp3_at_eof()) {  // track ended → next, wrap
       cur_track = (cur_track + 1) % cur_album()->n_tracks;
-      pos_frames = 0;
+      start_current_track();
       return 1;
     }
   }

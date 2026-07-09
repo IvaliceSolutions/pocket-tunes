@@ -19,7 +19,7 @@ module tb_soc;
   reg reset_n = 0;
   reg [15:0] cont1_key = 0;
 
-  localparam LIB_SIZE = 65133;
+  localparam LIB_SIZE = 390;
 
   // bridge driven by the APF model
   reg        bridge_wr = 0;
@@ -36,7 +36,11 @@ module tb_soc;
   wire [31:0] param_rd_data;
 
   wire [9:0] dt_addr;
-  wire [31:0] dt_q = (dt_addr == 10'd1) ? LIB_SIZE : 32'd0;
+  localparam AUDIO_SIZE = 33062;
+  wire [31:0] dt_q = (dt_addr == 10'd1) ? LIB_SIZE
+                   : (dt_addr == 10'd2) ? 32'd1        // slot id 1 (audio)
+                   : (dt_addr == 10'd3) ? AUDIO_SIZE
+                   : 32'd0;
 
   wire de, hs, vs;
   wire [23:0] rgb;
@@ -90,6 +94,8 @@ module tb_soc;
   // --------------------------------------------------------- file images
   reg [7:0] lib_img[0:131071];
   initial $readmemh("library_bytes.hex", lib_img);
+  reg [7:0] audio_img[0:65535];
+  initial $readmemh("audio_bytes.hex", audio_img);
 
   // ------------------------------------------------------- APF model
   integer w, nwords, base;
@@ -126,17 +132,25 @@ module tb_soc;
 
   task serve_read(input [15:0] id, input [31:0] off, input [31:0] baddr, input [31:0] len);
     begin
-      if (id != 0) begin
-        $display("APF model: read on unknown slot %0d", id);
-        tgt_err <= 3'd2;
-      end else begin
-        $display("APF model: serve read off=%0d len=%0d t=%0t", off, len, $time);
+      if (id == 0) begin
+        $display("APF model: serve lib read off=%0d len=%0d t=%0t", off, len, $time); $fflush;
         nwords = (len + 3) / 4;
         for (w = 0; w < nwords; w = w + 1) begin
           do_bridge_write(baddr + w * 4,
                           {lib_img[off+w*4], lib_img[off+w*4+1],
                            lib_img[off+w*4+2], lib_img[off+w*4+3]});
         end
+      end else if (id == 1) begin
+        $display("APF model: serve AUDIO read off=%0d len=%0d t=%0t", off, len, $time); $fflush;
+        nwords = (len + 3) / 4;
+        for (w = 0; w < nwords; w = w + 1) begin
+          do_bridge_write(baddr + w * 4,
+                          {audio_img[off+w*4], audio_img[off+w*4+1],
+                           audio_img[off+w*4+2], audio_img[off+w*4+3]});
+        end
+      end else begin
+        $display("APF model: read on unknown slot %0d", id);
+        tgt_err <= 3'd2;
       end
       repeat (30) @(posedge clk_74a);  // real APF: ok-status write trails data
       tgt_ack  <= 0;
@@ -186,6 +200,17 @@ module tb_soc;
     if (dut.cpu.trap && !trap_seen) begin
       trap_seen <= 1;
       $display("FAIL: CPU TRAP at t=%0t (pc-ish: check firmware)", $time);
+    end
+  end
+
+  // ---------------------------------------------------------- PCM capture
+  integer fpcm, pcm_n = 0;
+  initial fpcm = $fopen("pcm_out.txt", "w");
+  always @(posedge clk_sys) begin
+    if (dut.pcm_tick && dut.pcm_level != 0) begin
+      $fwrite(fpcm, "%0d %0d\n", $signed(dut.audio_l), $signed(dut.audio_r));
+      pcm_n = pcm_n + 1;
+      if (pcm_n % 1000 == 0) begin $display("  PCM %0d samples t=%0t", pcm_n, $time); $fflush; end
     end
   end
 
@@ -249,30 +274,24 @@ module tb_soc;
     repeat (20) @(posedge clk_sys);
     reset_n = 1;
 
-    // firmware streams + parses the library, then draws
-    wait (frame_no == 18);
-    start_capture("out_soc_a.ppm");
-    wait (frame_no == 20);
-
-    press(16'h0002);  // DOWN  → sidebar cursor on artist 1
-    press(16'h0010);  // A     → select artist 1, focus main
-    start_capture("out_soc_b.ppm");
-    wait_frames(2);
-
-    press(16'h0020);  // B     → back to sidebar
-    press(16'h0001);  // UP    → cursor artist 0
-    press(16'h0010);  // A     → select artist 0
-    press(16'h0010);  // A     → open drawer, track 1/109, playing
-    wait_frames(2);
+    // tiny library parses in ~2 frames
+    wait (frame_no == 6);
+    press(16'h0010);  // A → select artist 0, focus main
+    press(16'h0010);  // A → open drawer → mp3_start on track 0
     start_capture("out_soc_c.ppm");
     wait_frames(2);
+
+    // let it play: capture ~0.3 s of PCM (48 kHz)
+    wait (pcm_n >= 4000);
+    $display("PCM captured: %0d samples", pcm_n);
+    $fclose(fpcm);
 
     $display("DONE");
     $finish;
   end
 
   initial begin
-    #900_000_000;  // 900 ms sim-time safety
+    #1_500_000_000;  // 1.5 s sim-time safety
     $display("FAIL timeout");
     $finish;
   end

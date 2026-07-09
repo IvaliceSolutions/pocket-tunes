@@ -6,3 +6,11 @@ derisk-m4/*.elf
 derisk-m4/*.o
 derisk-m4/mp3_data.c
 derisk-m4/test*.mp3
+
+# derisk / test artifacts
+core/sim/*.raw
+core/sim/pcm_out.txt
+core/sim/raw.log
+core/sim/*_bytes.hex
+core/sim/test_audio.mp3
+core/sim/mini_lib.json

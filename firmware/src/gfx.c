@@ -98,6 +98,21 @@ void u32_to_dec(uint32_t v, char out[11]) {
   out[n] = 0;
 }
 
+void *memcpy(void *dst, const void *src, unsigned long n) {
+  unsigned char *d = dst;
+  const unsigned char *s = src;
+  while (n--) *d++ = *s++;
+  return dst;
+}
+
+void *memmove(void *dst, const void *src, unsigned long n) {
+  unsigned char *d = dst;
+  const unsigned char *s = src;
+  if (d < s) while (n--) *d++ = *s++;
+  else { d += n; s += n; while (n--) *--d = *--s; }
+  return dst;
+}
+
 // freestanding memset — gcc emits calls to it for struct zero-initializers
 void *memset(void *dst, int c, unsigned long n) {
   unsigned char *d = dst;

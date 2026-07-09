@@ -31,8 +31,15 @@
 #define TGT_ACK  1u
 #define TGT_DONE 2u
 
-// PCM fifo: write pushes {R,L}, read = free space in samples
+// PCM fifo: write pushes {R,L} signed, read = free space in samples
 #define REG_PCM         MMIO32(0x40)
+#ifndef PT_HOST_TEST
+static inline uint32_t pcm_free(void) { return REG_PCM; }
+static inline void pcm_push(uint32_t s) { REG_PCM = s; }
+#else
+uint32_t pcm_free(void);
+void pcm_push(uint32_t s);
+#endif
 
 // datatable window
 #define REG_DT_ADDR     MMIO32(0x50)

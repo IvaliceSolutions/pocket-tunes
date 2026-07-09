@@ -32,9 +32,11 @@ const char *lib_format_name(uint8_t fmt) {
 // ------------------------------------------------------------ byte stream
 // Chunks stream into the RX RAM, then get copied (fast word loop) into a
 // CPU-RAM staging buffer so the parse itself runs on plain cached memory.
-#define STAGE_SIZE 8192
-// word-aligned: refill() copies 32-bit words into it (misaligned stores trap)
-static char stage[STAGE_SIZE] __attribute__((aligned(4)));
+#define STAGE_SIZE 12288
+// word-aligned: refill() copies 32-bit words into it (misaligned stores trap).
+// Exported: doubles as the MP3 compressed-input buffer (see mp3.c).
+char lib_stage[STAGE_SIZE] __attribute__((aligned(4)));
+#define stage lib_stage
 static uint32_t f_pos, f_size, win_base, win_valid;
 static int f_err;
 
@@ -198,8 +200,14 @@ static int parse_track(void) {
       if (parse_string()) return -1;
       t.title = pool_tok();
     } else if (key_is("path")) {
+      skip_ws();
+      t.path_off = f_pos + 1;  // f_pos sits on the opening quote
       if (parse_string()) return -1;
-      t.path = pool_tok();
+      t.path_len = (uint16_t)tok_len;
+    } else if (key_is("fileSize")) {
+      uint32_t v;
+      if (parse_uint(&v)) return -1;
+      t.fsize = v;
     } else if (key_is("durationMs")) {
       uint32_t ms;
       if (parse_uint(&ms)) return -1;
@@ -308,6 +316,16 @@ store:
   ar.n_albums = (uint16_t)(lib_n_albums - ar.first_album);
   if (lib_n_artists < MAX_ARTISTS && ar.n_albums > 0) lib_artists[lib_n_artists++] = ar;
   return 0;
+}
+
+int lib_fetch_path(const track_t *t, char *out, int max) {
+  int n = t->path_len;
+  if (n >= max) n = max - 1;
+  if (file_read(SLOT_LIBRARY, t->path_off, (uint32_t)n)) return -1;
+  volatile const uint8_t *src = RX_BYTES;
+  for (int i = 0; i < n; i++) out[i] = (char)src[i];
+  out[n] = 0;
+  return n;
 }
 
 int lib_parse(void) {

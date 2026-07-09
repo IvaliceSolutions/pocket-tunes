@@ -9,6 +9,7 @@
 #include "palette.h"
 #include "lib.h"
 #include "ui.h"
+#include "mp3.h"
 
 static uint16_t keys_now, keys_prev;
 
@@ -50,6 +51,8 @@ int main(void) {
     keys_prev = keys_now;
     keys_now = (uint16_t)REG_KEYS;
     uint16_t pressed = keys_now & (uint16_t)~keys_prev;
+
+    mp3_pump();
 
     int redraw = 0;
     if (pressed) redraw |= ui_input(pressed);
