@@ -1,9 +1,9 @@
-// library.json data slot: APF bridge writes → 128 KB BRAM + byte counter.
+// library.json data slot: APF bridge writes → 128 KB RAM + byte counter.
 //
-// APF streams the file as 32-bit bridge writes at slot address 0x1000_0000;
-// data_loader (agg23) splits them into bytes in the clk_sys domain. Writes are
-// sequential, so `bytes_loaded` = last written address + 1 = file size.
-// Port B is the video-domain read side.
+// Storage is 32-bit wide (4 pixels of JSON text per word…) so the CPU reads
+// full words; the APF loader delivers single bytes, steered to the right
+// byte lane. Loader writes and CPU reads share clk_sys (single clock).
+// `bytes_loaded` = last written address + 1 = file size (writes sequential).
 
 `default_nettype none
 
@@ -19,14 +19,15 @@ module library_slot #(
     input wire [31:0] bridge_addr,
     input wire [31:0] bridge_wr_data,
 
-    // read port (its own clock domain)
-    input  wire                 rd_clk,
-    input  wire [ADDR_BITS-1:0] rd_addr,
-    output wire [          7:0] rd_data,
+    // CPU read port (clk_sys domain), 32-bit words
+    input  wire [ADDR_BITS-3:0] rd_word_addr,
+    output reg  [31:0]          rd_data,
 
     // file size so far (clk_sys domain)
     output reg [17:0] bytes_loaded
 );
+
+  localparam WORDS = 1 << (ADDR_BITS - 2);
 
   wire        wr_en;
   wire [27:0] wr_addr;
@@ -53,29 +54,27 @@ module library_slot #(
   );
 
   wire in_range = (wr_addr[27:ADDR_BITS] == 0);
+  wire wr = wr_en && in_range;
 
-  bram_block_dp #(
-      .DATA(8),
-      .ADDR(ADDR_BITS)
-  ) bram (
-      .a_clk (clk_sys),
-      .a_wr  (wr_en && in_range),
-      .a_addr(wr_addr[ADDR_BITS-1:0]),
-      .a_din (wr_data),
-      .a_dout(),
+  reg [31:0] mem[0:WORDS-1];
 
-      .b_clk (rd_clk),
-      .b_wr  (1'b0),
-      .b_addr(rd_addr),
-      .b_din (8'd0),
-      .b_dout(rd_data)
-  );
+  wire [ADDR_BITS-3:0] wr_word = wr_addr[ADDR_BITS-1:2];
+
+  always @(posedge clk_sys) begin
+    if (wr) begin
+      case (wr_addr[1:0])
+        2'd0: mem[wr_word][7:0] <= wr_data;
+        2'd1: mem[wr_word][15:8] <= wr_data;
+        2'd2: mem[wr_word][23:16] <= wr_data;
+        2'd3: mem[wr_word][31:24] <= wr_data;
+      endcase
+    end
+    rd_data <= mem[rd_word_addr];
+  end
 
   initial bytes_loaded = 0;
   always @(posedge clk_sys) begin
-    if (wr_en && in_range) begin
-      bytes_loaded <= {1'b0, wr_addr[ADDR_BITS-1:0]} + 18'd1;
-    end
+    if (wr) bytes_loaded <= {1'b0, wr_addr[ADDR_BITS-1:0]} + 18'd1;
   end
 
 endmodule

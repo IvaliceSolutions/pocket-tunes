@@ -408,88 +408,30 @@ module core_top (
   end
 
   ///////////////////////////////////////////////////////////////////////////
-  // library.json data slot → BRAM (128 KB), written as APF streams the file in
+  // SoC: PicoRV32 + memories + framebuffer scanout (see pt_soc.sv)
 
-  wire [7:0] lib_rd_byte;
-  wire [16:0] lib_rd_addr;
-  wire [17:0] bytes_loaded;
+  wire        soc_de;
+  wire        soc_hs;
+  wire        soc_vs;
+  wire [23:0] soc_rgb;
 
-  // instance name lib_slot: `library` is an SV keyword
-  library_slot #(
-      .ADDR_BITS(17)
-  ) lib_slot (
-      .clk_74a(clk_74a),
+  pt_soc soc (
       .clk_sys(clk_sys_48),
+      .clk_vid(clk_vid_12),
+      .reset_n(reset_n),
 
+      .clk_74a             (clk_74a),
       .bridge_wr           (bridge_wr),
       .bridge_endian_little(bridge_endian_little),
       .bridge_addr         (bridge_addr),
       .bridge_wr_data      (bridge_wr_data),
 
-      .rd_clk (clk_vid_12),
-      .rd_addr(lib_rd_addr),
-      .rd_data(lib_rd_byte),
+      .cont1_key(cont1_key),
 
-      .bytes_loaded(bytes_loaded)
-  );
-
-  // to the video domain (per-bit sync; ±1 frame skew is cosmetic-only here)
-  wire [17:0] bytes_loaded_vid;
-  synch_3 #(
-      .WIDTH(18)
-  ) bytes_sync (
-      bytes_loaded,
-      bytes_loaded_vid,
-      clk_vid_12
-  );
-
-  ///////////////////////////////////////////////////////////////////////////
-  // video
-
-  wire vid_reset_n;
-  synch_2 vid_rst_sync (
-      reset_n,
-      vid_reset_n,
-      clk_vid_12
-  );
-
-  wire de, hs, vs, de_falling, frame_start;
-  wire [9:0] vx, vy, vnx, vny;
-
-  video_gen vg (
-      .clk    (clk_vid_12),
-      .reset_n(vid_reset_n),
-
-      .de         (de),
-      .hs         (hs),
-      .vs         (vs),
-      .de_falling (de_falling),
-      .x          (vx),
-      .y          (vy),
-      .next_x     (vnx),
-      .next_y     (vny),
-      .frame_start(frame_start)
-  );
-
-  reg [9:0] frame_count = 0;
-  always @(posedge clk_vid_12) begin
-    if (frame_start) frame_count <= (frame_count == 10'd767) ? 10'd0 : frame_count + 10'd1;
-  end
-
-  wire [23:0] paint_rgb;
-
-  pt_display painter (
-      .x     (vx),
-      .y     (vy),
-      .next_x(vnx),
-      .next_y(vny),
-
-      .bytes_loaded(bytes_loaded_vid),
-      .frame       (frame_count),
-      .lib_byte    (lib_rd_byte),
-
-      .lib_addr(lib_rd_addr),
-      .rgb     (paint_rgb)
+      .video_de (soc_de),
+      .video_hs (soc_hs),
+      .video_vs (soc_vs),
+      .video_rgb(soc_rgb)
   );
 
   // final output register stage — everything shifts together by one dot
@@ -499,11 +441,11 @@ module core_top (
   reg [23:0] video_rgb_r;
 
   always @(posedge clk_vid_12) begin
-    video_de_r  <= de;
-    video_hs_r  <= hs;
-    video_vs_r  <= vs;
+    video_de_r  <= soc_de;
+    video_hs_r  <= soc_hs;
+    video_vs_r  <= soc_vs;
     // during blanking rgb carries the scaler-slot word; we use mode 0 → all zeros
-    video_rgb_r <= de ? paint_rgb : 24'h0;
+    video_rgb_r <= soc_de ? soc_rgb : 24'h0;
   end
 
   assign video_rgb_clock    = clk_vid_12;

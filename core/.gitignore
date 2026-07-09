@@ -4,3 +4,5 @@ sim/library_bytes.hex
 projects/output_files/
 projects/db/
 projects/incremental_db/
+library_words.hex
+out_soc_*.ppm
