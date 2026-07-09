@@ -60,4 +60,8 @@ source ../platform/pocket/pocket.tcl
 set_global_assignment -name QIP_FILE ../target/pocket/core.qip
 set_global_assignment -name SDC_FILE pocket_tunes.sdc
 
+# Pocket loads bitstreams uncompressed. A tiny design otherwise compresses to a
+# much smaller .rbf than the ~1.9MB the loader expects → "can't find bitstream".
+set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
