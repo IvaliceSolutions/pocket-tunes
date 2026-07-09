@@ -97,34 +97,51 @@ module tb_soc;
   end
 
   // ---------------------------------------------------------------- script
+  task press(input [15:0] key);
+    begin
+      cont1_key = key;
+      wait_frames(1);
+      cont1_key = 0;
+      wait_frames(1);
+    end
+  endtask
+
+  task wait_frames(input integer n);
+    integer target;
+    begin
+      target = frame_no + n;
+      wait (frame_no == target);
+    end
+  endtask
+
   initial begin
     repeat (20) @(posedge clk_sys);
     reset_n = 1;
 
-    // frame 1-2: CPU draws. Capture frame 3.
-    wait (frame_no == 2);
+    // let the firmware finish the JSON parse (~8 frames) and draw the browser
+    wait (frame_no == 14);
     start_capture("out_soc_a.ppm");
-    wait (frame_no == 4);
+    wait (frame_no == 16);
 
-    // press DOWN for a frame, release, then A
-    cont1_key = 16'h0002;  // DOWN
-    wait (frame_no == 5);
-    cont1_key = 0;
-    wait (frame_no == 6);
-    cont1_key = 16'h0010;  // A
-    wait (frame_no == 7);
-    cont1_key = 0;
-
-    wait (frame_no == 8);
+    press(16'h0002);  // DOWN  → sidebar cursor on artist 1
+    press(16'h0010);  // A     → select artist 1, focus main
     start_capture("out_soc_b.ppm");
-    wait (frame_no == 10);
+    wait_frames(2);
+
+    press(16'h0020);  // B     → back to sidebar
+    press(16'h0001);  // UP    → cursor artist 0
+    press(16'h0010);  // A     → select artist 0
+    press(16'h0010);  // A     → open drawer, track 1/109, playing
+    wait_frames(2);
+    start_capture("out_soc_c.ppm");
+    wait_frames(2);
 
     $display("DONE");
     $finish;
   end
 
   initial begin
-    #200_000_000;  // 200 ms sim-time safety
+    #900_000_000;  // 900 ms sim-time safety
     $display("FAIL timeout");
     $finish;
   end

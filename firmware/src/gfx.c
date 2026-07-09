@@ -32,29 +32,53 @@ void gfx_rect(int x, int y, int w, int h, uint8_t color) {
   gfx_vline(x + w - 1, y, h, color);
 }
 
-static int draw_glyphs(int x, int y, const char *s, uint8_t color,
-                       const unsigned char *font, int gw, int gh) {
-  for (; *s; s++) {
-    unsigned ch = (unsigned char)*s;
-    if (ch < 32 || ch > 126) ch = '?';
-    const unsigned char *g = font + (ch - 32) * gh;
+// Decode one UTF-8 sequence to a Latin-1 codepoint ('?' if outside 32..255).
+// Advances *i past the sequence.
+static unsigned utf8_next(const char *s, int len, int *i) {
+  unsigned b0 = (unsigned char)s[(*i)++];
+  if (b0 < 0x80) return (b0 >= 32) ? b0 : '?';
+  if ((b0 & 0xE0) == 0xC0 && *i < len) {
+    unsigned b1 = (unsigned char)s[(*i)++];
+    unsigned cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
+    return (cp >= 32 && cp <= 255) ? cp : '?';
+  }
+  // 3/4-byte sequences: skip continuations, render '?'
+  while (*i < len && ((unsigned char)s[*i] & 0xC0) == 0x80) (*i)++;
+  return '?';
+}
+
+// Draw at most `len` bytes, clipped to x < x_max. Returns final x.
+static int draw_glyphs(int x, int y, const char *s, int len, int x_max,
+                       uint8_t color, const unsigned char *font, int gw, int gh) {
+  int i = 0;
+  while (i < len && s[i]) {
+    unsigned cp = utf8_next(s, len, &i);
+    if (x + gw > x_max) break;
+    const unsigned char *g = font + (cp - 32) * gh;
     for (int r = 0; r < gh; r++) {
       unsigned bits = g[r];
       for (int c = 0; c < gw; c++)
         if (bits & (0x80u >> c)) px(x + c, y + r, color);
     }
     x += gw;
-    if (x + gw > SCREEN_W) break;
   }
   return x;
 }
 
 int gfx_text(int x, int y, const char *s, uint8_t color) {
-  return draw_glyphs(x, y, s, color, &font7x13[0][0], FONT7X13_W, FONT7X13_H);
+  return draw_glyphs(x, y, s, 0x7FFF, SCREEN_W, color, &font7x13[0][0], FONT7X13_W, FONT7X13_H);
 }
 
 int gfx_text_small(int x, int y, const char *s, uint8_t color) {
-  return draw_glyphs(x, y, s, color, &font5x8[0][0], FONT5X8_W, FONT5X8_H);
+  return draw_glyphs(x, y, s, 0x7FFF, SCREEN_W, color, &font5x8[0][0], FONT5X8_W, FONT5X8_H);
+}
+
+int gfx_textn(int x, int y, const char *s, int len, int x_max, uint8_t color) {
+  return draw_glyphs(x, y, s, len, x_max, color, &font7x13[0][0], FONT7X13_W, FONT7X13_H);
+}
+
+int gfx_textn_small(int x, int y, const char *s, int len, int x_max, uint8_t color) {
+  return draw_glyphs(x, y, s, len, x_max, color, &font5x8[0][0], FONT5X8_W, FONT5X8_H);
 }
 
 void u32_to_hex(uint32_t v, char out[9]) {
@@ -72,4 +96,11 @@ void u32_to_dec(uint32_t v, char out[11]) {
   do { tmp[n++] = '0' + (v % 10); v /= 10; } while (v);
   for (int i = 0; i < n; i++) out[i] = tmp[n - 1 - i];
   out[n] = 0;
+}
+
+// freestanding memset — gcc emits calls to it for struct zero-initializers
+void *memset(void *dst, int c, unsigned long n) {
+  unsigned char *d = dst;
+  while (n--) *d++ = (unsigned char)c;
+  return dst;
 }

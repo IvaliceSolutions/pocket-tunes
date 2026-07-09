@@ -35,7 +35,7 @@ def parse_bdf(path):
             while lines[i].strip() != "ENDCHAR":
                 rows.append(int(lines[i].strip(), 16))
                 i += 1
-            if enc is not None and 32 <= enc <= 126:
+            if enc is not None and 32 <= enc <= 255:
                 glyphs[enc] = (bbx, rows)
             enc = None
         i += 1
@@ -72,11 +72,11 @@ def main():
         w, h = fbb[0], fbb[1]
         out.append(f"#define {name.upper()}_W {w}")
         out.append(f"#define {name.upper()}_H {h}")
-        out.append(f"static const unsigned char {name}[95][{h}] = {{")
-        for enc in range(32, 127):
+        out.append(f"static const unsigned char {name}[224][{h}] = {{")
+        for enc in range(32, 256):
             cell = render(fbb, glyphs, enc)
             hexrow = ", ".join(f"0x{v:02x}" for v in cell)
-            ch = chr(enc).replace("\\", "backslash").replace("*/", "* /")
+            ch = chr(enc).replace("\\", "backslash").replace("*/", "* /") if enc < 127 else f"x{enc:02x}"
             out.append(f"  {{ {hexrow} }}, /* '{ch}' */")
         out.append("};")
         out.append("")

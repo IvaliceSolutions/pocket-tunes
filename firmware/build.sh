@@ -19,7 +19,7 @@ python3 "$D/scripts/bdf2c.py" "$D/src/fonts.h" \
 
 "$CC" -march=rv32im -mabi=ilp32 -O2 -ffreestanding -nostdlib \
   -Wall -Wextra -Werror=implicit-function-declaration \
-  "$D/src/crt0.S" "$D/src/main.c" "$D/src/gfx.c" \
+  "$D/src/crt0.S" "$D/src/main.c" "$D/src/gfx.c" "$D/src/lib.c" "$D/src/ui.c" \
   -T "$D/src/link.ld" -lgcc -o "$D/firmware.elf"
 
 "$OBJCOPY" -O binary "$D/firmware.elf" "$D/firmware.bin"
