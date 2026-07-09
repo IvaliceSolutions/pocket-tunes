@@ -4,7 +4,8 @@
 
 #include <stdint.h>
 
-#define LIBRARY_BASE ((volatile const char *)0x10000000)
+// (the old always-resident library slot is gone — files stream through the
+// 16 KB RX RAM at 0x10000000, see file.h)
 #define FB_BASE      ((volatile uint8_t *)0x20000000)
 #define FB_BASE32    ((volatile uint32_t *)0x20000000)
 
@@ -14,9 +15,30 @@
 #define MMIO32(off) (*(volatile uint32_t *)(0xF0000000u + (off)))
 #define REG_KEYS        MMIO32(0x00)
 #define REG_FRAME       MMIO32(0x04)
-#define REG_LIB_BYTES   MMIO32(0x08)
 #define REG_VBLANK      MMIO32(0x0C)
 #define REG_CYCLES      MMIO32(0x10)
+
+// target-command engine (see pt_soc.sv)
+#define REG_TGT_ID         MMIO32(0x20)
+#define REG_TGT_OFFSET     MMIO32(0x24)
+#define REG_TGT_BRIDGEADDR MMIO32(0x28)
+#define REG_TGT_LENGTH     MMIO32(0x2C)
+#define REG_TGT_CMD        MMIO32(0x30)
+#define REG_TGT_STATUS     MMIO32(0x34)
+#define TGT_CMD_READ     1u
+#define TGT_CMD_OPENFILE 2u
+#define TGT_CMD_GETFILE  3u
+#define TGT_ACK  1u
+#define TGT_DONE 2u
+
+// PCM fifo: write pushes {R,L}, read = free space in samples
+#define REG_PCM         MMIO32(0x40)
+
+// datatable window
+#define REG_DT_ADDR     MMIO32(0x50)
+#define REG_DT_DATA     MMIO32(0x54)
+
+#define REG_PARAM_RAM   ((volatile uint32_t *)0xF0000100u)
 
 // Pocket key bitmap (cont1_key)
 #define KEY_UP     (1u << 0)

@@ -1,18 +1,33 @@
-// Pocket Tunes SoC: PicoRV32 + memories + framebuffer scanout + MMIO.
+// Pocket Tunes SoC: PicoRV32 + memories + framebuffer scanout + MMIO
+//                   + APF target-command controller + PCM audio FIFO.
 //
 // Instantiated by core_top for synthesis and by the testbench for simulation,
 // so the simulated design is exactly what ships.
 //
 // CPU memory map (decoded on addr[31:28]):
-//   0x0000_0000  CPU RAM, 64 KB, byte-writable, initialized from firmware_b*.hex
-//   0x1000_0000  library.json slot RAM, 96 KB, read-only for the CPU
-//   0x2000_0000  framebuffer 320x288 @ 8bpp (92,160 bytes), byte-writable
+//   0x0000_0000  CPU RAM, 128 KB, byte-writable, initialized from firmware_b*.hex
+//   0x1000_0000  bridge RX RAM, 16 KB, read-only for the CPU (APF writes land
+//                here: 0x0180 target-read responses aimed at bridge 0x1000_0000)
+//   0x2000_0000  framebuffer 320x288 @ 8bpp (92,160 bytes), write-only
 //   0xF000_0000  MMIO:
-//     +0x00  r  cont1_key (buttons, already synchronized)
-//     +0x04  r  frame counter (increments each vblank)
-//     +0x08  r  bytes_loaded of the library slot
-//     +0x0C  r  vblank flag (1 while in vertical blanking)
-//     +0x10  r  free-running cycle counter (clk_sys)
+//     +0x00  r   cont1_key (buttons, synchronized)
+//     +0x04  r   frame counter (increments each vblank)
+//     +0x0C  r   vblank flag
+//     +0x10  r   free-running cycle counter (clk_sys)
+//     +0x20  rw  target: data slot id
+//     +0x24  rw  target: slot offset (bytes)
+//     +0x28  rw  target: bridge address (use 0x1000_0000 → RX RAM)
+//     +0x2C  rw  target: length (bytes)
+//     +0x30  rw  target: command level — 0 idle / 1 read / 2 openfile / 3 getfile
+//                (write params first; 0→N edge fires; hold until done, write 0)
+//     +0x34  r   target: {err[6:4], done[1], ack[0]}
+//     +0x40  w   PCM push {right[31:16], left[15:0]} signed
+//     +0x40  r   PCM fifo free space (samples)
+//     +0x50  w   datatable word address (slot i: word 2i = id, 2i+1 = size)
+//     +0x54  r   datatable word (wait ≥16 cycles after writing +0x50)
+//     +0x100..0x2FC  w  param/response struct RAM (128 words):
+//                bytes 0-255 = null-terminated path, +0x100 = flags,
+//                +0x104 = size — served to APF via bridge reads at 0x4000_0000
 
 `default_nettype none
 
@@ -27,15 +42,39 @@ module pt_soc #(
     input wire clk_vid,
     input wire reset_n,  // async-ish (bridge domain); synchronized internally
 
-    // APF bridge passthrough for the library data slot (clk_74a domain)
-    input wire        clk_74a,
-    input wire        bridge_wr,
-    input wire        bridge_endian_little,
-    input wire [31:0] bridge_addr,
-    input wire [31:0] bridge_wr_data,
+    // APF bridge (clk_74a domain)
+    input  wire        clk_74a,
+    input  wire        bridge_wr,
+    input  wire        bridge_rd,
+    input  wire        bridge_endian_little,
+    input  wire [31:0] bridge_addr,
+    input  wire [31:0] bridge_wr_data,
+    output wire [31:0] param_rd_data,  // bridge reads at 0x4xxxxxxx (param struct)
+
+    // APF target-command interface (wire to core_bridge_cmd; clk_74a domain)
+    output wire        target_dataslot_read,
+    output wire        target_dataslot_openfile,
+    output wire        target_dataslot_getfile,
+    input  wire        target_dataslot_ack,
+    input  wire        target_dataslot_done,
+    input  wire [ 2:0] target_dataslot_err,
+    output wire [15:0] target_dataslot_id,
+    output wire [31:0] target_dataslot_slotoffset,
+    output wire [31:0] target_dataslot_bridgeaddr,
+    output wire [31:0] target_dataslot_length,
+    output wire [31:0] target_buffer_param_struct,
+    output wire [31:0] target_buffer_resp_struct,
+
+    // datatable window (clk_74a domain BRAM inside core_bridge_cmd)
+    output wire [ 9:0] datatable_addr,
+    input  wire [31:0] datatable_q,
 
     // controller (raw; synchronized internally)
     input wire [15:0] cont1_key,
+
+    // audio samples out (clk_sys domain; updated at 48 kHz)
+    output reg signed [15:0] audio_l,
+    output reg signed [15:0] audio_r,
 
     // video out (registered, aligned)
     output wire        video_de,
@@ -136,7 +175,7 @@ module pt_soc #(
       .ENABLE_DIV       (1),
       .ENABLE_IRQ       (0),
       .PROGADDR_RESET   (32'h0000_0000),
-      .STACKADDR        (32'h0001_0000)   // top of 64 KB RAM
+      .STACKADDR        (32'h0002_0000)   // top of 128 KB RAM
   ) cpu (
       .clk   (clk_sys),
       .resetn(reset_n_sys),
@@ -180,11 +219,12 @@ module pt_soc #(
 
   wire [3:0] region = mem_addr[31:28];
   wire wr_phase = mem_valid && !mem_ready;  // write exactly once
+  wire mmio_wr = wr_phase && region == 4'hF && mem_wstrb == 4'hF;
 
   // ------------------------------------------------------------- memories
   wire [31:0] ram_rdata;
   cpu_ram #(
-      .WORDS(16384),
+      .WORDS(32768),
       .INIT_B0(FIRMWARE_B0),
       .INIT_B1(FIRMWARE_B1),
       .INIT_B2(FIRMWARE_B2),
@@ -198,12 +238,11 @@ module pt_soc #(
       .rdata(ram_rdata)
   );
 
-  wire [31:0] lib_rdata;
-  wire [17:0] bytes_loaded;
-
-  library_slot #(
-      .WORDS(24576)  // 96 KB — the 5CEBA4's 308 M10K can't hold 128K+128K+FB
-  ) lib_slot (
+  wire [31:0] rx_rdata;
+  bridge_rx_ram #(
+      .MASK_UPPER_4(4'h1),
+      .WORDS(4096)
+  ) rx_ram (
       .clk_74a(clk_74a),
       .clk_sys(clk_sys),
 
@@ -212,10 +251,8 @@ module pt_soc #(
       .bridge_addr         (bridge_addr),
       .bridge_wr_data      (bridge_wr_data),
 
-      .rd_word_addr(mem_addr[16:2]),
-      .rd_data     (lib_rdata),
-
-      .bytes_loaded(bytes_loaded)
+      .rd_word_addr(mem_addr[13:2]),
+      .rd_data     (rx_rdata)
   );
 
   pt_framebuffer fb (
@@ -230,21 +267,125 @@ module pt_soc #(
       .b_rdata    (fb_b_rdata)
   );
 
+  // -------------------------------------------------- target-command control
+  reg [15:0] tgt_id = 0;
+  reg [31:0] tgt_offset = 0;
+  reg [31:0] tgt_bridgeaddr = 32'h1000_0000;
+  reg [31:0] tgt_length = 0;
+  reg [ 1:0] tgt_cmd = 0;  // 0 idle / 1 read / 2 openfile / 3 getfile
+
+  assign target_dataslot_id         = tgt_id;
+  assign target_dataslot_slotoffset = tgt_offset;
+  assign target_dataslot_bridgeaddr = tgt_bridgeaddr;
+  assign target_dataslot_length     = tgt_length;
+  assign target_buffer_param_struct = 32'h4000_0000;
+  assign target_buffer_resp_struct  = 32'h1000_0000;  // getfile answer → RX RAM
+
+  // command level → clk_74a (edge-detected there); params are stable-before-edge
+  wire [1:0] tgt_cmd_74;
+  synch_3 #(.WIDTH(2)) cmd_s (tgt_cmd, tgt_cmd_74, clk_74a);
+  assign target_dataslot_read     = (tgt_cmd_74 == 2'd1);
+  assign target_dataslot_openfile = (tgt_cmd_74 == 2'd2);
+  assign target_dataslot_getfile  = (tgt_cmd_74 == 2'd3);
+
+  // status → clk_sys
+  wire tgt_ack_s, tgt_done_s;
+  wire [2:0] tgt_err_s;
+  synch_3 ack_s (target_dataslot_ack, tgt_ack_s, clk_sys);
+  synch_3 done_s (target_dataslot_done, tgt_done_s, clk_sys);
+  synch_3 #(.WIDTH(3)) err_s (target_dataslot_err, tgt_err_s, clk_sys);
+
+  // param/response struct RAM: 128 words. CPU writes (MMIO +0x100..0x2FC),
+  // bridge reads continuously at 0x4xxxxxxx (registered, stable before use)
+  reg [31:0] param_ram[0:127];
+  reg [31:0] param_q_74;
+  always @(posedge clk_sys) begin
+    if (mmio_wr && mem_addr[9:8] != 2'b00)  // 0x100..0x3FC
+      param_ram[mem_addr[8:2]] <= mem_wdata;
+  end
+  always @(posedge clk_74a) begin
+    param_q_74 <= param_ram[bridge_addr[8:2]];
+  end
+  assign param_rd_data = param_q_74;
+
+  // datatable window
+  reg [9:0] dt_addr = 0;
+  assign datatable_addr = dt_addr;
+  wire [31:0] dt_q_s;
+  synch_3 #(.WIDTH(32)) dtq_s (datatable_q, dt_q_s, clk_sys);
+
+  // ------------------------------------------------------------ PCM FIFO
+  // 2048 stereo samples; CPU pushes, a 48 kHz strobe (48 MHz / 1000) pops.
+  reg [31:0] pcm_mem[0:2047];
+  reg [10:0] pcm_wr = 0, pcm_rd = 0;
+  wire [10:0] pcm_level = pcm_wr - pcm_rd;
+  wire [10:0] pcm_free = 11'd2047 - pcm_level;
+
+  reg [9:0] pcm_div = 0;
+  wire pcm_tick = (pcm_div == 10'd999);
+
+  reg [31:0] pcm_q;
+
+  always @(posedge clk_sys) begin
+    if (!reset_n_sys) begin
+      pcm_wr <= 0;
+      pcm_rd <= 0;
+      pcm_div <= 0;
+      audio_l <= 0;
+      audio_r <= 0;
+    end else begin
+      if (mmio_wr && mem_addr[9:0] == 10'h040 && pcm_free != 0) begin
+        pcm_mem[pcm_wr[10:0]] <= mem_wdata;
+        pcm_wr <= pcm_wr + 1'b1;
+      end
+
+      pcm_div <= pcm_tick ? 10'd0 : pcm_div + 1'b1;
+      pcm_q <= pcm_mem[pcm_rd[10:0]];
+      if (pcm_tick && pcm_level != 0) begin
+        audio_l <= pcm_q[15:0];
+        audio_r <= pcm_q[31:16];
+        pcm_rd  <= pcm_rd + 1'b1;
+      end
+      // underflow: hold last sample
+    end
+  end
+
   // ---------------------------------------------------------------- MMIO
+  always @(posedge clk_sys) begin
+    if (mmio_wr && mem_addr[9:8] == 2'b00) begin
+      case (mem_addr[7:0])
+        8'h20: tgt_id <= mem_wdata[15:0];
+        8'h24: tgt_offset <= mem_wdata;
+        8'h28: tgt_bridgeaddr <= mem_wdata;
+        8'h2C: tgt_length <= mem_wdata;
+        8'h30: tgt_cmd <= mem_wdata[1:0];
+        8'h50: dt_addr <= mem_wdata[9:0];
+        default: ;
+      endcase
+    end
+  end
+
   reg [31:0] mmio_rdata;
   always @(posedge clk_sys) begin
     case (mem_addr[7:0])
       8'h00:   mmio_rdata <= {16'd0, cont1_key_s};
       8'h04:   mmio_rdata <= frame_count;
-      8'h08:   mmio_rdata <= {14'd0, bytes_loaded};
       8'h0C:   mmio_rdata <= {31'd0, in_vblank_s};
       8'h10:   mmio_rdata <= cycles;
+      8'h20:   mmio_rdata <= {16'd0, tgt_id};
+      8'h24:   mmio_rdata <= tgt_offset;
+      8'h28:   mmio_rdata <= tgt_bridgeaddr;
+      8'h2C:   mmio_rdata <= tgt_length;
+      8'h30:   mmio_rdata <= {30'd0, tgt_cmd};
+      8'h34:   mmio_rdata <= {25'd0, tgt_err_s, 2'b00, tgt_done_s, tgt_ack_s};
+      8'h40:   mmio_rdata <= {21'd0, pcm_free};
+      8'h54:   mmio_rdata <= dt_q_s;
       default: mmio_rdata <= 32'd0;
     endcase
   end
 
   assign mem_rdata = (region == 4'h0) ? ram_rdata
-                   : (region == 4'h1) ? lib_rdata
+                   : (region == 4'h1) ? rx_rdata
                    : (region == 4'h2) ? 32'd0
                    : mmio_rdata;
 

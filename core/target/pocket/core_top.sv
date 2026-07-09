@@ -343,6 +343,23 @@ module core_top (
   wire [31:0] rtc_date;
   wire [31:0] rtc_time;
 
+  // target commands (driven by the SoC)
+  wire target_dataslot_read;
+  wire target_dataslot_openfile;
+  wire target_dataslot_getfile;
+  wire target_dataslot_ack;
+  wire target_dataslot_done;
+  wire [2:0] target_dataslot_err;
+  wire [15:0] target_dataslot_id;
+  wire [31:0] target_dataslot_slotoffset;
+  wire [31:0] target_dataslot_bridgeaddr;
+  wire [31:0] target_dataslot_length;
+  wire [31:0] target_buffer_param_struct;
+  wire [31:0] target_buffer_resp_struct;
+  wire [9:0] soc_datatable_addr;
+  wire [31:0] datatable_q;
+  wire [31:0] soc_param_rd_data;
+
   core_bridge_cmd icb (
 
       .clk    (clk_74a),
@@ -393,16 +410,34 @@ module core_top (
 
       .osnotify_inmenu(osnotify_inmenu),
 
-      .datatable_addr(10'd0),
+      .target_dataslot_read    (target_dataslot_read),
+      .target_dataslot_write   (1'b0),
+      .target_dataslot_getfile (target_dataslot_getfile),
+      .target_dataslot_openfile(target_dataslot_openfile),
+
+      .target_dataslot_ack (target_dataslot_ack),
+      .target_dataslot_done(target_dataslot_done),
+      .target_dataslot_err (target_dataslot_err),
+
+      .target_dataslot_id        (target_dataslot_id),
+      .target_dataslot_slotoffset(target_dataslot_slotoffset),
+      .target_dataslot_bridgeaddr(target_dataslot_bridgeaddr),
+      .target_dataslot_length    (target_dataslot_length),
+
+      .target_buffer_param_struct(target_buffer_param_struct),
+      .target_buffer_resp_struct (target_buffer_resp_struct),
+
+      .datatable_addr(soc_datatable_addr),
       .datatable_wren(1'b0),
       .datatable_data(32'd0),
-      .datatable_q   ()
+      .datatable_q   (datatable_q)
   );
 
   // bridge read mux — only the host command region is readable in M2
   always @(*) begin
     casex (bridge_addr)
       32'hF8xxxxxx: bridge_rd_data = cmd_bridge_rd_data;
+      32'h4xxxxxxx: bridge_rd_data = soc_param_rd_data;  // openfile param struct
       default:      bridge_rd_data = 0;
     endcase
   end
@@ -415,6 +450,9 @@ module core_top (
   wire        soc_vs;
   wire [23:0] soc_rgb;
 
+  wire signed [15:0] soc_audio_l;
+  wire signed [15:0] soc_audio_r;
+
   pt_soc soc (
       .clk_sys(clk_sys_48),
       .clk_vid(clk_vid_12),
@@ -422,11 +460,32 @@ module core_top (
 
       .clk_74a             (clk_74a),
       .bridge_wr           (bridge_wr),
+      .bridge_rd           (bridge_rd),
       .bridge_endian_little(bridge_endian_little),
       .bridge_addr         (bridge_addr),
       .bridge_wr_data      (bridge_wr_data),
+      .param_rd_data       (soc_param_rd_data),
+
+      .target_dataslot_read    (target_dataslot_read),
+      .target_dataslot_openfile(target_dataslot_openfile),
+      .target_dataslot_getfile (target_dataslot_getfile),
+      .target_dataslot_ack     (target_dataslot_ack),
+      .target_dataslot_done    (target_dataslot_done),
+      .target_dataslot_err     (target_dataslot_err),
+      .target_dataslot_id        (target_dataslot_id),
+      .target_dataslot_slotoffset(target_dataslot_slotoffset),
+      .target_dataslot_bridgeaddr(target_dataslot_bridgeaddr),
+      .target_dataslot_length    (target_dataslot_length),
+      .target_buffer_param_struct(target_buffer_param_struct),
+      .target_buffer_resp_struct (target_buffer_resp_struct),
+
+      .datatable_addr(soc_datatable_addr),
+      .datatable_q   (datatable_q),
 
       .cont1_key(cont1_key),
+
+      .audio_l(soc_audio_l),
+      .audio_r(soc_audio_r),
 
       .video_de (soc_de),
       .video_hs (soc_hs),
@@ -465,8 +524,8 @@ module core_top (
       .clk_74a  (clk_74a),
       .clk_audio(clk_sys_48),
 
-      .audio_l(16'd0),
-      .audio_r(16'd0),
+      .audio_l(soc_audio_l),
+      .audio_r(soc_audio_r),
 
       .audio_mclk(audio_mclk),
       .audio_lrck(audio_lrck),

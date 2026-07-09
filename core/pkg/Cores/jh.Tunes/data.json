@@ -8,9 +8,12 @@
         "required": false,
         "parameters": "0x9",
         "filename": "library.json",
-        "extensions": ["json"],
+        "extensions": [
+          "json"
+        ],
         "address": "0x10000000",
-        "size_maximum": "0x18000"
+        "size_maximum": "0x18000",
+        "deferload": true
       }
     ]
   }

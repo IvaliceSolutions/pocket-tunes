@@ -19,7 +19,7 @@ python3 "$D/scripts/bdf2c.py" "$D/src/fonts.h" \
 
 "$CC" -march=rv32im -mabi=ilp32 -O2 -ffreestanding -nostdlib \
   -Wall -Wextra -Werror=implicit-function-declaration \
-  "$D/src/crt0.S" "$D/src/main.c" "$D/src/gfx.c" "$D/src/lib.c" "$D/src/ui.c" \
+  "$D/src/crt0.S" "$D/src/main.c" "$D/src/gfx.c" "$D/src/lib.c" "$D/src/ui.c" "$D/src/file.c" \
   -T "$D/src/link.ld" -lgcc -o "$D/firmware.elf"
 
 "$OBJCOPY" -O binary "$D/firmware.elf" "$D/firmware.bin"
@@ -35,7 +35,7 @@ for lane in range(4):
     with open(os.path.join(sys.argv[2], f"firmware_b{lane}.hex"), "w") as f:
         for i in range(words):
             f.write(f"{data[i*4+lane]:02x}\n")
-        for _ in range(16384 - words):
+        for _ in range(32768 - words):
             f.write("00\n")
 print(f"firmware: {len(data)} bytes → firmware_b0..3.hex ({words} words)")
 EOF

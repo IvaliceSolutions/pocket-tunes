@@ -1,8 +1,11 @@
-// Minimal recursive-descent parser for library.json (see docs/library-format.md).
-// Tolerant: unknown keys are skipped, caps are clamped, and any structural
-// error aborts with a negative code (the UI shows a "regenerate" message).
+// Streaming recursive-descent parser for library.json.
+//
+// Input: the file streams through the RX RAM in 16 KB chunks via target-read
+// commands; the scan is strictly forward. String tokens are accumulated into
+// a bounded token buffer, and the ones worth keeping are copied into the pool.
 
 #include "lib.h"
+#include "file.h"
 #include "mmio.h"
 
 artist_t lib_artists[MAX_ARTISTS];
@@ -10,10 +13,10 @@ album_t  lib_albums[MAX_ALBUMS];
 track_t  lib_tracks[MAX_TRACKS];
 int lib_n_artists, lib_n_albums, lib_n_tracks;
 
-static const char *buf;
-static uint32_t pos, end;
+static char pool[POOL_SIZE];
+static uint32_t pool_used;
 
-const char *lib_str(span_t s) { return (const char *)LIBRARY_BASE + s.off; }
+const char *lib_str(span_t s) { return &pool[s.off]; }
 
 const char *lib_format_name(uint8_t fmt) {
   switch (fmt) {
@@ -26,64 +29,97 @@ const char *lib_format_name(uint8_t fmt) {
   }
 }
 
-// ---------------------------------------------------------------- scanner
+// ------------------------------------------------------------ byte stream
+// Chunks stream into the RX RAM, then get copied (fast word loop) into a
+// CPU-RAM staging buffer so the parse itself runs on plain cached memory.
+#define STAGE_SIZE 8192
+// word-aligned: refill() copies 32-bit words into it (misaligned stores trap)
+static char stage[STAGE_SIZE] __attribute__((aligned(4)));
+static uint32_t f_pos, f_size, win_base, win_valid;
+static int f_err;
 
+static void refill(void) {
+  uint32_t want = f_size - f_pos;
+  if (want > STAGE_SIZE) want = STAGE_SIZE;
+  int e = file_read(SLOT_LIBRARY, f_pos, want);
+  if (e) { f_err = e; win_valid = 0; return; }
+  uint32_t words = (want + 3) / 4;
+  uint32_t *d = (uint32_t *)stage;
+  for (uint32_t i = 0; i < words; i++) d[i] = RX_BASE[i];
+  win_base = f_pos;
+  win_valid = want;
+}
+
+static int at_end(void) { return f_pos >= f_size || f_err; }
+
+static char cur(void) {
+  if (at_end()) return 0;
+  if (f_pos < win_base || f_pos >= win_base + win_valid) refill();
+  if (f_err) return 0;
+  return stage[f_pos - win_base];
+}
+
+static void adv(void) { f_pos++; }
+
+// ------------------------------------------------------------- tokenizer
 static void skip_ws(void) {
-  while (pos < end) {
-    char c = buf[pos];
-    if (c == ' ' || c == '\t' || c == '\n' || c == '\r') pos++;
-    else break;
+  for (;;) {
+    char c = cur();
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\r') adv();
+    else return;
   }
 }
 
 static int expect(char c) {
   skip_ws();
-  if (pos < end && buf[pos] == c) { pos++; return 0; }
+  if (cur() == c) { adv(); return 0; }
   return -1;
 }
 
 static int peek(void) {
   skip_ws();
-  return pos < end ? buf[pos] : -1;
+  return at_end() ? -1 : cur();
 }
 
-// span of the string at cursor (cursor on opening quote); raw bytes, escapes
-// left as-is except that we step over backslash pairs
-static int parse_string(span_t *out) {
+#define TOK_MAX 320
+static char tok[TOK_MAX + 1];
+static int tok_len;
+
+// string at cursor → tok[] (raw bytes, escape pairs copied as-is, clamped)
+static int parse_string(void) {
   if (expect('"')) return -1;
-  uint32_t start = pos;
-  while (pos < end) {
-    char c = buf[pos];
-    if (c == '\\') pos += 2;
-    else if (c == '"') {
-      uint32_t len = pos - start;
-      if (out) {
-        out->off = start;
-        out->len = (len > 0xFFFF) ? 0xFFFF : (uint16_t)len;
-      }
-      pos++;
-      return 0;
-    } else pos++;
+  tok_len = 0;
+  for (;;) {
+    char c = cur();
+    if (at_end()) return -1;
+    if (c == '"') { adv(); tok[tok_len] = 0; return 0; }
+    if (c == '\\') {
+      if (tok_len < TOK_MAX) tok[tok_len++] = c;
+      adv();
+      c = cur();
+    }
+    if (tok_len < TOK_MAX) tok[tok_len++] = c;
+    adv();
   }
-  return -1;
 }
 
-// unsigned integer; accepts null (→0), a leading '-' (→0), and ignores any
-// fractional part
 static int parse_uint(uint32_t *out) {
   skip_ws();
-  if (pos + 4 <= end && buf[pos] == 'n') { pos += 4; *out = 0; return 0; }  // null
+  char c = cur();
+  if (c == 'n') { adv(); adv(); adv(); adv(); *out = 0; return 0; }  // null
   int neg = 0;
-  if (pos < end && buf[pos] == '-') { neg = 1; pos++; }
-  if (pos >= end || buf[pos] < '0' || buf[pos] > '9') return -1;
+  if (c == '-') { neg = 1; adv(); c = cur(); }
+  if (c < '0' || c > '9') return -1;
   uint32_t v = 0;
-  while (pos < end && buf[pos] >= '0' && buf[pos] <= '9') {
-    v = v * 10 + (uint32_t)(buf[pos] - '0');
-    pos++;
+  while (c >= '0' && c <= '9') {
+    v = v * 10 + (uint32_t)(c - '0');
+    adv();
+    c = cur();
   }
-  if (pos < end && buf[pos] == '.') {  // skip fraction
-    pos++;
-    while (pos < end && buf[pos] >= '0' && buf[pos] <= '9') pos++;
+  if (c == '.') {
+    adv();
+    c = cur();
+    while (c >= '0' && c <= '9') { adv(); c = cur(); }
   }
   *out = neg ? 0 : v;
   return 0;
@@ -93,84 +129,95 @@ static int skip_value(void);
 
 static int skip_container(char open, char close) {
   if (expect(open)) return -1;
-  if (peek() == close) { pos++; return 0; }
+  if (peek() == close) { adv(); return 0; }
   for (;;) {
     if (open == '{') {
-      if (parse_string(0)) return -1;
+      if (parse_string()) return -1;
       if (expect(':')) return -1;
     }
     if (skip_value()) return -1;
     int c = peek();
-    if (c == ',') { pos++; continue; }
-    if (c == close) { pos++; return 0; }
+    if (c == ',') { adv(); continue; }
+    if (c == close) { adv(); return 0; }
     return -1;
   }
 }
 
 static int skip_value(void) {
   int c = peek();
-  if (c == '"') return parse_string(0);
+  if (c == '"') return parse_string();
   if (c == '{') return skip_container('{', '}');
   if (c == '[') return skip_container('[', ']');
-  if (c == 't') { pos += 4; return 0; }               // true
-  if (c == 'f') { pos += 5; return 0; }               // false
-  if (c == 'n') { pos += 4; return 0; }               // null
+  if (c == 't') { adv(); adv(); adv(); adv(); return 0; }         // true
+  if (c == 'f') { adv(); adv(); adv(); adv(); adv(); return 0; }  // false
+  if (c == 'n') { adv(); adv(); adv(); adv(); return 0; }         // null
   uint32_t dummy;
   return parse_uint(&dummy);
 }
 
-static int span_eq(span_t s, const char *lit) {
-  const char *p = lib_str(s);
-  uint16_t i = 0;
+static int key_is(const char *lit) {
+  int i = 0;
   while (lit[i]) {
-    if (i >= s.len || p[i] != lit[i]) return 0;
+    if (i >= tok_len || tok[i] != lit[i]) return 0;
     i++;
   }
-  return i == s.len;
+  return i == tok_len;
 }
 
-// ---------------------------------------------------------------- schema
+// copy tok[] into the pool (clamped if the pool fills up)
+static span_t pool_tok(void) {
+  span_t s;
+  uint32_t n = (uint32_t)tok_len;
+  if (pool_used + n + 1 > POOL_SIZE) n = (POOL_SIZE > pool_used + 1) ? POOL_SIZE - pool_used - 1 : 0;
+  s.off = (uint16_t)pool_used;
+  s.len = (uint16_t)n;
+  for (uint32_t i = 0; i < n; i++) pool[pool_used + i] = tok[i];
+  pool[pool_used + n] = 0;
+  pool_used += n + 1;
+  return s;
+}
 
-static uint8_t format_code(span_t s) {
-  if (span_eq(s, "MP3")) return FMT_MP3;
-  if (span_eq(s, "WAV")) return FMT_WAV;
-  if (span_eq(s, "FLAC")) return FMT_FLAC;
-  if (span_eq(s, "OPUS")) return FMT_OPUS;
-  if (span_eq(s, "OGG")) return FMT_OGG;
+static uint8_t format_code(void) {
+  if (key_is("MP3")) return FMT_MP3;
+  if (key_is("WAV")) return FMT_WAV;
+  if (key_is("FLAC")) return FMT_FLAC;
+  if (key_is("OPUS")) return FMT_OPUS;
+  if (key_is("OGG")) return FMT_OGG;
   return FMT_UNK;
 }
 
+// ---------------------------------------------------------------- schema
 static int parse_track(void) {
   track_t t = {0};
   if (expect('{')) return -1;
-  if (peek() == '}') { pos++; goto store; }
+  if (peek() == '}') { adv(); goto store; }
   for (;;) {
-    span_t key;
-    if (parse_string(&key)) return -1;
+    if (parse_string()) return -1;
     if (expect(':')) return -1;
-    if (span_eq(key, "title")) {
-      if (parse_string(&t.title)) return -1;
-    } else if (span_eq(key, "path")) {
-      if (parse_string(&t.path)) return -1;
-    } else if (span_eq(key, "durationMs")) {
+    if (key_is("title")) {
+      if (parse_string()) return -1;
+      t.title = pool_tok();
+    } else if (key_is("path")) {
+      if (parse_string()) return -1;
+      t.path = pool_tok();
+    } else if (key_is("durationMs")) {
       uint32_t ms;
       if (parse_uint(&ms)) return -1;
       uint32_t s = ms / 1000u;
       t.dur_s = (s > 0xFFFF) ? 0xFFFF : (uint16_t)s;
-    } else if (span_eq(key, "bitrateKbps")) {
+    } else if (key_is("bitrateKbps")) {
       uint32_t v;
       if (parse_uint(&v)) return -1;
       t.kbps = (v > 0xFFFF) ? 0xFFFF : (uint16_t)v;
-    } else if (span_eq(key, "format")) {
-      span_t f;
-      if (parse_string(&f)) return -1;
-      t.format = format_code(f);
+    } else if (key_is("format")) {
+      if (parse_string()) return -1;
+      t.format = format_code();
     } else {
       if (skip_value()) return -1;
     }
     int c = peek();
-    if (c == ',') { pos++; continue; }
-    if (c == '}') { pos++; break; }
+    if (c == ',') { adv(); continue; }
+    if (c == '}') { adv(); break; }
     return -1;
   }
 store:
@@ -182,47 +229,43 @@ static int parse_album(void) {
   album_t a = {0};
   a.first_track = (uint16_t)lib_n_tracks;
   if (expect('{')) return -1;
-  if (peek() == '}') { pos++; goto store; }
+  if (peek() == '}') { adv(); goto store; }
   for (;;) {
-    span_t key;
-    if (parse_string(&key)) return -1;
+    if (parse_string()) return -1;
     if (expect(':')) return -1;
-    if (span_eq(key, "title")) {
-      if (parse_string(&a.title)) return -1;
-    } else if (span_eq(key, "genre")) {
-      if (peek() == '"') { if (parse_string(&a.genre)) return -1; }
-      else if (skip_value()) return -1;
-    } else if (span_eq(key, "coverArtSmall")) {
-      if (peek() == '"') { if (parse_string(&a.cover_small)) return -1; }
-      else if (skip_value()) return -1;
-    } else if (span_eq(key, "coverArt")) {
-      if (peek() == '"') { if (parse_string(&a.cover_large)) return -1; }
-      else if (skip_value()) return -1;
-    } else if (span_eq(key, "year")) {
+    if (key_is("title")) {
+      if (parse_string()) return -1;
+      a.title = pool_tok();
+    } else if (key_is("genre")) {
+      if (peek() == '"') {
+        if (parse_string()) return -1;
+        a.genre = pool_tok();
+      } else if (skip_value()) return -1;
+    } else if (key_is("year")) {
       uint32_t v;
       if (parse_uint(&v)) return -1;
       a.year = (uint16_t)v;
-    } else if (span_eq(key, "hue")) {
+    } else if (key_is("hue")) {
       uint32_t v;
       if (parse_uint(&v)) return -1;
       a.hue = (uint16_t)(v % 360);
-    } else if (span_eq(key, "tracks")) {
+    } else if (key_is("tracks")) {
       if (expect('[')) return -1;
-      if (peek() == ']') pos++;
+      if (peek() == ']') adv();
       else
         for (;;) {
           if (parse_track()) return -1;
           int c = peek();
-          if (c == ',') { pos++; continue; }
-          if (c == ']') { pos++; break; }
+          if (c == ',') { adv(); continue; }
+          if (c == ']') { adv(); break; }
           return -1;
         }
     } else {
       if (skip_value()) return -1;
     }
     int c = peek();
-    if (c == ',') { pos++; continue; }
-    if (c == '}') { pos++; break; }
+    if (c == ',') { adv(); continue; }
+    if (c == '}') { adv(); break; }
     return -1;
   }
 store:
@@ -235,30 +278,30 @@ static int parse_artist(void) {
   artist_t ar = {0};
   ar.first_album = (uint16_t)lib_n_albums;
   if (expect('{')) return -1;
-  if (peek() == '}') { pos++; goto store; }
+  if (peek() == '}') { adv(); goto store; }
   for (;;) {
-    span_t key;
-    if (parse_string(&key)) return -1;
+    if (parse_string()) return -1;
     if (expect(':')) return -1;
-    if (span_eq(key, "name")) {
-      if (parse_string(&ar.name)) return -1;
-    } else if (span_eq(key, "albums")) {
+    if (key_is("name")) {
+      if (parse_string()) return -1;
+      ar.name = pool_tok();
+    } else if (key_is("albums")) {
       if (expect('[')) return -1;
-      if (peek() == ']') pos++;
+      if (peek() == ']') adv();
       else
         for (;;) {
           if (parse_album()) return -1;
           int c = peek();
-          if (c == ',') { pos++; continue; }
-          if (c == ']') { pos++; break; }
+          if (c == ',') { adv(); continue; }
+          if (c == ']') { adv(); break; }
           return -1;
         }
     } else {
       if (skip_value()) return -1;
     }
     int c = peek();
-    if (c == ',') { pos++; continue; }
-    if (c == '}') { pos++; break; }
+    if (c == ',') { adv(); continue; }
+    if (c == '}') { adv(); break; }
     return -1;
   }
 store:
@@ -268,35 +311,38 @@ store:
 }
 
 int lib_parse(void) {
-  buf = (const char *)LIBRARY_BASE;
-  pos = 0;
-  end = REG_LIB_BYTES;
   lib_n_artists = lib_n_albums = lib_n_tracks = 0;
+  pool_used = 0;
+  f_pos = 0;
+  win_valid = 0;
+  f_err = 0;
 
-  if (end < 2) return -2;  // no library loaded
+  f_size = file_slot_size(SLOT_LIBRARY);
+  if (f_size < 2) return -2;  // no library registered
+
   if (expect('{')) return -1;
   for (;;) {
-    span_t key;
-    if (parse_string(&key)) return -1;
+    if (parse_string()) return -1;
     if (expect(':')) return -1;
-    if (span_eq(key, "artists")) {
+    if (key_is("artists")) {
       if (expect('[')) return -1;
-      if (peek() == ']') pos++;
+      if (peek() == ']') adv();
       else
         for (;;) {
           if (parse_artist()) return -1;
           int c = peek();
-          if (c == ',') { pos++; continue; }
-          if (c == ']') { pos++; break; }
+          if (c == ',') { adv(); continue; }
+          if (c == ']') { adv(); break; }
           return -1;
         }
     } else {
       if (skip_value()) return -1;
     }
     int c = peek();
-    if (c == ',') { pos++; continue; }
+    if (c == ',') { adv(); continue; }
     if (c == '}') break;
     return -1;
   }
+  if (f_err) return -4;  // a chunk read failed mid-parse
   return (lib_n_artists > 0) ? 0 : -3;
 }
