@@ -14,14 +14,20 @@ node src/index.js --music <music-folder> --out <output-folder> --sd-root <on-car
 - `--music`  folder to scan (point it at the Pocket's `Music` folder, or a copy).
 - `--out`    where `library.json` and `covers/` are written. On the card this is
              `/Assets/pockettunes/common/`.
-- `--sd-root` the absolute path of the music folder **as seen on the Pocket SD card**
-             (default `/Music`). Baked into every track path so the core can open
-             files with target command `0x0192`.
+- `--sd-root` the absolute path of the music folder **as seen on the Pocket SD card**.
+             Baked into every track path so the core can open files with target
+             command `0x0192`.
+
+> **Important — music must live under `/Assets` (or `/Saves`).** The Pocket's
+> `0x0192` open-file command only opens paths inside those two trees, so put your
+> music under `/Assets/pockettunes/common/Music/…` and pass a matching `--sd-root`
+> (e.g. `/Assets/pockettunes/common/Music`). Music left in a top-level `/Music`
+> folder cannot be opened by the core.
 
 Example, card mounted at `/Volumes/POCKET`:
 
 ```bash
-node src/index.js -m /Volumes/POCKET/Music -o /Volumes/POCKET/Assets/pockettunes/common -r /Music
+node src/index.js -m "/Volumes/POCKET/Assets/pockettunes/common/Music" -o "/Volumes/POCKET/Assets/pockettunes/common" -r "/Assets/pockettunes/common/Music"
 ```
 
 Re-run whenever the library changes ("library refresh").
