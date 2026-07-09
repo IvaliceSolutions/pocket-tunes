@@ -176,8 +176,9 @@ module pt_soc #(
       .ENABLE_COUNTERS64(0),
       .BARREL_SHIFTER   (1),
       .COMPRESSED_ISA   (0),
-      .ENABLE_MUL       (1),
-      .ENABLE_DIV       (1),
+      .ENABLE_MUL       (0),
+      .ENABLE_FAST_MUL  (1),  // DSP multiplier (~2 cyc) vs bit-serial ~32-cyc one;
+      .ENABLE_DIV       (1),  // MP3 decode is multiply-bound → the big real-time win
       .ENABLE_IRQ       (0),
       .PROGADDR_RESET   (32'h0000_0000),
       .STACKADDR        (32'h0002_0000)   // top of 128 KB RAM
