@@ -46,13 +46,20 @@ int main(void) {
   ui_init();
   ui_render_full();
 
+  // Decode continuously; touch the UI only once per video frame. Blocking on
+  // wait_vblank() here would starve the PCM fifo (the CPU would spend most of
+  // each frame spinning instead of decoding) → slow-motion audio.
+  uint32_t last_frame = REG_FRAME;
   for (;;) {
-    wait_vblank();
+    mp3_pump();  // keep the audio fifo topped up (returns fast when it's full)
+
+    uint32_t f = REG_FRAME;
+    if (f == last_frame) continue;  // not a new frame yet — go decode more
+    last_frame = f;
+
     keys_prev = keys_now;
     keys_now = (uint16_t)REG_KEYS;
     uint16_t pressed = keys_now & (uint16_t)~keys_prev;
-
-    mp3_pump();
 
     int redraw = 0;
     if (pressed) redraw |= ui_input(pressed);
