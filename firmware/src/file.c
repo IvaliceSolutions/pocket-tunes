@@ -34,7 +34,7 @@ int file_open(uint16_t id, const char *path, int path_len) {
     for (int b = 0; b < 4; b++) {
       int i = w * 4 + b;
       uint8_t ch = (i < path_len) ? (uint8_t)path[i] : 0;
-      v |= (uint32_t)ch << (8 * b);
+      v |= (uint32_t)ch << (8 * (3 - b));  // big-endian: byte 0 in MSB
     }
     p[w] = v;
   }

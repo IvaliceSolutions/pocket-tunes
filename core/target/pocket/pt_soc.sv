@@ -310,7 +310,7 @@ module pt_soc #(
     if (mmio_wr && param_sel) param_ram[mem_la_addr[8:2]] <= mem_la_wdata;
   end
   always @(posedge clk_74a) begin
-    param_q_74 <= param_ram[bridge_addr[8:2]];
+    if (bridge_rd) param_q_74 <= param_ram[bridge_addr[8:2]];
   end
   assign param_rd_data = param_q_74;
 
