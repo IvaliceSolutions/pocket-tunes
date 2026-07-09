@@ -8,7 +8,7 @@ set -e
 SRC="${1:?usage: deploy_sd.sh <artifact-dir> <sd-mount-point>}"
 SD="${2:?usage: deploy_sd.sh <artifact-dir> <sd-mount-point>}"
 
-[ -f "$SRC/Cores/jh.Tunes/pocket_tunes.rbf_r" ] || { echo "no pocket_tunes.rbf_r in $SRC"; exit 1; }
+[ -f "$SRC/Cores/jh.Tunes/bitstream.rbf_r" ] || { echo "no bitstream.rbf_r in $SRC"; exit 1; }
 [ -d "$SD" ] || { echo "SD not mounted at $SD"; exit 1; }
 
 mkdir -p "$SD/Cores" "$SD/Platforms"
