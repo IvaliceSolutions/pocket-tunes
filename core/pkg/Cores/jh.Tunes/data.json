@@ -10,7 +10,7 @@
         "filename": "library.json",
         "extensions": ["json"],
         "address": "0x10000000",
-        "size_maximum": "0x20000"
+        "size_maximum": "0x18000"
       }
     ]
   }

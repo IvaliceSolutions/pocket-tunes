@@ -4,8 +4,8 @@
 // so the simulated design is exactly what ships.
 //
 // CPU memory map (decoded on addr[31:28]):
-//   0x0000_0000  CPU RAM, 128 KB, byte-writable, initialized from firmware.hex
-//   0x1000_0000  library.json slot RAM, 128 KB, read-only for the CPU
+//   0x0000_0000  CPU RAM, 64 KB, byte-writable, initialized from firmware_b*.hex
+//   0x1000_0000  library.json slot RAM, 96 KB, read-only for the CPU
 //   0x2000_0000  framebuffer 320x288 @ 8bpp (92,160 bytes), byte-writable
 //   0xF000_0000  MMIO:
 //     +0x00  r  cont1_key (buttons, already synchronized)
@@ -136,7 +136,7 @@ module pt_soc #(
       .ENABLE_DIV       (1),
       .ENABLE_IRQ       (0),
       .PROGADDR_RESET   (32'h0000_0000),
-      .STACKADDR        (32'h0002_0000)   // top of 128 KB RAM
+      .STACKADDR        (32'h0001_0000)   // top of 64 KB RAM
   ) cpu (
       .clk   (clk_sys),
       .resetn(reset_n_sys),
@@ -184,7 +184,7 @@ module pt_soc #(
   // ------------------------------------------------------------- memories
   wire [31:0] ram_rdata;
   cpu_ram #(
-      .WORDS(32768),
+      .WORDS(16384),
       .INIT_B0(FIRMWARE_B0),
       .INIT_B1(FIRMWARE_B1),
       .INIT_B2(FIRMWARE_B2),
@@ -202,7 +202,7 @@ module pt_soc #(
   wire [17:0] bytes_loaded;
 
   library_slot #(
-      .ADDR_BITS(17)
+      .WORDS(24576)  // 96 KB — the 5CEBA4's 308 M10K can't hold 128K+128K+FB
   ) lib_slot (
       .clk_74a(clk_74a),
       .clk_sys(clk_sys),

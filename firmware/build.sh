@@ -35,7 +35,7 @@ for lane in range(4):
     with open(os.path.join(sys.argv[2], f"firmware_b{lane}.hex"), "w") as f:
         for i in range(words):
             f.write(f"{data[i*4+lane]:02x}\n")
-        for _ in range(32768 - words):
+        for _ in range(16384 - words):
             f.write("00\n")
 print(f"firmware: {len(data)} bytes → firmware_b0..3.hex ({words} words)")
 EOF

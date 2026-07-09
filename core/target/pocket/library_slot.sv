@@ -1,4 +1,4 @@
-// library.json data slot: APF bridge writes → 128 KB RAM + byte counter.
+// library.json data slot: APF bridge writes → 96 KB RAM + byte counter.
 //
 // Storage is 32-bit wide (4 pixels of JSON text per word…) so the CPU reads
 // full words; the APF loader delivers single bytes, steered to the right
@@ -8,7 +8,7 @@
 `default_nettype none
 
 module library_slot #(
-    parameter ADDR_BITS = 17  // 128 KB
+    parameter WORDS = 24576  // 96 KB (need not be a power of two)
 ) (
     input wire clk_74a,
     input wire clk_sys,
@@ -20,14 +20,12 @@ module library_slot #(
     input wire [31:0] bridge_wr_data,
 
     // CPU read port (clk_sys domain), 32-bit words
-    input  wire [ADDR_BITS-3:0] rd_word_addr,
+    input  wire [14:0] rd_word_addr,
     output reg  [31:0]          rd_data,
 
     // file size so far (clk_sys domain)
     output reg [17:0] bytes_loaded
 );
-
-  localparam WORDS = 1 << (ADDR_BITS - 2);
 
   wire        wr_en;
   wire [27:0] wr_addr;
@@ -53,7 +51,7 @@ module library_slot #(
       .write_data(wr_data)
   );
 
-  wire in_range = (wr_addr[27:ADDR_BITS] == 0);
+  wire in_range = (wr_addr < WORDS * 4);
   wire wr = wr_en && in_range;
 
   // four 8-bit banks (one per byte lane) — reliable RAM inference; the
@@ -63,7 +61,7 @@ module library_slot #(
   reg [7:0] mb2[0:WORDS-1];
   reg [7:0] mb3[0:WORDS-1];
 
-  wire [ADDR_BITS-3:0] wr_word = wr_addr[ADDR_BITS-1:2];
+  wire [14:0] wr_word = wr_addr[16:2];
 
   reg [7:0] q0, q1, q2, q3;
 
@@ -88,7 +86,7 @@ module library_slot #(
 
   initial bytes_loaded = 0;
   always @(posedge clk_sys) begin
-    if (wr) bytes_loaded <= {1'b0, wr_addr[ADDR_BITS-1:0]} + 18'd1;
+    if (wr) bytes_loaded <= {1'b0, wr_addr[16:0]} + 18'd1;
   end
 
 endmodule
