@@ -305,9 +305,9 @@ module pt_soc #(
   // bridge reads continuously at 0x4xxxxxxx (registered, stable before use)
   reg [31:0] param_ram[0:127];
   reg [31:0] param_q_74;
+  wire param_sel = mem_la_addr[12];  // param struct RAM at 0xF000_1xxx
   always @(posedge clk_sys) begin
-    if (mmio_wr && mem_la_addr[9:8] != 2'b00)  // 0x100..0x3FC
-      param_ram[mem_la_addr[8:2]] <= mem_la_wdata;
+    if (mmio_wr && param_sel) param_ram[mem_la_addr[8:2]] <= mem_la_wdata;
   end
   always @(posedge clk_74a) begin
     param_q_74 <= param_ram[bridge_addr[8:2]];
@@ -358,7 +358,7 @@ module pt_soc #(
 
   // ---------------------------------------------------------------- MMIO
   always @(posedge clk_sys) begin
-    if (mmio_wr && mem_la_addr[9:8] == 2'b00) begin
+    if (mmio_wr && !param_sel) begin
       case (mem_la_addr[7:0])
         8'h20: tgt_id <= mem_la_wdata[15:0];
         8'h24: tgt_offset <= mem_la_wdata;

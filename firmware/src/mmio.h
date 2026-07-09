@@ -45,7 +45,7 @@ void pcm_push(uint32_t s);
 #define REG_DT_ADDR     MMIO32(0x50)
 #define REG_DT_DATA     MMIO32(0x54)
 
-#define REG_PARAM_RAM   ((volatile uint32_t *)0xF0000100u)
+#define REG_PARAM_RAM   ((volatile uint32_t *)0xF0001000u)  // param struct base
 
 // Pocket key bitmap (cont1_key)
 #define KEY_UP     (1u << 0)
