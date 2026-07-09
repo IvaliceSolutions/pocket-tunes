@@ -56,21 +56,35 @@ module library_slot #(
   wire in_range = (wr_addr[27:ADDR_BITS] == 0);
   wire wr = wr_en && in_range;
 
-  reg [31:0] mem[0:WORDS-1];
+  // four 8-bit banks (one per byte lane) — reliable RAM inference; the
+  // loader's byte stream steers into one bank by wr_addr[1:0]
+  reg [7:0] mb0[0:WORDS-1];
+  reg [7:0] mb1[0:WORDS-1];
+  reg [7:0] mb2[0:WORDS-1];
+  reg [7:0] mb3[0:WORDS-1];
 
   wire [ADDR_BITS-3:0] wr_word = wr_addr[ADDR_BITS-1:2];
 
+  reg [7:0] q0, q1, q2, q3;
+
   always @(posedge clk_sys) begin
-    if (wr) begin
-      case (wr_addr[1:0])
-        2'd0: mem[wr_word][7:0] <= wr_data;
-        2'd1: mem[wr_word][15:8] <= wr_data;
-        2'd2: mem[wr_word][23:16] <= wr_data;
-        2'd3: mem[wr_word][31:24] <= wr_data;
-      endcase
-    end
-    rd_data <= mem[rd_word_addr];
+    if (wr && wr_addr[1:0] == 2'd0) mb0[wr_word] <= wr_data;
+    q0 <= mb0[rd_word_addr];
   end
+  always @(posedge clk_sys) begin
+    if (wr && wr_addr[1:0] == 2'd1) mb1[wr_word] <= wr_data;
+    q1 <= mb1[rd_word_addr];
+  end
+  always @(posedge clk_sys) begin
+    if (wr && wr_addr[1:0] == 2'd2) mb2[wr_word] <= wr_data;
+    q2 <= mb2[rd_word_addr];
+  end
+  always @(posedge clk_sys) begin
+    if (wr && wr_addr[1:0] == 2'd3) mb3[wr_word] <= wr_data;
+    q3 <= mb3[rd_word_addr];
+  end
+
+  always @(*) rd_data = {q3, q2, q1, q0};
 
   initial bytes_loaded = 0;
   always @(posedge clk_sys) begin

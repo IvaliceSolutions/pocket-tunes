@@ -23,8 +23,11 @@ module tb_soc;
   wire [23:0] rgb;
 
   pt_soc #(
-      .FIRMWARE_FILE("../projects/firmware.hex"),
-      .PALETTE_FILE ("../projects/palette.hex")
+      .FIRMWARE_B0 ("../projects/firmware_b0.hex"),
+      .FIRMWARE_B1 ("../projects/firmware_b1.hex"),
+      .FIRMWARE_B2 ("../projects/firmware_b2.hex"),
+      .FIRMWARE_B3 ("../projects/firmware_b3.hex"),
+      .PALETTE_FILE("../projects/palette.hex")
   ) dut (
       .clk_sys(clk_sys),
       .clk_vid(clk_vid),
@@ -47,7 +50,10 @@ module tb_soc;
   // ------------------------------------------------- library preload (words)
   integer lib_size = 0;
   initial begin
-    $readmemh("library_words.hex", dut.lib_slot.mem);
+    $readmemh("library_b0.hex", dut.lib_slot.mb0);
+    $readmemh("library_b1.hex", dut.lib_slot.mb1);
+    $readmemh("library_b2.hex", dut.lib_slot.mb2);
+    $readmemh("library_b3.hex", dut.lib_slot.mb3);
     // bytes_loaded is a plain reg — poke the real byte size
     dut.lib_slot.bytes_loaded = 18'd65133;
   end

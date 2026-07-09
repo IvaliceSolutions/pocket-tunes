@@ -24,18 +24,20 @@ python3 "$D/scripts/bdf2c.py" "$D/src/fonts.h" \
 
 "$OBJCOPY" -O binary "$D/firmware.elf" "$D/firmware.bin"
 
-# binary → 32-bit little-endian word hex for $readmemh, padded to full RAM
-python3 - "$D/firmware.bin" "$OUT/firmware.hex" <<'EOF'
-import sys, struct
+# binary → one hex file per byte lane (the RAM is four 8-bit banks so that
+# Quartus RAM inference never has to deal with byte enables), padded to 32K
+python3 - "$D/firmware.bin" "$OUT" <<'EOF'
+import sys, os
 data = open(sys.argv[1], "rb").read()
 data += b"\0" * (-len(data) % 4)
-words = struct.unpack("<%dI" % (len(data) // 4), data)
-with open(sys.argv[2], "w") as f:
-    for w in words:
-        f.write(f"{w:08x}\n")
-    for _ in range(32768 - len(words)):
-        f.write("00000000\n")
-print(f"firmware: {len(data)} bytes → {sys.argv[2]}")
+words = len(data) // 4
+for lane in range(4):
+    with open(os.path.join(sys.argv[2], f"firmware_b{lane}.hex"), "w") as f:
+        for i in range(words):
+            f.write(f"{data[i*4+lane]:02x}\n")
+        for _ in range(32768 - words):
+            f.write("00\n")
+print(f"firmware: {len(data)} bytes → firmware_b0..3.hex ({words} words)")
 EOF
 
 ls -l "$D/firmware.bin" | awk '{print "firmware.bin: "$5" bytes"}'

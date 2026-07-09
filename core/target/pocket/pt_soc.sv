@@ -17,8 +17,11 @@
 `default_nettype none
 
 module pt_soc #(
-    parameter FIRMWARE_FILE = "firmware.hex",
-    parameter PALETTE_FILE  = "palette.hex"
+    parameter FIRMWARE_B0  = "firmware_b0.hex",
+    parameter FIRMWARE_B1  = "firmware_b1.hex",
+    parameter FIRMWARE_B2  = "firmware_b2.hex",
+    parameter FIRMWARE_B3  = "firmware_b3.hex",
+    parameter PALETTE_FILE = "palette.hex"
 ) (
     input wire clk_sys,
     input wire clk_vid,
@@ -182,7 +185,10 @@ module pt_soc #(
   wire [31:0] ram_rdata;
   cpu_ram #(
       .WORDS(32768),
-      .INIT_FILE(FIRMWARE_FILE)
+      .INIT_B0(FIRMWARE_B0),
+      .INIT_B1(FIRMWARE_B1),
+      .INIT_B2(FIRMWARE_B2),
+      .INIT_B3(FIRMWARE_B3)
   ) ram (
       .clk  (clk_sys),
       .sel  (wr_phase && region == 4'h0),
@@ -212,14 +218,12 @@ module pt_soc #(
       .bytes_loaded(bytes_loaded)
   );
 
-  wire [31:0] fb_a_rdata;
   pt_framebuffer fb (
       .a_clk  (clk_sys),
       .a_sel  (wr_phase && region == 4'h2),
       .a_wstrb(mem_wstrb),
       .a_addr (mem_addr),
       .a_wdata(mem_wdata),
-      .a_rdata(fb_a_rdata),
 
       .b_clk      (clk_vid),
       .b_word_addr(fb_word_addr),
@@ -241,7 +245,7 @@ module pt_soc #(
 
   assign mem_rdata = (region == 4'h0) ? ram_rdata
                    : (region == 4'h1) ? lib_rdata
-                   : (region == 4'h2) ? fb_a_rdata
+                   : (region == 4'h2) ? 32'd0
                    : mmio_rdata;
 
 endmodule
