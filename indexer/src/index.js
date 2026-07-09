@@ -44,7 +44,10 @@ Example:
   pocket-tunes-indexer -m /Volumes/POCKET/Music -o /Volumes/POCKET/Assets/pockettunes/common -r /Music
 `;
 
-/** Join an SD absolute root with a relative path, forcing POSIX separators. */
+/** Join an SD absolute root with a relative path, forcing POSIX separators.
+ *  Paths are kept in the exact Unicode form the filesystem reports (NFD on
+ *  macOS) so they byte-match the on-disk exFAT entry the Pocket looks up.
+ *  (Normalizing to NFC breaks accented lookups on macOS-written cards.) */
 function sdJoin(sdRoot, rel) {
   const norm = rel.split(path.sep).join("/");
   return (sdRoot.replace(/\/+$/, "") + "/" + norm).replace(/\/{2,}/g, "/");
