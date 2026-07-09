@@ -29,6 +29,7 @@ static int cur_artist, main_cursor, main_scroll;
 static int drawer_open, cur_track, playing;   // cur_track relative to album
 static uint32_t pos_frames;
 static char pathbuf[288];
+static int last_start_err;  // mp3_start() return code, shown if playback fails
 static void start_current_track(void);
 
 // ------------------------------------------------------------ small utils
@@ -65,9 +66,11 @@ static void start_current_track(void) {
   int n = lib_fetch_path(t, pathbuf, sizeof pathbuf);
   pos_frames = 0;
   if (n > 0 && t->format == FMT_MP3) {
-    playing = (mp3_start(pathbuf, n, t->fsize) == 0);
+    last_start_err = mp3_start(pathbuf, n, t->fsize);
+    playing = (last_start_err == 0);
   } else {
-    playing = 0;  // non-MP3 formats arrive later
+    last_start_err = (n <= 0) ? -20 : -21;  // -20 path, -21 non-MP3
+    playing = 0;
     mp3_stop();
   }
 }
@@ -245,8 +248,13 @@ static void render_drawer(void) {
 
   // title + play state
   gfx_textn(76, DRAWER_Y + 12, lib_str(t->title), t->title.len, 250, COL_TRACK_TITLE);
-  gfx_text_small(SCREEN_W - 10 - 9 * 5, DRAWER_Y + 14,
-                 playing ? "> LECTURE" : "|| PAUSE", COL_PLAYSTATE);
+  if (!playing && last_start_err) {
+    char e[16], *q = e; q = s_append(q, "ERR "); s_udec(q, (uint32_t)(-last_start_err));
+    gfx_text_small(SCREEN_W - 10 - 7 * 5, DRAWER_Y + 14, e, COL_WHITE);
+  } else {
+    gfx_text_small(SCREEN_W - 10 - 9 * 5, DRAWER_Y + 14,
+                   playing ? "> LECTURE" : "|| PAUSE", COL_PLAYSTATE);
+  }
 
   // "{album} · piste n/total"
   int sx = gfx_textn_small(76, DRAWER_Y + 32, lib_str(al->title), al->title.len, 200,

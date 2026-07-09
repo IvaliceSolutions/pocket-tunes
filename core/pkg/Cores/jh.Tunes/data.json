@@ -14,6 +14,15 @@
         "address": "0x10000000",
         "size_maximum": "0x18000",
         "deferload": true
+      },
+      {
+        "name": "Audio",
+        "id": 1,
+        "required": false,
+        "parameters": "0x0",
+        "deferload": true,
+        "address": "0x30000000",
+        "size_maximum": "0x4000000"
       }
     ]
   }
