@@ -38,6 +38,7 @@ void free(void *p) { (void)p; }  // decoder is initialized once and kept
 static HMP3Decoder hdec;
 static int inited;
 static uint32_t f_size, f_off;   // audio file
+static uint32_t f_audio_start;   // first byte after the ID3v2 tag
 static int in_len;               // valid bytes at INBUF[0..in_len)
 static unsigned char *in_ptr;
 static int playing, paused, eof_decode;
@@ -77,6 +78,20 @@ int mp3_start(const char *path, int path_len, uint32_t file_size) {
   f_size = file_size ? file_size : file_slot_size(SLOT_AUDIO);
   if (f_size < 128) return -2;
   f_off = 0;
+  // Skip an ID3v2 tag up front. Its size is declared in the header, so jump
+  // past it wholesale — otherwise MP3FindSyncWord scans into the tag's embedded
+  // cover-art JPEG, whose 0xFFEx markers (e.g. 0xFFE0 JFIF) look exactly like
+  // MP3 frame syncs, and the decoder grinds byte-by-byte and never plays.
+  if (!file_read(SLOT_AUDIO, 0, 10)) {
+    volatile const uint8_t *h = RX_BYTES;
+    if (h[0] == 'I' && h[1] == 'D' && h[2] == '3') {
+      uint32_t sz = ((uint32_t)(h[6] & 0x7F) << 21) | ((uint32_t)(h[7] & 0x7F) << 14) |
+                    ((uint32_t)(h[8] & 0x7F) << 7) | (uint32_t)(h[9] & 0x7F);
+      uint32_t tag = 10u + sz + ((h[5] & 0x10) ? 10u : 0u);  // +footer if present
+      if (tag < f_size) f_off = tag;
+    }
+  }
+  f_audio_start = f_off;
   in_len = 0;
   in_ptr = INBUF;
   samples_pushed = 0;
@@ -107,6 +122,7 @@ uint32_t mp3_pos_seconds(void) { return samples_pushed / 48000u; }
 
 void mp3_seek(uint32_t to_seconds, uint32_t byte_off) {
   if (!playing) return;
+  if (byte_off < f_audio_start) byte_off = f_audio_start;  // never seek into the ID3 tag
   // clamp so there's at least a frame of data left to decode
   if (byte_off + 512 >= f_size) byte_off = f_size > 2048 ? f_size - 2048 : 0;
   f_off = byte_off;
