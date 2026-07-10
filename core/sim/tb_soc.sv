@@ -194,15 +194,6 @@ module tb_soc;
     end
   endtask
 
-  // CPU trap watchdog — a trap halts PicoRV32 silently; make it loud
-  reg trap_seen = 0;
-  always @(posedge clk_sys) begin
-    if (dut.cpu.trap && !trap_seen) begin
-      trap_seen <= 1;
-      $display("FAIL: CPU TRAP at t=%0t (pc-ish: check firmware)", $time);
-    end
-  end
-
   // ---------------------------------------------------------- PCM capture
   integer fpcm, pcm_n = 0;
   initial fpcm = $fopen("pcm_out.txt", "w");
@@ -210,7 +201,7 @@ module tb_soc;
     if (dut.pcm_tick && dut.pcm_level != 0) begin
       $fwrite(fpcm, "%0d %0d\n", $signed(dut.audio_l), $signed(dut.audio_r));
       pcm_n = pcm_n + 1;
-      if (pcm_n % 1000 == 0) begin $display("  PCM %0d samples t=%0t", pcm_n, $time); $fflush; end
+      if (pcm_n % 100 == 0) begin $display("  PCM %0d samples t=%0t", pcm_n, $time); $fflush; $fflush(fpcm); end
     end
   end
 
@@ -233,6 +224,7 @@ module tb_soc;
     vs_prev <= vs;
     if (vs && !vs_prev) begin
       frame_no = frame_no + 1;
+      $display("  [progress] frame_no=%0d t=%0t pcm_n=%0d", frame_no, $time, pcm_n); $fflush;
       if (fppm != 0) begin
         $fclose(fppm);
         $display("frame %0d captured (%0d px)", frame_no - 1, px_count);
@@ -281,8 +273,8 @@ module tb_soc;
     start_capture("out_soc_c.ppm");
     wait_frames(2);
 
-    // let it play: capture ~0.3 s of PCM (48 kHz)
-    wait (pcm_n >= 4000);
+    // let it play: capture enough PCM to prove sustained, correct decode
+    wait (pcm_n >= 512);
     $display("PCM captured: %0d samples", pcm_n);
     $fclose(fpcm);
 

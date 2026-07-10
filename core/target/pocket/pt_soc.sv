@@ -158,91 +158,81 @@ module pt_soc #(
   always @(posedge clk_sys) cycles <= cycles + 1;
 
   // ------------------------------------------------------------------- CPU
-  wire        mem_valid;
-  wire        mem_instr;
-  wire        mem_ready;
-  wire [31:0] mem_addr;
-  wire [31:0] mem_wdata;
-  wire [ 3:0] mem_wstrb;
-  wire [31:0] mem_rdata;
-  wire        mem_la_read;
-  wire        mem_la_write;
-  wire [31:0] mem_la_addr;
-  wire [31:0] mem_la_wdata;
-  wire [ 3:0] mem_la_wstrb;
+  // VexRiscv (pipelined rv32im, DSP multiplier, no cache): simple iBus/dBus.
+  wire        ibus_cmd_valid, ibus_cmd_ready, ibus_rsp_valid;
+  wire [31:0] ibus_pc, ibus_inst;
 
-  picorv32 #(
-      .ENABLE_COUNTERS  (1),
-      .ENABLE_COUNTERS64(0),
-      .BARREL_SHIFTER   (1),
-      .COMPRESSED_ISA   (0),
-      .ENABLE_MUL       (0),
-      .ENABLE_FAST_MUL  (1),  // DSP multiplier (~2 cyc) vs bit-serial ~32-cyc one;
-      .ENABLE_DIV       (1),  // MP3 decode is multiply-bound → the big real-time win
-      .ENABLE_IRQ       (0),
-      .PROGADDR_RESET   (32'h0000_0000),
-      .STACKADDR        (32'h0002_0000)   // top of 128 KB RAM
-  ) cpu (
-      .clk   (clk_sys),
-      .resetn(reset_n_sys),
-      .trap  (),
+  wire        dbus_cmd_valid, dbus_cmd_ready, dbus_wr;
+  wire [ 3:0] dbus_mask;
+  wire [31:0] dbus_addr, dbus_wdata, dbus_rdata;
+  wire [ 1:0] dbus_size;
+  wire        dbus_rsp_valid;
 
-      .mem_valid(mem_valid),
-      .mem_instr(mem_instr),
-      .mem_ready(mem_ready),
-      .mem_addr (mem_addr),
-      .mem_wdata(mem_wdata),
-      .mem_wstrb(mem_wstrb),
-      .mem_rdata(mem_rdata),
+  VexRiscv cpu (
+      .clk  (clk_sys),
+      .reset(~reset_n_sys),  // active high
 
-      .mem_la_read (mem_la_read),
-      .mem_la_write(mem_la_write),
-      .mem_la_addr (mem_la_addr),
-      .mem_la_wdata(mem_la_wdata),
-      .mem_la_wstrb(mem_la_wstrb),
+      .timerInterrupt   (1'b0),
+      .externalInterrupt(1'b0),
+      .softwareInterrupt(1'b0),
 
-      .pcpi_valid(),
-      .pcpi_insn (),
-      .pcpi_rs1  (),
-      .pcpi_rs2  (),
-      .pcpi_wr   (1'b0),
-      .pcpi_rd   (32'd0),
-      .pcpi_wait (1'b0),
-      .pcpi_ready(1'b0),
+      .iBus_cmd_valid      (ibus_cmd_valid),
+      .iBus_cmd_ready      (ibus_cmd_ready),
+      .iBus_cmd_payload_pc (ibus_pc),
+      .iBus_rsp_valid      (ibus_rsp_valid),
+      .iBus_rsp_payload_error(1'b0),
+      .iBus_rsp_payload_inst (ibus_inst),
 
-      .irq(32'd0),
-      .eoi(),
-
-      .trace_valid(),
-      .trace_data ()
+      .dBus_cmd_valid         (dbus_cmd_valid),
+      .dBus_cmd_ready         (dbus_cmd_ready),
+      .dBus_cmd_payload_wr     (dbus_wr),
+      .dBus_cmd_payload_mask   (dbus_mask),
+      .dBus_cmd_payload_address(dbus_addr),
+      .dBus_cmd_payload_data   (dbus_wdata),
+      .dBus_cmd_payload_size   (dbus_size),
+      .dBus_rsp_ready(dbus_rsp_valid),  // "ready" here = response valid
+      .dBus_rsp_error(1'b0),
+      .dBus_rsp_data (dbus_rdata)
   );
 
-  // zero wait states: memories are addressed by the look-ahead interface one
-  // cycle early, so every access completes in a single cycle. Writes fire on
-  // mem_la_write (exactly one pulse per store).
-  assign mem_ready = 1'b1;
+  // ---- iBus: always-ready single fetch from CPU RAM (port A), 1-cycle rsp
+  assign ibus_cmd_ready = 1'b1;
+  reg ibus_rsp_valid_r;
+  always @(posedge clk_sys) ibus_rsp_valid_r <= ibus_cmd_valid & reset_n_sys;
+  assign ibus_rsp_valid = ibus_rsp_valid_r;
 
-  wire [3:0] la_region = mem_la_addr[31:28];
-  reg  [3:0] region_q;  // region of the op completing this cycle
-  always @(posedge clk_sys) region_q <= la_region;
+  // ---- dBus: region-decoded, 1-cycle rsp for every access
+  wire [3:0] dregion = dbus_addr[31:28];
+  assign dbus_cmd_ready = 1'b1;
+  wire d_acc   = dbus_cmd_valid & reset_n_sys;
+  wire dwrite  = d_acc & dbus_wr;
+  wire mmio_wr = dwrite & (dregion == 4'hF);
+  wire param_sel = dbus_addr[12];  // param struct RAM at 0xF000_1xxx
 
-  wire mmio_wr = mem_la_write && la_region == 4'hF && mem_la_wstrb == 4'hF;
+  reg dbus_rsp_valid_r;
+  reg [3:0] dregion_q;
+  always @(posedge clk_sys) begin
+    dbus_rsp_valid_r <= d_acc;
+    dregion_q <= dregion;
+  end
+  assign dbus_rsp_valid = dbus_rsp_valid_r;
 
   // ------------------------------------------------------------- memories
-  wire [31:0] ram_rdata;
-  cpu_ram #(
+  wire [31:0] ram_b_rdata;
+  cpu_ram_dp #(
       .WORDS(32768),
       .INIT_B0(FIRMWARE_B0),
       .INIT_B1(FIRMWARE_B1),
       .INIT_B2(FIRMWARE_B2),
       .INIT_B3(FIRMWARE_B3)
   ) ram (
-      .clk  (clk_sys),
-      .sel  (mem_la_write && la_region == 4'h0),
-      .wstrb(mem_la_wstrb),
-      .addr (mem_la_addr),
-      .wdata(mem_la_wdata),
-      .rdata(ram_rdata)
+      .clk    (clk_sys),
+      .a_word (ibus_pc[16:2]),
+      .a_rdata(ibus_inst),
+      .b_word (dbus_addr[16:2]),
+      .b_we   ((dregion == 4'h0) ? {4{dwrite}} & dbus_mask : 4'h0),
+      .b_wdata(dbus_wdata),
+      .b_rdata(ram_b_rdata)
   );
 
   wire [31:0] rx_rdata;
@@ -258,16 +248,16 @@ module pt_soc #(
       .bridge_addr         (bridge_addr),
       .bridge_wr_data      (bridge_wr_data),
 
-      .rd_word_addr(mem_la_addr[13:2]),
+      .rd_word_addr(dbus_addr[13:2]),
       .rd_data     (rx_rdata)
   );
 
   pt_framebuffer fb (
       .a_clk  (clk_sys),
-      .a_sel  (mem_la_write && la_region == 4'h2),
-      .a_wstrb(mem_la_wstrb),
-      .a_addr (mem_la_addr),
-      .a_wdata(mem_la_wdata),
+      .a_sel  (dwrite && dregion == 4'h2),
+      .a_wstrb(dbus_mask),
+      .a_addr (dbus_addr),
+      .a_wdata(dbus_wdata),
 
       .b_clk      (clk_vid),
       .b_word_addr(fb_word_addr),
@@ -306,9 +296,8 @@ module pt_soc #(
   // bridge reads continuously at 0x4xxxxxxx (registered, stable before use)
   reg [31:0] param_ram[0:127];
   reg [31:0] param_q_74;
-  wire param_sel = mem_la_addr[12];  // param struct RAM at 0xF000_1xxx
   always @(posedge clk_sys) begin
-    if (mmio_wr && param_sel) param_ram[mem_la_addr[8:2]] <= mem_la_wdata;
+    if (mmio_wr && param_sel) param_ram[dbus_addr[8:2]] <= dbus_wdata;
   end
   always @(posedge clk_74a) begin
     if (bridge_rd) param_q_74 <= param_ram[bridge_addr[8:2]];
@@ -341,8 +330,8 @@ module pt_soc #(
       audio_l <= 0;
       audio_r <= 0;
     end else begin
-      if (mmio_wr && mem_la_addr[9:0] == 10'h040 && pcm_free != 0) begin
-        pcm_mem[pcm_wr[10:0]] <= mem_la_wdata;
+      if (mmio_wr && dbus_addr[9:0] == 10'h040 && pcm_free != 0) begin
+        pcm_mem[pcm_wr[10:0]] <= dbus_wdata;
         pcm_wr <= pcm_wr + 1'b1;
       end
 
@@ -360,13 +349,13 @@ module pt_soc #(
   // ---------------------------------------------------------------- MMIO
   always @(posedge clk_sys) begin
     if (mmio_wr && !param_sel) begin
-      case (mem_la_addr[7:0])
-        8'h20: tgt_id <= mem_la_wdata[15:0];
-        8'h24: tgt_offset <= mem_la_wdata;
-        8'h28: tgt_bridgeaddr <= mem_la_wdata;
-        8'h2C: tgt_length <= mem_la_wdata;
-        8'h30: tgt_cmd <= mem_la_wdata[1:0];
-        8'h50: dt_addr <= mem_la_wdata[9:0];
+      case (dbus_addr[7:0])
+        8'h20: tgt_id <= dbus_wdata[15:0];
+        8'h24: tgt_offset <= dbus_wdata;
+        8'h28: tgt_bridgeaddr <= dbus_wdata;
+        8'h2C: tgt_length <= dbus_wdata;
+        8'h30: tgt_cmd <= dbus_wdata[1:0];
+        8'h50: dt_addr <= dbus_wdata[9:0];
         default: ;
       endcase
     end
@@ -374,7 +363,7 @@ module pt_soc #(
 
   reg [31:0] mmio_rdata;
   always @(posedge clk_sys) begin
-    case (mem_la_addr[7:0])
+    case (dbus_addr[7:0])
       8'h00:   mmio_rdata <= {16'd0, cont1_key_s};
       8'h04:   mmio_rdata <= frame_count;
       8'h0C:   mmio_rdata <= {31'd0, in_vblank_s};
@@ -391,9 +380,9 @@ module pt_soc #(
     endcase
   end
 
-  assign mem_rdata = (region_q == 4'h0) ? ram_rdata
-                   : (region_q == 4'h1) ? rx_rdata
-                   : (region_q == 4'h2) ? 32'd0
-                   : mmio_rdata;
+  assign dbus_rdata = (dregion_q == 4'h0) ? ram_b_rdata
+                    : (dregion_q == 4'h1) ? rx_rdata
+                    : (dregion_q == 4'h2) ? 32'd0
+                    : mmio_rdata;
 
 endmodule

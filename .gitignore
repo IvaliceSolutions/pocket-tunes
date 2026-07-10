@@ -14,3 +14,9 @@ core/sim/raw.log
 core/sim/*_bytes.hex
 core/sim/test_audio.mp3
 core/sim/mini_lib.json
+
+# VexRiscv sim artifacts
+core/sim/firmware_b*.hex
+core/sim/*.ppm
+core/sim/*.png
+core/sim/*.vvp

@@ -3,7 +3,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "pt_soc.sv"]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "pt_mem.sv"]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "fb_scanout.sv"]
-set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "picorv32.v"]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "vexriscv.v"]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "bridge_rx_ram.sv"]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "data_loader.sv"]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "sync_fifo.sv"]
