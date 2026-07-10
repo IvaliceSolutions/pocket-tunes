@@ -97,6 +97,27 @@ static uint32_t seek_byte_off(const track_t *t, uint32_t sec) {
   return 0;
 }
 
+// ---- shuffle: toggled with START. A tiny xorshift PRNG stirred by the
+// free-running cycle counter (unpredictable exactly when a track ends).
+static int shuffle;
+static uint32_t rng_state = 0x2545F491u;
+static uint32_t rng_next(void) {
+  uint32_t x = rng_state ^ REG_CYCLES;
+  x ^= x << 13; x ^= x >> 17; x ^= x << 5;
+  rng_state = x ? x : 0x2545F491u;
+  return rng_state;
+}
+// Next track index in the album: random when shuffle is on, else sequential.
+// Both wrap; shuffle avoids immediately repeating the current track.
+static int next_rel(const album_t *pa, int cur_rel) {
+  int n = pa->n_tracks;
+  if (n <= 1) return 0;
+  if (!shuffle) return (cur_rel + 1) % n;
+  int r = (int)(rng_next() % (uint32_t)n);
+  if (r == cur_rel) r = (r + 1) % n;
+  return r;
+}
+
 // Load and start playing lib_tracks[gidx] (in album `alb`).
 static void start_play(int gidx, int alb) {
   play_gidx = gidx;
@@ -170,12 +191,14 @@ void ui_init(void) {
 int ui_input(uint16_t pressed) {
   anim = 0;  // any key press restarts the selected item's marquee
 
+  if (pressed & KEY_START) { shuffle = !shuffle; return 1; }  // toggle shuffle
+
   if (drawer_open) {
     if (pressed & (KEY_UP | KEY_DOWN)) {  // prev/next track (wraps), auto-play
       const album_t *pa = play_album_p();
-      int rel = play_gidx - pa->first_track;
-      rel += (pressed & KEY_DOWN) ? 1 : pa->n_tracks - 1;
-      rel %= pa->n_tracks;
+      int cur_rel = play_gidx - pa->first_track;
+      int rel = (pressed & KEY_DOWN) ? next_rel(pa, cur_rel)          // shuffle-aware
+                                     : (cur_rel + pa->n_tracks - 1) % pa->n_tracks;
       start_play(pa->first_track + rel, play_alb);
       track_cursor = rel;  // keep the track list in sync behind the drawer
       track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
@@ -265,9 +288,9 @@ int ui_tick(void) {
   anim++;  // drives the marquee at every level
   if (playing) {
     pos_frames = mp3_pos_seconds() * 60u;  // progress from real samples
-    if (mp3_at_eof()) {  // track ended → next in the album, wrap
+    if (mp3_at_eof()) {  // track ended → next in the album (shuffle-aware, wraps)
       const album_t *pa = play_album_p();
-      int rel = (play_gidx - pa->first_track + 1) % pa->n_tracks;
+      int rel = next_rel(pa, play_gidx - pa->first_track);
       start_play(pa->first_track + rel, play_alb);
       if (drawer_open || focus == FOC_TRACKS) {
         track_cursor = rel;
@@ -281,14 +304,15 @@ int ui_tick(void) {
 
 // ----------------------------------------------------------------- render
 static void level_footer(uint32_t cur, uint32_t total, const char *noun) {
-  char f[32], *p = f;
+  char f[48], *p = f;
   p = s_append(p, "NIVEAU : ");
   p = s_udec(p, cur);
   *p++ = '/';
   p = s_udec(p, total);
   *p++ = ' ';
-  s_append(p, noun);
-  gfx_text_small(MAIN_X, SCREEN_H - 12, f, COL_ARTIST_DIM);
+  p = s_append(p, noun);
+  int x = gfx_text_small(MAIN_X, SCREEN_H - 12, f, COL_ARTIST_DIM);
+  if (shuffle) gfx_text_small(x + 8, SCREEN_H - 12, "\xc2\xb7 ALEA", COL_FOCUS);
 }
 
 static void render_sidebar(void) {
@@ -421,6 +445,8 @@ static void render_drawer(void) {
   p = s_udec(p, al->n_tracks);
   gfx_text_small(sx, DRAWER_Y + 32, sub, COL_ARTIST_DIM);
 
+  if (shuffle) gfx_text_small(76, DRAWER_Y + 50, "ALEA", COL_FOCUS);
+
   render_progress();
 
   char l1[64], *q = l1;
@@ -444,7 +470,7 @@ static void render_drawer(void) {
   }
   gfx_text_small(10, DRAWER_Y + 102, l2, COL_ARTIST_DIM);
 
-  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 <> +/-10s \xc2\xb7 A pause \xc2\xb7 B fermer",
+  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 <> 10s \xc2\xb7 A pause \xc2\xb7 START alea \xc2\xb7 B fermer",
                  COL_ARTIST_DIM);
 }
 

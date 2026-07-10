@@ -1,7 +1,7 @@
 Archive member included to satisfy reference by file (symbol)
 
 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
-                              /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o (__udivdi3)
+                              /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o (__udivdi3)
 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
                               /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o) (__clz_tab)
 
@@ -18,41 +18,41 @@ RAM              0x00000000         0x00020000         xrw
 
 Linker script and memory map
 
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
+LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
 LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a
                 0x00000000                        . = 0x0
 
-.text           0x00000000     0xc380
+.text           0x00000000     0xc498
  *(.text.init)
- .text.init     0x00000000       0x30 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
+ .text.init     0x00000000       0x30 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
                 0x00000000                _start
  *(.text*)
- .text          0x00000030        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
- .text          0x00000030        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
- .text.startup  0x00000030      0x1f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
+ .text          0x00000030        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
+ .text          0x00000030        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
+ .text.startup  0x00000030      0x1f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
                 0x00000030                main
- .text          0x00000220      0xab8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
+ .text          0x00000220      0xab8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
                 0x000002c4                gfx_clear
                 0x000002f0                gfx_fill_rect
                 0x000003bc                gfx_hline
@@ -69,312 +69,311 @@ LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32
                 0x00000c4c                memcpy
                 0x00000c70                memmove
                 0x00000cbc                memset
- .text          0x00000cd8     0x13d4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
+ .text          0x00000cd8     0x13d4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
                 0x00001410                lib_str
                 0x00001430                lib_format_name
                 0x00001464                lib_fetch_path
                 0x000014e8                lib_parse
- .text          0x000020ac     0x1a14 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
-                0x000025e8                ui_init
-                0x00002658                ui_input
-                0x00002ab4                ui_tick
-                0x00002ba4                ui_render_full
-                0x00003828                ui_render_playing
- .text          0x00003ac0      0x1f4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
-                0x00003b98                file_read
-                0x00003bc4                file_open
-                0x00003c34                file_slot_size
- .text          0x00003cb4      0x8a4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
-                0x00003e1c                malloc
-                0x00003e58                free
-                0x00003e5c                mp3_start
-                0x0000408c                mp3_stop
-                0x000040a8                mp3_set_paused
-                0x000040b4                mp3_is_playing
-                0x000040d0                mp3_at_eof
-                0x000040ec                mp3_pos_seconds
-                0x00004108                mp3_seek
-                0x000041b8                mp3_pump
- .text          0x00004558      0x7cc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
-                0x00004558                MP3InitDecoder
-                0x0000455c                MP3FreeDecoder
-                0x00004568                MP3FindSyncWord
-                0x000045b4                MP3GetLastFrameInfo
-                0x00004650                MP3GetNextFrameInfo
-                0x00004714                MP3Decode
- .text          0x00004d24        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
- .text          0x00004d24      0x844 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
-                0x00004d24                xmp3_SetBitstreamPointer
-                0x00004d38                xmp3_GetBits
-                0x00004e54                xmp3_CalcBitsUsed
-                0x00004e70                xmp3_CheckPadBit
-                0x00004e90                xmp3_UnpackFrameHeader
-                0x00005178                xmp3_UnpackSideInfo
- .text          0x00005568      0x2cc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
-                0x00005568                xmp3_FreeBuffers
-                0x00005604                xmp3_AllocateBuffers
- .text          0x00005834      0x8d4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
-                0x00005834                xmp3_FDCT32
- .text          0x00006108      0x3f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
-                0x00006108                xmp3_Dequantize
- .text          0x000064f8      0x5f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
-                0x00006728                xmp3_DequantChannel
- .text          0x00006ae8      0xb50 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
-                0x00006ae8                xmp3_DecodeHuffman
- .text          0x00007638        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
- .text          0x00007638     0x1610 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
-                0x00007990                xmp3_IMDCT
- .text          0x00008c48     0x1d1c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
-                0x00008c48                xmp3_PolyphaseMono
-                0x00009600                xmp3_PolyphaseStereo
- .text          0x0000a964      0xaf4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
-                0x0000a964                xmp3_UnpackScaleFactors
- .text          0x0000b458      0x8c4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
-                0x0000b458                xmp3_MidSideProc
-                0x0000b4f8                xmp3_IntensityProcMPEG1
-                0x0000b9a8                xmp3_IntensityProcMPEG2
- .text          0x0000bd1c      0x1b4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
-                0x0000bd1c                xmp3_Subband
- .text          0x0000bed0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
- .text          0x0000bed0      0x4b0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
-                0x0000bed0                __udivdi3
- .text          0x0000c380        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+ .text          0x000020ac     0x1b2c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+                0x000026a8                ui_init
+                0x00002718                ui_input
+                0x00002b94                ui_tick
+                0x00002c94                ui_render_full
+                0x00003940                ui_render_playing
+ .text          0x00003bd8      0x1f4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
+                0x00003cb0                file_read
+                0x00003cdc                file_open
+                0x00003d4c                file_slot_size
+ .text          0x00003dcc      0x8a4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
+                0x00003f34                malloc
+                0x00003f70                free
+                0x00003f74                mp3_start
+                0x000041a4                mp3_stop
+                0x000041c0                mp3_set_paused
+                0x000041cc                mp3_is_playing
+                0x000041e8                mp3_at_eof
+                0x00004204                mp3_pos_seconds
+                0x00004220                mp3_seek
+                0x000042d0                mp3_pump
+ .text          0x00004670      0x7cc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
+                0x00004670                MP3InitDecoder
+                0x00004674                MP3FreeDecoder
+                0x00004680                MP3FindSyncWord
+                0x000046cc                MP3GetLastFrameInfo
+                0x00004768                MP3GetNextFrameInfo
+                0x0000482c                MP3Decode
+ .text          0x00004e3c        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
+ .text          0x00004e3c      0x844 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
+                0x00004e3c                xmp3_SetBitstreamPointer
+                0x00004e50                xmp3_GetBits
+                0x00004f6c                xmp3_CalcBitsUsed
+                0x00004f88                xmp3_CheckPadBit
+                0x00004fa8                xmp3_UnpackFrameHeader
+                0x00005290                xmp3_UnpackSideInfo
+ .text          0x00005680      0x2cc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
+                0x00005680                xmp3_FreeBuffers
+                0x0000571c                xmp3_AllocateBuffers
+ .text          0x0000594c      0x8d4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
+                0x0000594c                xmp3_FDCT32
+ .text          0x00006220      0x3f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
+                0x00006220                xmp3_Dequantize
+ .text          0x00006610      0x5f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
+                0x00006840                xmp3_DequantChannel
+ .text          0x00006c00      0xb50 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
+                0x00006c00                xmp3_DecodeHuffman
+ .text          0x00007750        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
+ .text          0x00007750     0x1610 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
+                0x00007aa8                xmp3_IMDCT
+ .text          0x00008d60     0x1d1c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
+                0x00008d60                xmp3_PolyphaseMono
+                0x00009718                xmp3_PolyphaseStereo
+ .text          0x0000aa7c      0xaf4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
+                0x0000aa7c                xmp3_UnpackScaleFactors
+ .text          0x0000b570      0x8c4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
+                0x0000b570                xmp3_MidSideProc
+                0x0000b610                xmp3_IntensityProcMPEG1
+                0x0000bac0                xmp3_IntensityProcMPEG2
+ .text          0x0000be34      0x1b4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
+                0x0000be34                xmp3_Subband
+ .text          0x0000bfe8        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
+ .text          0x0000bfe8      0x4b0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+                0x0000bfe8                __udivdi3
+ .text          0x0000c498        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
 
-.rodata         0x0000c380     0x480c
+.rodata         0x0000c498     0x4824
  *(.rodata*)
  .rodata.str1.4
-                0x0000c380      0x211 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
+                0x0000c498      0x22c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
                                  0xea (size before relaxing)
- *fill*         0x0000c591        0x3 
- .rodata        0x0000c594     0x1260 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
- .rodata        0x0000d7f4       0x98 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
+ .rodata        0x0000c6c4     0x1260 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
+ .rodata        0x0000d924       0x98 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
  .rodata.str1.4
-                0x0000d88c        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
+                0x0000d9bc        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
                                  0x90 (size before relaxing)
  .rodata.str1.4
-                0x0000d88c        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
-                                 0xa1 (size before relaxing)
- .rodata        0x0000d88c       0x24 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
- .rodata        0x0000d8b0      0x500 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
-                0x0000d8b0                xmp3_sfBandTable
-                0x0000db4c                xmp3_slotTab
-                0x0000dc5c                xmp3_sideBytesTab
-                0x0000dc68                xmp3_samplesPerFrameTab
-                0x0000dc7c                xmp3_bitrateTab
-                0x0000dd8c                xmp3_samplerateTab
- .rodata        0x0000ddb0       0xc0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
- .rodata        0x0000de70       0x16 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
- *fill*         0x0000de86        0x2 
- .rodata        0x0000de88     0x22f4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
-                0x0000de88                xmp3_quadTable
-                0x0000ded8                xmp3_huffTabLookup
-                0x0000dfd8                xmp3_huffTabOffset
-                0x0000e058                xmp3_huffTable
- .rodata        0x0001017c       0x24 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
- .rodata        0x000101a0       0x68 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
- .rodata        0x00010208      0x864 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
-                0x00010208                xmp3_polyCoef
-                0x00010628                xmp3_coef32
-                0x000106a4                xmp3_csa
-                0x000106e4                xmp3_ISFIIP
-                0x000106f4                xmp3_ISFMpeg2
-                0x000107f4                xmp3_ISFMpeg1
-                0x0001082c                xmp3_imdctWin
- .rodata        0x00010a6c      0x100 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
-                0x00010a6c                __clz_tab
+                0x0000d9bc        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+                                 0xbc (size before relaxing)
+ .rodata        0x0000d9bc       0x24 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+ .rodata        0x0000d9e0      0x500 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
+                0x0000d9e0                xmp3_sfBandTable
+                0x0000dc7c                xmp3_slotTab
+                0x0000dd8c                xmp3_sideBytesTab
+                0x0000dd98                xmp3_samplesPerFrameTab
+                0x0000ddac                xmp3_bitrateTab
+                0x0000debc                xmp3_samplerateTab
+ .rodata        0x0000dee0       0xc0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
+ .rodata        0x0000dfa0       0x16 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
+ *fill*         0x0000dfb6        0x2 
+ .rodata        0x0000dfb8     0x22f4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
+                0x0000dfb8                xmp3_quadTable
+                0x0000e008                xmp3_huffTabLookup
+                0x0000e108                xmp3_huffTabOffset
+                0x0000e188                xmp3_huffTable
+ .rodata        0x000102ac       0x24 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
+ .rodata        0x000102d0       0x68 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
+ .rodata        0x00010338      0x864 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
+                0x00010338                xmp3_polyCoef
+                0x00010758                xmp3_coef32
+                0x000107d4                xmp3_csa
+                0x00010814                xmp3_ISFIIP
+                0x00010824                xmp3_ISFMpeg2
+                0x00010924                xmp3_ISFMpeg1
+                0x0001095c                xmp3_imdctWin
+ .rodata        0x00010b9c      0x100 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+                0x00010b9c                __clz_tab
  *(.srodata*)
- .srodata       0x00010b6c        0x6 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
-                0x00010b6c                xmp3_bitsPerSlotTab
- *fill*         0x00010b72        0x2 
- .srodata       0x00010b74       0x10 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
-                0x00010b74                xmp3_quadTabMaxBits
-                0x00010b7c                xmp3_quadTabOffset
- .srodata       0x00010b84        0x8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
-                0x00010b84                xmp3_uniqueIDTab
+ .srodata       0x00010c9c        0x6 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
+                0x00010c9c                xmp3_bitsPerSlotTab
+ *fill*         0x00010ca2        0x2 
+ .srodata       0x00010ca4       0x10 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
+                0x00010ca4                xmp3_quadTabMaxBits
+                0x00010cac                xmp3_quadTabOffset
+ .srodata       0x00010cb4        0x8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
+                0x00010cb4                xmp3_uniqueIDTab
 
-.eh_frame       0x00010b8c       0x28
- .eh_frame      0x00010b8c       0x28 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+.eh_frame       0x00010cbc       0x28
+ .eh_frame      0x00010cbc       0x28 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
 
-.rela.dyn       0x00010bb4        0x0
+.rela.dyn       0x00010ce4        0x0
  .rela.text.init
-                0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
+                0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
 
-.data           0x00010bb4      0x288
+.data           0x00010ce4      0x28c
  *(.data*)
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
- .data          0x00010bb4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
- .data          0x00010bb4      0x238 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
-                0x00010bb4                poly43lo
-                0x00010bc8                poly43hi
-                0x00010bdc                pow43_14
-                0x00010cdc                pow14
-                0x00010cec                pow43
-                0x00010dac                pow2frac
-                0x00010dcc                pow2exp
- .data          0x00010dec        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
- .data          0x00010dec        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
- .data          0x00010dec       0x48 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
-                0x00010dec                fastWin36
- .data          0x00010e34        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
- .data          0x00010e34        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
- .data          0x00010e34        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
- .data          0x00010e34        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
- .data          0x00010e34        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
- .data          0x00010e34        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
- .data          0x00010e34        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
+ .data          0x00010ce4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
+ .data          0x00010ce4      0x238 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
+                0x00010ce4                poly43lo
+                0x00010cf8                poly43hi
+                0x00010d0c                pow43_14
+                0x00010e0c                pow14
+                0x00010e1c                pow43
+                0x00010edc                pow2frac
+                0x00010efc                pow2exp
+ .data          0x00010f1c        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
+ .data          0x00010f1c        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
+ .data          0x00010f1c       0x48 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
+                0x00010f1c                fastWin36
+ .data          0x00010f64        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
+ .data          0x00010f64        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
+ .data          0x00010f64        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
+ .data          0x00010f64        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
+ .data          0x00010f64        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
+ .data          0x00010f64        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+ .data          0x00010f64        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
  *(.sdata*)
- .sdata         0x00010e34        0x8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
+ .sdata         0x00010f64        0xc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
 
-.bss            0x00010e40     0xee84
-                0x00010e40                        __bss_start = .
+.bss            0x00010f70     0xee88
+                0x00010f70                        __bss_start = .
  *(.bss*)
- .bss           0x00010e40        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
- .bss           0x00010e40        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
- .bss           0x00010e40        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
- .bss           0x00010e40     0x76c4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
-                0x00010f84                lib_albums
-                0x00011584                lib_artists
-                0x00011704                lib_stage
-                0x00016704                lib_tracks
- .bss           0x00018504      0x120 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
- .bss           0x00018624        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
- *fill*         0x00018624        0x4 
- .bss           0x00018628     0x7600 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
- .bss           0x0001fc28        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
- .bss           0x0001fc28        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
- .bss           0x0001fc28        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+ .bss           0x00010f70        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
+ .bss           0x00010f70        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
+ .bss           0x00010f70        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
+ .bss           0x00010f70     0x76c4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
+                0x000110b4                lib_albums
+                0x000116b4                lib_artists
+                0x00011834                lib_stage
+                0x00016834                lib_tracks
+ .bss           0x00018634      0x120 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+ .bss           0x00018754        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
+ *fill*         0x00018754        0x4 
+ .bss           0x00018758     0x7600 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
+ .bss           0x0001fd58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
+ .bss           0x0001fd58        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+ .bss           0x0001fd58        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
  *(.sbss*)
- .sbss          0x0001fc28        0x2 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
- *fill*         0x0001fc2a        0x2 
- .sbss          0x0001fc2c       0x28 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
-                0x0001fc48                lib_n_tracks
-                0x0001fc4c                lib_n_albums
-                0x0001fc50                lib_n_artists
- .sbss          0x0001fc54       0x34 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
- .sbss          0x0001fc88       0x3c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
+ .sbss          0x0001fd58        0x2 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
+ *fill*         0x0001fd5a        0x2 
+ .sbss          0x0001fd5c       0x28 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
+                0x0001fd78                lib_n_tracks
+                0x0001fd7c                lib_n_albums
+                0x0001fd80                lib_n_artists
+ .sbss          0x0001fd84       0x38 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
+ .sbss          0x0001fdbc       0x3c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
  *(COMMON)
-                0x0001fcc4                        __bss_end = .
+                0x0001fdf8                        __bss_end = .
                 0x00020000                        _stack_top = (ORIGIN (RAM) + LENGTH (RAM))
 OUTPUT(/Users/jeremy/test_fpga/pocket-tunes/firmware/firmware.elf elf32-littleriscv)
 
 .riscv.attributes
                 0x00000000       0x2a
  .riscv.attributes
-                0x00000000       0x28 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccidQ19s.o
+                0x00000000       0x28 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccxolmds.o
  .riscv.attributes
-                0x00000028       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
+                0x00000028       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
  .riscv.attributes
-                0x00000052       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
+                0x00000052       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
  .riscv.attributes
-                0x0000007c       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
+                0x0000007c       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
  .riscv.attributes
-                0x000000a6       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
+                0x000000a6       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
  .riscv.attributes
-                0x000000d0       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
+                0x000000d0       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
  .riscv.attributes
-                0x000000fa       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
+                0x000000fa       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
  .riscv.attributes
-                0x00000124       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
+                0x00000124       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
  .riscv.attributes
-                0x0000014e       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
+                0x0000014e       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
  .riscv.attributes
-                0x00000178       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
+                0x00000178       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
  .riscv.attributes
-                0x000001a2       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
+                0x000001a2       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
  .riscv.attributes
-                0x000001cc       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
+                0x000001cc       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
  .riscv.attributes
-                0x000001f6       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
+                0x000001f6       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
  .riscv.attributes
-                0x00000220       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
+                0x00000220       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
  .riscv.attributes
-                0x0000024a       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
+                0x0000024a       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
  .riscv.attributes
-                0x00000274       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
+                0x00000274       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
  .riscv.attributes
-                0x0000029e       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
+                0x0000029e       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
  .riscv.attributes
-                0x000002c8       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
+                0x000002c8       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
  .riscv.attributes
-                0x000002f2       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
+                0x000002f2       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
  .riscv.attributes
-                0x0000031c       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
+                0x0000031c       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
  .riscv.attributes
-                0x00000346       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
+                0x00000346       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
  .riscv.attributes
-                0x00000370       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
+                0x00000370       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
  .riscv.attributes
                 0x0000039a       0x2a /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
  .riscv.attributes
                 0x000003c4       0x2a /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
 
 .comment        0x00000000       0x12
- .comment       0x00000000       0x12 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
+ .comment       0x00000000       0x12 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
+ .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
                                  0x13 (size before relaxing)
  .comment       0x00000012        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
                                  0x13 (size before relaxing)
@@ -384,47 +383,47 @@ OUTPUT(/Users/jeremy/test_fpga/pocket-tunes/firmware/firmware.elf elf32-littleri
 .note.GNU-stack
                 0x00000000        0x0
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccic6D9l.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIhiT4W.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAxDI7w.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIQJeP3.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciBwid2.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIWuu7y.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccOeEgw4.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cciMmTLr.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccvlTL9i.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8oIHFo.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoD3fxX.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccTH2eC4.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccXWNNRq.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc3P0b5N.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgxYrBO.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccp7atPA.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccUhBEpa.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc40qFmV.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc8lXMIf.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cca40UDM.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccBnqO5x.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc7eu0g3.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdJXVrZ.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccNST85H.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccQp7yzc.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccsgqioI.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6HEjFk.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccStUred.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccVtzhN5.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccnLUuhT.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCbdk9v.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccZFCOMN.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccoR8YHP.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccbcCbtS.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccChmUMm.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9cIqSA.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccgsLkUV.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccMVEvuW.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc9Mp1wL.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrOrcbb.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccAjcXc7.o
+                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cctq089G.o
  .note.GNU-stack
                 0x00000000        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
  .note.GNU-stack
