@@ -328,8 +328,8 @@ module pt_soc #(
   wire [10:0] pcm_level = pcm_wr - pcm_rd;
   wire [10:0] pcm_free = 11'd2047 - pcm_level;
 
-  reg [9:0] pcm_div = 0;
-  wire pcm_tick = (pcm_div == 10'd999);
+  reg [10:0] pcm_div = 0;
+  wire pcm_tick = (pcm_div == 11'd1499);  // 72MHz/1500 = 48kHz
 
   reg [31:0] pcm_q;
 
@@ -346,7 +346,7 @@ module pt_soc #(
         pcm_wr <= pcm_wr + 1'b1;
       end
 
-      pcm_div <= pcm_tick ? 10'd0 : pcm_div + 1'b1;
+      pcm_div <= pcm_tick ? 11'd0 : pcm_div + 1'b1;
       pcm_q <= pcm_mem[pcm_rd[10:0]];
       if (pcm_tick && pcm_level != 0) begin
         audio_l <= pcm_q[15:0];

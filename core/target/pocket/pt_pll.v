@@ -1,7 +1,7 @@
 // Pocket Tunes PLL
 //
 // 74.25 MHz reference in (Pocket clk_74a) →
-//   outclk_0: 48 MHz  clk_sys   (bridge consumers now; soft-CPU domain later)
+//   outclk_0: 72 MHz  clk_sys  (was 48; raised for real-time MP3)   (bridge consumers now; soft-CPU domain later)
 //   outclk_1: 12 MHz  clk_vid   (dot clock, 400x360@60: 500x400 total = 200k dots)
 //   outclk_2: 12 MHz  clk_vid_90 (+90° = 20833 ps, for video_rgb_clock_90)
 //
@@ -44,7 +44,7 @@ module pt_pll_0002 (
       .reference_clock_frequency("74.25 MHz"),
       .operation_mode("normal"),
       .number_of_clocks(3),
-      .output_clock_frequency0("48.000000 MHz"),
+      .output_clock_frequency0("72.000000 MHz"),
       .phase_shift0("0 ps"),
       .duty_cycle0(50),
       .output_clock_frequency1("12.000000 MHz"),
