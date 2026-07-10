@@ -44,17 +44,77 @@ Example:
   pocket-tunes-indexer -m /Volumes/POCKET/Music -o /Volumes/POCKET/Assets/pockettunes/common -r /Music
 `;
 
-/** Join an SD absolute root with a relative path, forcing POSIX separators.
- *  The path is normalized to Unicode NFC: exFAT stores filenames precomposed
- *  (Microsoft/NFC convention) and the Pocket's openfile (0x0192) matches those
- *  raw entries. macOS's readdir DEcomposes them to NFD on the way out, so the
- *  as-read form does NOT byte-match what the Pocket looks up — accented files
- *  then fail with openfile ERR 1 while ASCII names work. NFC fixes it. */
+/** Transliterate a string to plain ASCII (é→e, œ→oe, …). The Pocket's openfile
+ *  (0x0192) can only match ASCII names — it fails to match ANY non-ASCII entry,
+ *  in EITHER Unicode form (NFC and NFD both tested on hardware → ERR 1). So the
+ *  only reliable fix is to give the file an ASCII name on disk and store that
+ *  ASCII path here; the accented original is kept as the display title. */
+const LIGATURES = { "œ": "oe", "Œ": "OE", "æ": "ae", "Æ": "AE", "ß": "ss",
+  "ø": "o", "Ø": "O", "đ": "d", "Đ": "D", "ł": "l", "Ł": "L", "þ": "th", "ð": "d" };
+function deaccent(s) {
+  return s
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")                 // strip combining diacritics
+    .replace(/[œŒæÆßøØđĐłŁþð]/g, (c) => LIGATURES[c]) // common ligatures
+    .replace(/[^\x20-\x7e]/g, "_");                  // any remaining non-ASCII → _
+}
+function hasNonAscii(s) {
+  return /[^\x20-\x7e]/.test(s);
+}
+
+/** Join an SD absolute root with a relative path (POSIX separators) and force
+ *  the whole path to ASCII. `sanitizeMusicTree` renames the real files/folders
+ *  on disk to the same ASCII names so this path resolves on the Pocket. */
 function sdJoin(sdRoot, rel) {
   const norm = rel.split(path.sep).join("/");
-  return (sdRoot.replace(/\/+$/, "") + "/" + norm)
-    .replace(/\/{2,}/g, "/")
-    .normalize("NFC");
+  return deaccent((sdRoot.replace(/\/+$/, "") + "/" + norm).replace(/\/{2,}/g, "/"));
+}
+
+/** Rename every file/folder under `root` whose name has non-ASCII characters to
+ *  its ASCII transliteration, so the paths written to library.json resolve on
+ *  the Pocket. Deepest-first so a directory is renamed only after its children.
+ *  Display names (artist/album/track) were already captured with accents from
+ *  the earlier scan, so this only touches on-disk names, not what's shown. */
+async function sanitizeMusicTree(root, quiet) {
+  const entries = [];
+  async function walk(dir) {
+    let items;
+    try {
+      items = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const it of items) {
+      if (it.name.startsWith(".")) continue; // skip dotfiles / macOS ._ cruft
+      const full = path.join(dir, it.name);
+      if (it.isDirectory()) await walk(full);
+      if (hasNonAscii(it.name)) entries.push({ dir, name: it.name, depth: full.split(path.sep).length });
+    }
+  }
+  await walk(root);
+  entries.sort((a, b) => b.depth - a.depth); // deepest first
+
+  let renamed = 0;
+  for (const e of entries) {
+    const ascii = deaccent(e.name);
+    if (ascii === e.name) continue;
+    const from = path.join(e.dir, e.name);
+    const to = path.join(e.dir, ascii);
+    try {
+      await fs.access(to);
+      log(quiet, `  ! keep accented (ASCII name taken): ${e.name}`);
+      continue; // collision — leave it; would clobber a different entry
+    } catch {
+      /* target free → rename */
+    }
+    try {
+      await fs.rename(from, to);
+      renamed++;
+    } catch (err) {
+      log(quiet, `  ! rename failed: ${e.name} (${err.message})`);
+    }
+  }
+  if (renamed) log(quiet, `Renamed ${renamed} non-ASCII name(s) → ASCII (Pocket openfile needs it)`);
 }
 
 function log(quiet, ...m) {
@@ -193,6 +253,11 @@ async function main() {
 
   // Re-number artist ids to their final array position.
   artists.forEach((a, i) => (a.id = i));
+
+  // All disk reads are done; now rename any accented files/folders to ASCII so
+  // the ASCII paths recorded above resolve on the Pocket (openfile can't match
+  // non-ASCII). Display names keep their accents (captured before this).
+  await sanitizeMusicTree(musicRoot, args.quiet);
 
   const library = {
     schemaVersion: SCHEMA_VERSION,
