@@ -75,6 +75,7 @@ module pt_soc #(
     // audio samples out (clk_sys domain; updated at 48 kHz)
     output reg signed [15:0] audio_l,
     output reg signed [15:0] audio_r,
+    output reg               audio_stb,  // 1-cycle pulse per 48 kHz sample (push strobe for i2s)
 
     // video out (registered, aligned)
     output wire        video_de,
@@ -313,11 +314,12 @@ module pt_soc #(
   synch_3 #(.WIDTH(32)) dtq_s (datatable_q, dt_q_s, clk_sys);
 
   // ------------------------------------------------------------ PCM FIFO
-  // 2048 stereo samples; CPU pushes, a 48 kHz strobe (48 MHz / 1000) pops.
-  reg [31:0] pcm_mem[0:2047];
-  reg [10:0] pcm_wr = 0, pcm_rd = 0;
-  wire [10:0] pcm_level = pcm_wr - pcm_rd;
-  wire [10:0] pcm_free = 11'd2047 - pcm_level;
+  // 4096 stereo samples (~85 ms) — deep enough to ride out a full-screen UI
+  // redraw without starving. CPU pushes; a 48 kHz strobe (72 MHz / 1500) pops.
+  reg [31:0] pcm_mem[0:4095];
+  reg [11:0] pcm_wr = 0, pcm_rd = 0;
+  wire [11:0] pcm_level = pcm_wr - pcm_rd;
+  wire [11:0] pcm_free = 12'd4095 - pcm_level;
 
   reg [10:0] pcm_div = 0;
   wire pcm_tick = (pcm_div == 11'd1499);  // 72MHz/1500 = 48kHz
@@ -331,14 +333,20 @@ module pt_soc #(
       pcm_div <= 0;
       audio_l <= 0;
       audio_r <= 0;
+      audio_stb <= 0;
     end else begin
       if (mmio_wr && dbus_addr[9:0] == 10'h040 && pcm_free != 0) begin
-        pcm_mem[pcm_wr[10:0]] <= dbus_wdata;
+        pcm_mem[pcm_wr[11:0]] <= dbus_wdata;
         pcm_wr <= pcm_wr + 1'b1;
       end
 
       pcm_div <= pcm_tick ? 11'd0 : pcm_div + 1'b1;
-      pcm_q <= pcm_mem[pcm_rd[10:0]];
+      pcm_q <= pcm_mem[pcm_rd[11:0]];
+      // Strobe EVERY 48 kHz tick so sound_i2s pushes one sample per period —
+      // its own change-detect drops identical consecutive samples (common in
+      // speech/silence → crackle). On underflow we re-push the held sample,
+      // which keeps the producer/consumer sample rates locked.
+      audio_stb <= pcm_tick;
       if (pcm_tick && pcm_level != 0) begin
         audio_l <= pcm_q[15:0];
         audio_r <= pcm_q[31:16];
@@ -376,7 +384,7 @@ module pt_soc #(
       8'h2C:   mmio_rdata <= tgt_length;
       8'h30:   mmio_rdata <= {30'd0, tgt_cmd};
       8'h34:   mmio_rdata <= {25'd0, tgt_err_s, 2'b00, tgt_done_s, tgt_ack_s};
-      8'h40:   mmio_rdata <= {21'd0, pcm_free};
+      8'h40:   mmio_rdata <= {20'd0, pcm_free};
       8'h54:   mmio_rdata <= dt_q_s;
       default: mmio_rdata <= 32'd0;
     endcase

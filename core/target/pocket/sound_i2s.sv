@@ -33,6 +33,9 @@ module sound_i2s #(
     // Left and right audio channels. Can be in an arbitrary clock domain
     input wire [CHANNEL_WIDTH - 1:0] audio_l,
     input wire [CHANNEL_WIDTH - 1:0] audio_r,
+    // 1-cycle strobe (clk_audio) marking a fresh sample to enqueue. When 1'b0
+    // is tied, falls back to change-detection (legacy behaviour).
+    input wire sample_stb,
 
     output reg audio_mclk,
     output reg audio_lrck,
@@ -114,14 +117,17 @@ module sound_i2s #(
   reg [CHANNEL_WIDTH - 1:0] prev_left;
   reg [CHANNEL_WIDTH - 1:0] prev_right;
 
-  // Mark write when necessary
+  // Enqueue one sample per external strobe (the core drives it once per 48 kHz
+  // period). Change-detection is kept only as a fallback for sample_stb tied 0:
+  // it silently drops identical consecutive samples, which desyncs the i2s rate
+  // and crackles on speech/silence.
   always @(posedge clk_audio) begin
     prev_left  <= audio_l;
     prev_right <= audio_r;
 
-    write_en   <= 0;
+    write_en   <= sample_stb;
 
-    if (audio_l != prev_left || audio_r != prev_right) begin
+    if (!sample_stb && (audio_l != prev_left || audio_r != prev_right)) begin
       write_en <= 1;
     end
   end

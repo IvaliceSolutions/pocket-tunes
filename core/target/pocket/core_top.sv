@@ -452,6 +452,7 @@ module core_top (
 
   wire signed [15:0] soc_audio_l;
   wire signed [15:0] soc_audio_r;
+  wire               soc_audio_stb;
 
   pt_soc soc (
       .clk_sys(clk_sys_48),
@@ -486,6 +487,7 @@ module core_top (
 
       .audio_l(soc_audio_l),
       .audio_r(soc_audio_r),
+      .audio_stb(soc_audio_stb),
 
       .video_de (soc_de),
       .video_hs (soc_hs),
@@ -526,6 +528,7 @@ module core_top (
 
       .audio_l(soc_audio_l),
       .audio_r(soc_audio_r),
+      .sample_stb(soc_audio_stb),
 
       .audio_mclk(audio_mclk),
       .audio_lrck(audio_lrck),

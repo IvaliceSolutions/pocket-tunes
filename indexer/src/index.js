@@ -45,12 +45,16 @@ Example:
 `;
 
 /** Join an SD absolute root with a relative path, forcing POSIX separators.
- *  Paths are kept in the exact Unicode form the filesystem reports (NFD on
- *  macOS) so they byte-match the on-disk exFAT entry the Pocket looks up.
- *  (Normalizing to NFC breaks accented lookups on macOS-written cards.) */
+ *  The path is normalized to Unicode NFC: exFAT stores filenames precomposed
+ *  (Microsoft/NFC convention) and the Pocket's openfile (0x0192) matches those
+ *  raw entries. macOS's readdir DEcomposes them to NFD on the way out, so the
+ *  as-read form does NOT byte-match what the Pocket looks up — accented files
+ *  then fail with openfile ERR 1 while ASCII names work. NFC fixes it. */
 function sdJoin(sdRoot, rel) {
   const norm = rel.split(path.sep).join("/");
-  return (sdRoot.replace(/\/+$/, "") + "/" + norm).replace(/\/{2,}/g, "/");
+  return (sdRoot.replace(/\/+$/, "") + "/" + norm)
+    .replace(/\/{2,}/g, "/")
+    .normalize("NFC");
 }
 
 function log(quiet, ...m) {
