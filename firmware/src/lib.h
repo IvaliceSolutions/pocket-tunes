@@ -42,7 +42,7 @@ typedef struct {
 
 #define MAX_ARTISTS 48
 #define MAX_ALBUMS  96
-#define MAX_TRACKS  384
+#define MAX_TRACKS  256   // was 384; trimmed to give the CPU stack room (128 KB RAM is tight)
 #define POOL_SIZE   8192
 
 extern artist_t lib_artists[MAX_ARTISTS];
