@@ -50,10 +50,11 @@ module bridge_rx_ram #(
   wire in_range = (wr_addr < WORDS * 4);
   wire wr = wr_en && in_range;
 
-  reg [7:0] mb0[0:WORDS-1];
-  reg [7:0] mb1[0:WORDS-1];
-  reg [7:0] mb2[0:WORDS-1];
-  reg [7:0] mb3[0:WORDS-1];
+  // Force block RAM: without this Quartus spilled bank 0 into ~32 k registers.
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] mb0[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] mb1[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] mb2[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] mb3[0:WORDS-1];
 
   wire [$clog2(WORDS)-1:0] wr_word = wr_addr[$clog2(WORDS)+1:2];
 

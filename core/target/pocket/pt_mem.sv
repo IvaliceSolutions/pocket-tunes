@@ -10,9 +10,15 @@
 
 // CPU RAM: 32-bit, byte-writable, TRUE DUAL-PORT, initialized with the firmware
 // image (one init file per byte lane, from firmware/build.sh).
-//   Port A: read-only  — VexRiscv iBus instruction fetch
-//   Port B: read/write  — VexRiscv dBus data access (byte-enabled)
-// Four 8-bit banks, each a true dual-port BRAM (two always blocks per array).
+//   Port A: VexRiscv iBus instruction fetch (a_we tied 0 in the SoC -> read only)
+//   Port B: VexRiscv dBus data access (read + byte-enabled write)
+//
+// Both ports are declared SYMMETRICALLY (each with its own write path) so
+// Quartus infers a single true-dual-port M10K per bank. Declaring port A as
+// pure-read made Quartus replicate every bank into two M10K blocks (a read-only
+// copy + a 1W1R copy) — doubling the whole 128 KB RAM to ~2 Mbit and blowing the
+// 308-block M10K budget. ramstyle forces block RAM; no_rw_check drops the
+// read-during-write bypass logic the ports never rely on.
 module cpu_ram_dp #(
     parameter WORDS = 32768,  // 128 KB
     parameter INIT_B0 = "firmware_b0.hex",
@@ -21,8 +27,10 @@ module cpu_ram_dp #(
     parameter INIT_B3 = "firmware_b3.hex"
 ) (
     input  wire                    clk,
-    // port A: instruction fetch (read only)
+    // port A: instruction fetch (a_we held 0 -> read only)
     input  wire [$clog2(WORDS)-1:0] a_word,
+    input  wire                     a_we,
+    input  wire [31:0]              a_wdata,
     output wire [31:0]              a_rdata,
     // port B: data (read + byte-enabled write)
     input  wire [$clog2(WORDS)-1:0] b_word,
@@ -31,10 +39,10 @@ module cpu_ram_dp #(
     output wire [31:0]              b_rdata
 );
 
-  reg [7:0] m0[0:WORDS-1];
-  reg [7:0] m1[0:WORDS-1];
-  reg [7:0] m2[0:WORDS-1];
-  reg [7:0] m3[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] m0[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] m1[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] m2[0:WORDS-1];
+  (* ramstyle = "M10K, no_rw_check" *) reg [7:0] m3[0:WORDS-1];
 
   initial begin
     $readmemh(INIT_B0, m0);
@@ -46,26 +54,39 @@ module cpu_ram_dp #(
   reg [7:0] a0, a1, a2, a3;   // port A read regs
   reg [7:0] qb0, qb1, qb2, qb3;  // port B read regs
 
+  // Each bank: two symmetric R/W ports -> one true-dual-port M10K.
   // bank 0
-  always @(posedge clk) a0 <= m0[a_word];
+  always @(posedge clk) begin
+    if (a_we) m0[a_word] <= a_wdata[7:0];
+    a0 <= m0[a_word];
+  end
   always @(posedge clk) begin
     if (b_we[0]) m0[b_word] <= b_wdata[7:0];
     qb0 <= m0[b_word];
   end
   // bank 1
-  always @(posedge clk) a1 <= m1[a_word];
+  always @(posedge clk) begin
+    if (a_we) m1[a_word] <= a_wdata[15:8];
+    a1 <= m1[a_word];
+  end
   always @(posedge clk) begin
     if (b_we[1]) m1[b_word] <= b_wdata[15:8];
     qb1 <= m1[b_word];
   end
   // bank 2
-  always @(posedge clk) a2 <= m2[a_word];
+  always @(posedge clk) begin
+    if (a_we) m2[a_word] <= a_wdata[23:16];
+    a2 <= m2[a_word];
+  end
   always @(posedge clk) begin
     if (b_we[2]) m2[b_word] <= b_wdata[23:16];
     qb2 <= m2[b_word];
   end
   // bank 3
-  always @(posedge clk) a3 <= m3[a_word];
+  always @(posedge clk) begin
+    if (a_we) m3[a_word] <= a_wdata[31:24];
+    a3 <= m3[a_word];
+  end
   always @(posedge clk) begin
     if (b_we[3]) m3[b_word] <= b_wdata[31:24];
     qb3 <= m3[b_word];

@@ -228,6 +228,8 @@ module pt_soc #(
   ) ram (
       .clk    (clk_sys),
       .a_word (ibus_pc[16:2]),
+      .a_we   (1'b0),          // iBus is read-only; port kept for symmetric TDP
+      .a_wdata(32'b0),
       .a_rdata(ibus_inst),
       .b_word (dbus_addr[16:2]),
       .b_we   ((dregion == 4'h0) ? {4{dwrite}} & dbus_mask : 4'h0),
