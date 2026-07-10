@@ -105,6 +105,21 @@ int mp3_at_eof(void) {
 
 uint32_t mp3_pos_seconds(void) { return samples_pushed / 48000u; }
 
+void mp3_seek(uint32_t to_seconds, uint32_t byte_off) {
+  if (!playing) return;
+  // clamp so there's at least a frame of data left to decode
+  if (byte_off + 512 >= f_size) byte_off = f_size > 2048 ? f_size - 2048 : 0;
+  f_off = byte_off;
+  in_len = 0;
+  in_ptr = INBUF;
+  eof_decode = 0;
+  samples_pushed = to_seconds * 48000u;  // keeps mp3_pos_seconds() consistent
+  rs_phase = 0;
+  rs_prev_l = rs_prev_r = 0;
+  in_compact_and_fill();  // refill the input window from the new offset
+  // mp3_pump() will MP3FindSyncWord() from here and resync within a frame.
+}
+
 // resample `n` interleaved stereo samples at `sr` to 48 kHz, pushing to the fifo
 static void resample_push(int n, int sr, int nch) {
   if (rs_step == 0) rs_step = ((uint32_t)sr << 16) / 48000u;

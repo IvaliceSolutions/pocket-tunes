@@ -30,6 +30,9 @@ static int drawer_open, cur_track, playing;   // cur_track relative to album
 static uint32_t pos_frames;
 static char pathbuf[288];
 static int last_start_err;  // mp3_start() return code, shown if playback fails
+static int resume_gidx = -1;   // global track index remembered on B (-1 = none)
+static uint32_t resume_sec;    // position (s) to resume that same track at
+static uint32_t anim;          // free-running frame counter for the title marquee
 static void start_current_track(void);
 
 // ------------------------------------------------------------ small utils
@@ -60,19 +63,39 @@ static const track_t *cur_track_p(void) {
   const album_t *al = cur_album();
   return &lib_tracks[al->first_track + cur_track];
 }
+static int cur_gidx(void) { return cur_album()->first_track + cur_track; }
+
+// Estimate the file byte offset for a given time (CBR: file-size ratio, else
+// nominal bitrate). Used by seek (FF/RW) and resume.
+static uint32_t seek_byte_off(const track_t *t, uint32_t sec) {
+  if (t->dur_s) return (uint32_t)((uint64_t)t->fsize * sec / t->dur_s);
+  if (t->kbps) return sec * (t->kbps * 1000u / 8u);
+  return 0;
+}
 
 static void start_current_track(void) {
   const track_t *t = cur_track_p();
   int n = lib_fetch_path(t, pathbuf, sizeof pathbuf);
+  int g = cur_gidx();
+  anim = 0;         // restart the title marquee from the beginning
   pos_frames = 0;
   if (n > 0 && t->format == FMT_MP3) {
     last_start_err = mp3_start(pathbuf, n, t->fsize);
     playing = (last_start_err == 0);
+    // Resume where we left THIS same track (marker set on B); one-shot.
+    if (playing && g == resume_gidx && resume_sec > 0) {
+      uint32_t sec = resume_sec;
+      if (t->dur_s && sec >= t->dur_s) sec = t->dur_s - 1;
+      mp3_seek(sec, seek_byte_off(t, sec));
+      pos_frames = sec * 60u;
+    }
   } else {
     last_start_err = (n <= 0) ? -20 : -21;  // -20 path, -21 non-MP3
     playing = 0;
     mp3_stop();
   }
+  resume_gidx = -1;  // consume the resume marker (matched or not)
+  resume_sec = 0;
 }
 
 // hue (0..359) → two-tone placeholder colors from the 6x6x6 cube
@@ -116,12 +139,26 @@ int ui_input(uint16_t pressed) {
       start_current_track();
       return 1;
     }
+    if (pressed & (KEY_LEFT | KEY_RIGHT)) {  // FF / rewind ±10 s
+      const track_t *t = cur_track_p();
+      uint32_t cur = mp3_pos_seconds();
+      uint32_t tgt = (pressed & KEY_RIGHT) ? cur + 10 : (cur > 10 ? cur - 10 : 0);
+      if (t->dur_s && tgt >= t->dur_s) tgt = t->dur_s ? t->dur_s - 1 : 0;
+      mp3_seek(tgt, seek_byte_off(t, tgt));
+      pos_frames = tgt * 60u;
+      return 1;
+    }
     if (pressed & KEY_A) {
       playing = !playing;
       mp3_set_paused(!playing);
       return 1;
     }
     if (pressed & KEY_B) {
+      // remember this track + position so re-opening it resumes here
+      if (last_start_err == 0) {
+        resume_gidx = cur_gidx();
+        resume_sec = mp3_pos_seconds();
+      }
       drawer_open = 0;
       playing = 0;
       mp3_stop();
@@ -160,7 +197,13 @@ int ui_input(uint16_t pressed) {
   }
   if (pressed & KEY_A) {
     drawer_open = 1;
-    cur_track = 0;
+    const album_t *al = cur_album();
+    // if we B'd out of a track in THIS album, re-open on it so it resumes
+    if (resume_gidx >= al->first_track &&
+        resume_gidx < al->first_track + al->n_tracks)
+      cur_track = resume_gidx - al->first_track;
+    else
+      cur_track = 0;
     start_current_track();
     return 1;
   }
@@ -169,6 +212,7 @@ int ui_input(uint16_t pressed) {
 }
 
 int ui_tick(void) {
+  if (drawer_open) anim++;  // drives the title marquee
   if (drawer_open && playing) {
     pos_frames = mp3_pos_seconds() * 60u;  // progress driven by real samples
     if (mp3_at_eof()) {  // track ended → next, wrap
@@ -237,6 +281,33 @@ static void render_progress(void) {
   }
 }
 
+// Now-playing title in a fixed box at (76 .. 250). If it doesn't fit, scroll
+// it left/right with a bounce so the whole title can be read. Redrawn every
+// frame from ui_render_playing() so the marquee animates.
+#define TITLE_X 76
+#define TITLE_Y (DRAWER_Y + 12)
+#define TITLE_W 174
+static void render_title(const track_t *t) {
+  const char *s = lib_str(t->title);
+  int len = t->title.len;
+  gfx_fill_rect(TITLE_X, TITLE_Y, TITLE_W, 13, COL_DRAWER_BG);
+  int tw = gfx_text_px_len(s, len, 0);
+  if (tw <= TITLE_W) {
+    gfx_textn(TITLE_X, TITLE_Y, s, len, TITLE_X + TITLE_W, COL_TRACK_TITLE);
+    return;
+  }
+  int overflow = tw - TITLE_W;
+  int hold = 30;                          // pause units at each end
+  int cyc = 2 * hold + 2 * overflow;
+  int p = (int)((anim >> 1) % (uint32_t)cyc);  // >>1 → ~30 px/s
+  int scroll;
+  if (p < hold) scroll = 0;                       // hold at start
+  else if (p < hold + overflow) scroll = p - hold;         // scroll out
+  else if (p < 2 * hold + overflow) scroll = overflow;     // hold at end
+  else scroll = cyc - p;                                   // scroll back
+  gfx_text_scroll(TITLE_X, TITLE_Y, s, len, TITLE_W, COL_TRACK_TITLE, scroll, 0);
+}
+
 static void render_drawer(void) {
   const album_t *al = cur_album();
   const track_t *t = cur_track_p();
@@ -247,7 +318,7 @@ static void render_drawer(void) {
   draw_cover_ph(10, DRAWER_Y + 10, 56, al->hue);
 
   // title + play state
-  gfx_textn(76, DRAWER_Y + 12, lib_str(t->title), t->title.len, 250, COL_TRACK_TITLE);
+  render_title(t);
   if (!playing && last_start_err) {
     char e[16], *q = e; q = s_append(q, "ERR "); s_udec(q, (uint32_t)(-last_start_err));
     gfx_text_small(SCREEN_W - 10 - 7 * 5, DRAWER_Y + 14, e, COL_WHITE);
@@ -296,7 +367,7 @@ static void render_drawer(void) {
   gfx_text_small(10, DRAWER_Y + 102, l2, COL_ARTIST_DIM);
 
   // control hints pinned at the bottom
-  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 A lecture/pause \xc2\xb7 B fermer",
+  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 <> +/-10s \xc2\xb7 A pause \xc2\xb7 B retour",
                  COL_ARTIST_DIM);
 }
 
@@ -308,5 +379,8 @@ void ui_render_full(void) {
 }
 
 void ui_render_playing(void) {
-  if (drawer_open && playing) render_progress();
+  if (drawer_open) {
+    render_title(cur_track_p());  // animate the marquee even while paused
+    render_progress();
+  }
 }

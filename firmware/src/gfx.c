@@ -81,6 +81,44 @@ int gfx_textn_small(int x, int y, const char *s, int len, int x_max, uint8_t col
   return draw_glyphs(x, y, s, len, x_max, color, &font5x8[0][0], FONT5X8_W, FONT5X8_H);
 }
 
+// Pixel width the string would occupy (counts glyphs, not bytes — multi-byte
+// UTF-8 sequences count as one glyph).
+int gfx_text_px_len(const char *s, int len, int small) {
+  int gw = small ? FONT5X8_W : FONT7X13_W;
+  int i = 0, n = 0;
+  while (i < len && s[i]) { utf8_next(s, len, &i); n++; }
+  return n * gw;
+}
+
+// Marquee: draw text inside the window [x, x+box_w), shifted left by scroll_px,
+// with per-pixel clipping on BOTH edges (so partial glyphs at the borders don't
+// spill). Used to scroll long titles that don't fit.
+void gfx_text_scroll(int x, int y, const char *s, int len, int box_w,
+                     uint8_t color, int scroll_px, int small) {
+  const unsigned char *font = small ? &font5x8[0][0] : &font7x13[0][0];
+  int gw = small ? FONT5X8_W : FONT7X13_W;
+  int gh = small ? FONT5X8_H : FONT7X13_H;
+  int cx0 = x, cx1 = x + box_w;
+  int gx = x - scroll_px;
+  int i = 0;
+  while (i < len && s[i]) {
+    unsigned cp = utf8_next(s, len, &i);
+    if (gx >= cx1) break;             // rest is past the right edge
+    if (gx + gw > cx0) {              // at least partly inside the window
+      const unsigned char *g = font + (cp - 32) * gh;
+      for (int r = 0; r < gh; r++) {
+        unsigned bits = g[r];
+        for (int c = 0; c < gw; c++) {
+          int px_x = gx + c;
+          if (px_x < cx0 || px_x >= cx1) continue;
+          if (bits & (0x80u >> c)) px(px_x, y + r, color);
+        }
+      }
+    }
+    gx += gw;
+  }
+}
+
 void u32_to_hex(uint32_t v, char out[9]) {
   for (int i = 7; i >= 0; i--) {
     unsigned d = v & 0xF;

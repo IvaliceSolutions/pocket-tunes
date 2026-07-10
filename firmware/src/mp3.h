@@ -19,4 +19,8 @@ int mp3_pump(void);
 // Playback position in seconds (from samples pushed at 48 kHz).
 uint32_t mp3_pos_seconds(void);
 
+// Seek to `to_seconds` (also becomes the reported position) by repositioning
+// the file read to `byte_off`. The decoder resyncs at the next frame sync word.
+void mp3_seek(uint32_t to_seconds, uint32_t byte_off);
+
 #endif
