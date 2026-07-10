@@ -20,7 +20,7 @@ extern char lib_stage[];          // 12 KB, word-aligned (defined in lib.c)
 // ---- tiny arena for Helix's mallocs (MP3InitDecoder allocates ~20 KB once).
 // On the native host test we let libc's malloc serve Helix instead.
 #ifndef PT_HOST_TEST
-static char arena[25600] __attribute__((aligned(8)));  // Helix needs 23864; margin
+static char arena[25088] __attribute__((aligned(8)));  // Helix needs 23864; margin
 static uint32_t arena_used;
 void *malloc(unsigned long n) {
   n = (n + 7u) & ~7u;
