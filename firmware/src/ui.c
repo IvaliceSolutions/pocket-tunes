@@ -1,7 +1,10 @@
-// Pocket Tunes browser UI — implements the amber-terminal design handoff
-// (design_handoff_pocket_tunes_1b) at 320x288: artist sidebar → album list →
-// now-playing drawer. Cover art uses per-album hue placeholders until real
-// thumbnails arrive with the file-streaming milestone.
+// Pocket Tunes browser UI — the amber-terminal design handoff
+// (design_handoff_pocket_tunes_1b) at 320x288. Three explicit navigation
+// levels — Artists (sidebar) → Albums → Tracks — with a now-playing drawer
+// that overlays the track list. Playback is independent of the browse cursor:
+// music keeps running while you browse, so "where am I" and "what's playing"
+// never conflate. The currently-selected item at every level scrolls its title
+// with a bounce (marquee) when it's too long to fit.
 
 #include "ui.h"
 #include "mmio.h"
@@ -12,28 +15,47 @@
 
 // ----------------------------------------------------------------- layout
 #define SIDEBAR_W 95
-#define MAIN_X (SIDEBAR_W + 5)
-#define MAIN_X_MAX (SCREEN_W - 4)
+#define SB_X 8
 #define SB_ROW_H 17
 #define SB_ROWS 16
+#define SB_Y0 6
+#define SB_TXT_W (SIDEBAR_W - 4 - SB_X)
+
+#define MAIN_X (SIDEBAR_W + 5)
+#define MAIN_X_MAX (SCREEN_W - 4)
+
 #define AL_ROW_H 38
 #define AL_ROWS 6
 #define AL_Y0 24
+#define AL_TXT_X (MAIN_X + 40)
+#define AL_TXT_W (MAIN_X_MAX - AL_TXT_X)
+
+#define TR_ROW_H 22
+#define TR_ROWS 11
+#define TR_Y0 24
+#define TR_TXT_X (MAIN_X + 18)
+#define TR_TXT_W (MAIN_X_MAX - TR_TXT_X - 10)  // 10px kept for the ▶ marker
+
 #define DRAWER_H 184
 #define DRAWER_Y (SCREEN_H - DRAWER_H)
+#define TITLE_X 76
+#define TITLE_Y (DRAWER_Y + 12)
+#define TITLE_W 174
 
 // ------------------------------------------------------------------ state
-enum { FOC_SIDEBAR, FOC_MAIN };
-static int focus, sb_cursor, sb_scroll;
-static int cur_artist, main_cursor, main_scroll;
-static int drawer_open, cur_track, playing;   // cur_track relative to album
-static uint32_t pos_frames;
+enum { FOC_ARTISTS, FOC_ALBUMS, FOC_TRACKS };
+static int focus;
+static int sb_cursor, sb_scroll;          // artists (sidebar)
+static int cur_artist;                     // artist whose albums are shown
+static int album_cursor, album_scroll;     // albums level cursor
+static int track_cursor, track_scroll;     // tracks level cursor
+// playback state — independent of the browse cursor above
+static int play_gidx = -1;                 // global track index loaded (-1 none)
+static int play_alb = -1;                  // global album index of that track
+static int drawer_open, playing;
+static uint32_t pos_frames, anim;
 static char pathbuf[288];
-static int last_start_err;  // mp3_start() return code, shown if playback fails
-static int resume_gidx = -1;   // global track index remembered on B (-1 = none)
-static uint32_t resume_sec;    // position (s) to resume that same track at
-static uint32_t anim;          // free-running frame counter for the title marquee
-static void start_current_track(void);
+static int last_start_err;
 
 // ------------------------------------------------------------ small utils
 static char *s_append(char *d, const char *s) {
@@ -54,48 +76,65 @@ static char *s_time(char *d, uint32_t sec) {
   *d = 0;
   return d;
 }
+static int clamp_scroll(int cursor, int scroll, int rows) {
+  if (cursor < scroll) return cursor;
+  if (cursor >= scroll + rows) return cursor - rows + 1;
+  return scroll;
+}
 
-static const album_t *cur_album(void) {
-  const artist_t *ar = &lib_artists[cur_artist];
-  return &lib_albums[ar->first_album + main_cursor];
+static const artist_t *sel_artist(void) { return &lib_artists[cur_artist]; }
+static const album_t *sel_album(void) {  // album the tracks level is showing
+  return &lib_albums[sel_artist()->first_album + album_cursor];
 }
-static const track_t *cur_track_p(void) {
-  const album_t *al = cur_album();
-  return &lib_tracks[al->first_track + cur_track];
-}
-static int cur_gidx(void) { return cur_album()->first_track + cur_track; }
+static const album_t *play_album_p(void) { return &lib_albums[play_alb]; }
+static const track_t *play_track_p(void) { return &lib_tracks[play_gidx]; }
 
 // Estimate the file byte offset for a given time (CBR: file-size ratio, else
-// nominal bitrate). Used by seek (FF/RW) and resume.
+// nominal bitrate). Used by seek (FF/RW).
 static uint32_t seek_byte_off(const track_t *t, uint32_t sec) {
   if (t->dur_s) return (uint32_t)((uint64_t)t->fsize * sec / t->dur_s);
   if (t->kbps) return sec * (t->kbps * 1000u / 8u);
   return 0;
 }
 
-static void start_current_track(void) {
-  const track_t *t = cur_track_p();
+// Load and start playing lib_tracks[gidx] (in album `alb`).
+static void start_play(int gidx, int alb) {
+  play_gidx = gidx;
+  play_alb = alb;
+  const track_t *t = &lib_tracks[gidx];
   int n = lib_fetch_path(t, pathbuf, sizeof pathbuf);
-  int g = cur_gidx();
-  anim = 0;         // restart the title marquee from the beginning
+  anim = 0;
   pos_frames = 0;
   if (n > 0 && t->format == FMT_MP3) {
     last_start_err = mp3_start(pathbuf, n, t->fsize);
     playing = (last_start_err == 0);
-    // Resume where we left THIS same track (marker set on B); one-shot.
-    if (playing && g == resume_gidx && resume_sec > 0) {
-      uint32_t sec = resume_sec;
-      if (t->dur_s && sec >= t->dur_s) sec = t->dur_s - 1;
-      mp3_seek(sec, seek_byte_off(t, sec));
-      pos_frames = sec * 60u;
-    }
   } else {
     last_start_err = (n <= 0) ? -20 : -21;  // -20 path, -21 non-MP3
     playing = 0;
     mp3_stop();
   }
-  resume_gidx = -1;  // consume the resume marker (matched or not)
-  resume_sec = 0;
+}
+
+// ---- marquee: draw text in [x, x+box_w). If `animate` and it overflows,
+// scroll it left/right with a bounce (only the selected item animates).
+static void draw_marquee(int x, int y, int box_w, const char *s, int len,
+                         uint8_t color, int small, int animate) {
+  int tw = gfx_text_px_len(s, len, small);
+  if (tw <= box_w || !animate) {
+    if (small) gfx_textn_small(x, y, s, len, x + box_w, color);
+    else gfx_textn(x, y, s, len, x + box_w, color);
+    return;
+  }
+  int overflow = tw - box_w;
+  int hold = 30;                               // pause units at each end
+  int cyc = 2 * hold + 2 * overflow;
+  int p = (int)((anim >> 1) % (uint32_t)cyc);  // >>1 → ~30 px/s
+  int scroll;
+  if (p < hold) scroll = 0;
+  else if (p < hold + overflow) scroll = p - hold;
+  else if (p < 2 * hold + overflow) scroll = overflow;
+  else scroll = cyc - p;
+  gfx_text_scroll(x, y, s, len, box_w, color, scroll, small);
 }
 
 // hue (0..359) → two-tone placeholder colors from the 6x6x6 cube
@@ -118,29 +157,32 @@ static void draw_cover_ph(int x, int y, int size, uint16_t hue) {
 
 // ------------------------------------------------------------------ input
 void ui_init(void) {
-  focus = FOC_SIDEBAR;
+  focus = FOC_ARTISTS;
   sb_cursor = sb_scroll = 0;
   cur_artist = 0;
-  main_cursor = main_scroll = 0;
+  album_cursor = album_scroll = 0;
+  track_cursor = track_scroll = 0;
+  play_gidx = play_alb = -1;
   drawer_open = playing = 0;
-  cur_track = 0;
   pos_frames = 0;
 }
 
 int ui_input(uint16_t pressed) {
-  const artist_t *ar = &lib_artists[cur_artist];
+  anim = 0;  // any key press restarts the selected item's marquee
 
   if (drawer_open) {
-    const album_t *al = cur_album();
-    if (pressed & (KEY_UP | KEY_DOWN)) {
-      int n = al->n_tracks;
-      cur_track += (pressed & KEY_DOWN) ? 1 : n - 1;
-      cur_track %= n;
-      start_current_track();
+    if (pressed & (KEY_UP | KEY_DOWN)) {  // prev/next track (wraps), auto-play
+      const album_t *pa = play_album_p();
+      int rel = play_gidx - pa->first_track;
+      rel += (pressed & KEY_DOWN) ? 1 : pa->n_tracks - 1;
+      rel %= pa->n_tracks;
+      start_play(pa->first_track + rel, play_alb);
+      track_cursor = rel;  // keep the track list in sync behind the drawer
+      track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
       return 1;
     }
     if (pressed & (KEY_LEFT | KEY_RIGHT)) {  // FF / rewind ±10 s
-      const track_t *t = cur_track_p();
+      const track_t *t = play_track_p();
       uint32_t cur = mp3_pos_seconds();
       uint32_t tgt = (pressed & KEY_RIGHT) ? cur + 10 : (cur > 10 ? cur - 10 : 0);
       if (t->dur_s && tgt >= t->dur_s) tgt = t->dur_s ? t->dur_s - 1 : 0;
@@ -153,71 +195,84 @@ int ui_input(uint16_t pressed) {
       mp3_set_paused(!playing);
       return 1;
     }
-    if (pressed & KEY_B) {
-      // remember this track + position so re-opening it resumes here
-      if (last_start_err == 0) {
-        resume_gidx = cur_gidx();
-        resume_sec = mp3_pos_seconds();
-      }
+    if (pressed & KEY_B) {  // close overlay only — playback keeps running
       drawer_open = 0;
-      playing = 0;
-      mp3_stop();
       return 1;
     }
     return 0;
   }
 
-  if (focus == FOC_SIDEBAR) {
+  if (focus == FOC_ARTISTS) {
     if (pressed & (KEY_UP | KEY_DOWN)) {
       sb_cursor += (pressed & KEY_DOWN) ? 1 : lib_n_artists - 1;
       sb_cursor %= lib_n_artists;
-      if (sb_cursor < sb_scroll) sb_scroll = sb_cursor;
-      if (sb_cursor >= sb_scroll + SB_ROWS) sb_scroll = sb_cursor - SB_ROWS + 1;
+      sb_scroll = clamp_scroll(sb_cursor, sb_scroll, SB_ROWS);
       return 1;
     }
-    if (pressed & KEY_A) {
+    if (pressed & KEY_A) {  // → albums
       cur_artist = sb_cursor;
-      focus = FOC_MAIN;
-      main_cursor = main_scroll = 0;
+      focus = FOC_ALBUMS;
+      album_cursor = album_scroll = 0;
       return 1;
     }
     return 0;
   }
 
-  // focus == FOC_MAIN
+  if (focus == FOC_ALBUMS) {
+    if (pressed & KEY_UP) {
+      if (album_cursor > 0) album_cursor--;
+      album_scroll = clamp_scroll(album_cursor, album_scroll, AL_ROWS);
+      return 1;
+    }
+    if (pressed & KEY_DOWN) {
+      if (album_cursor < sel_artist()->n_albums - 1) album_cursor++;
+      album_scroll = clamp_scroll(album_cursor, album_scroll, AL_ROWS);
+      return 1;
+    }
+    if (pressed & KEY_A) {  // → tracks (does NOT start playback yet)
+      focus = FOC_TRACKS;
+      track_cursor = track_scroll = 0;
+      return 1;
+    }
+    if (pressed & KEY_B) { focus = FOC_ARTISTS; return 1; }
+    return 0;
+  }
+
+  // focus == FOC_TRACKS
   if (pressed & KEY_UP) {
-    if (main_cursor > 0) main_cursor--;
-    if (main_cursor < main_scroll) main_scroll = main_cursor;
+    if (track_cursor > 0) track_cursor--;
+    track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
     return 1;
   }
   if (pressed & KEY_DOWN) {
-    if (main_cursor < ar->n_albums - 1) main_cursor++;
-    if (main_cursor >= main_scroll + AL_ROWS) main_scroll = main_cursor - AL_ROWS + 1;
+    if (track_cursor < sel_album()->n_tracks - 1) track_cursor++;
+    track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
     return 1;
   }
-  if (pressed & KEY_A) {
+  if (pressed & KEY_A) {  // open drawer for the selected track
+    int gidx = sel_album()->first_track + track_cursor;
+    int alb = sel_artist()->first_album + album_cursor;
+    if (gidx != play_gidx)  // same track already loaded → resume, don't restart
+      start_play(gidx, alb);
     drawer_open = 1;
-    const album_t *al = cur_album();
-    // if we B'd out of a track in THIS album, re-open on it so it resumes
-    if (resume_gidx >= al->first_track &&
-        resume_gidx < al->first_track + al->n_tracks)
-      cur_track = resume_gidx - al->first_track;
-    else
-      cur_track = 0;
-    start_current_track();
     return 1;
   }
-  if (pressed & KEY_B) { focus = FOC_SIDEBAR; return 1; }
+  if (pressed & KEY_B) { focus = FOC_ALBUMS; return 1; }
   return 0;
 }
 
 int ui_tick(void) {
-  if (drawer_open) anim++;  // drives the title marquee
-  if (drawer_open && playing) {
-    pos_frames = mp3_pos_seconds() * 60u;  // progress driven by real samples
-    if (mp3_at_eof()) {  // track ended → next, wrap
-      cur_track = (cur_track + 1) % cur_album()->n_tracks;
-      start_current_track();
+  anim++;  // drives the marquee at every level
+  if (playing) {
+    pos_frames = mp3_pos_seconds() * 60u;  // progress from real samples
+    if (mp3_at_eof()) {  // track ended → next in the album, wrap
+      const album_t *pa = play_album_p();
+      int rel = (play_gidx - pa->first_track + 1) % pa->n_tracks;
+      start_play(pa->first_track + rel, play_alb);
+      if (drawer_open || focus == FOC_TRACKS) {
+        track_cursor = rel;
+        track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+      }
       return 1;
     }
   }
@@ -225,52 +280,104 @@ int ui_tick(void) {
 }
 
 // ----------------------------------------------------------------- render
+static void level_footer(uint32_t cur, uint32_t total, const char *noun) {
+  char f[32], *p = f;
+  p = s_append(p, "NIVEAU : ");
+  p = s_udec(p, cur);
+  *p++ = '/';
+  p = s_udec(p, total);
+  *p++ = ' ';
+  s_append(p, noun);
+  gfx_text_small(MAIN_X, SCREEN_H - 12, f, COL_ARTIST_DIM);
+}
+
 static void render_sidebar(void) {
   gfx_vline(SIDEBAR_W, 0, SCREEN_H, COL_DIVIDER);
   for (int i = 0; i < SB_ROWS; i++) {
     int idx = sb_scroll + i;
     if (idx >= lib_n_artists) break;
-    int y = 6 + i * SB_ROW_H;
-    if (idx == sb_cursor && focus == FOC_SIDEBAR && !drawer_open)
-      gfx_fill_rect(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
+    int y = SB_Y0 + i * SB_ROW_H;
+    int sel = (idx == sb_cursor && focus == FOC_ARTISTS && !drawer_open);
+    if (sel) gfx_fill_rect(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
     uint8_t col = (idx == cur_artist) ? COL_ARTIST_ACTIVE : COL_ARTIST_DIM;
     const artist_t *a = &lib_artists[idx];
-    gfx_textn(8, y, lib_str(a->name), a->name.len, SIDEBAR_W - 4, col);
+    draw_marquee(SB_X, y, SB_TXT_W, lib_str(a->name), a->name.len, col, 0, sel);
   }
 }
 
-static void render_main(void) {
-  const artist_t *ar = &lib_artists[cur_artist];
-
-  // folder-path header: "{Artist}/"
+static void render_albums(void) {
+  const artist_t *ar = sel_artist();
   int x = gfx_textn_small(MAIN_X, 8, lib_str(ar->name), ar->name.len, MAIN_X_MAX - 6, COL_PATH);
   gfx_text_small(x, 8, "/", COL_PATH);
 
   for (int i = 0; i < AL_ROWS; i++) {
-    int idx = main_scroll + i;
+    int idx = album_scroll + i;
     if (idx >= ar->n_albums) break;
     const album_t *al = &lib_albums[ar->first_album + idx];
     int y = AL_Y0 + i * AL_ROW_H;
-
-    if (idx == main_cursor && focus == FOC_MAIN && !drawer_open)
-      gfx_rect(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, AL_ROW_H - 2, COL_FOCUS);
-
+    int sel = (idx == album_cursor && focus == FOC_ALBUMS && !drawer_open);
+    if (sel) gfx_rect(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, AL_ROW_H - 2, COL_FOCUS);
     draw_cover_ph(MAIN_X, y + 1, 32, al->hue);
-
-    gfx_textn(MAIN_X + 40, y + 3, lib_str(al->title), al->title.len, MAIN_X_MAX, COL_TITLE);
+    draw_marquee(AL_TXT_X, y + 3, AL_TXT_W, lib_str(al->title), al->title.len, COL_TITLE, 0, sel);
 
     char meta[48], *p = meta;
     if (al->year) p = s_udec(p, al->year);
     if (al->year && al->genre.len) p = s_append(p, " \xc2\xb7 ");
     *p = 0;
-    int mx = gfx_text_small(MAIN_X + 40, y + 20, meta, COL_ARTIST_DIM);
+    int mx = gfx_text_small(AL_TXT_X, y + 20, meta, COL_ARTIST_DIM);
     if (al->genre.len)
       gfx_textn_small(mx, y + 20, lib_str(al->genre), al->genre.len, MAIN_X_MAX, COL_ARTIST_DIM);
   }
 }
 
+static void render_tracks(void) {
+  const artist_t *ar = sel_artist();
+  const album_t *al = sel_album();
+  // breadcrumb "{Artist}/{Album}/"
+  int x = gfx_textn_small(MAIN_X, 8, lib_str(ar->name), ar->name.len, MAIN_X_MAX - 40, COL_PATH);
+  x = gfx_text_small(x, 8, "/", COL_PATH);
+  x = gfx_textn_small(x, 8, lib_str(al->title), al->title.len, MAIN_X_MAX - 6, COL_PATH);
+  gfx_text_small(x, 8, "/", COL_PATH);
+
+  for (int i = 0; i < TR_ROWS; i++) {
+    int idx = track_scroll + i;
+    if (idx >= al->n_tracks) break;
+    const track_t *t = &lib_tracks[al->first_track + idx];
+    int y = TR_Y0 + i * TR_ROW_H;
+    int sel = (idx == track_cursor && focus == FOC_TRACKS && !drawer_open);
+    if (sel) gfx_rect(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, TR_ROW_H - 2, COL_FOCUS);
+
+    char num[12];
+    u32_to_dec((uint32_t)idx + 1, num);
+    gfx_text_small(MAIN_X, y + 2, num, COL_ARTIST_DIM);
+
+    draw_marquee(TR_TXT_X, y, TR_TXT_W, lib_str(t->title), t->title.len, COL_TITLE, 0, sel);
+
+    char m[24], *p = m;
+    if (t->dur_s) { p = s_time(p, t->dur_s); p = s_append(p, " \xc2\xb7 "); }
+    s_append(p, lib_format_name(t->format));
+    gfx_text_small(TR_TXT_X, y + 12, m, COL_ARTIST_DIM);
+
+    if (al->first_track + idx == play_gidx)  // currently loaded track marker
+      gfx_text_small(MAIN_X_MAX - 6, y + 2, ">", COL_FOCUS);
+  }
+}
+
+static void render_main(void) {
+  if (focus == FOC_TRACKS) {
+    render_tracks();
+    level_footer((uint32_t)track_cursor + 1, sel_album()->n_tracks, "pistes");
+  } else {
+    render_albums();
+    if (focus == FOC_ARTISTS)
+      level_footer((uint32_t)sb_cursor + 1, lib_n_artists, "artistes");
+    else
+      level_footer((uint32_t)album_cursor + 1, sel_artist()->n_albums, "albums");
+  }
+}
+
 static void render_progress(void) {
-  const track_t *t = cur_track_p();
+  const track_t *t = play_track_p();
   int bar_x = 10, bar_w = SCREEN_W - 20, bar_y = DRAWER_Y + 74;
   gfx_fill_rect(bar_x, bar_y, bar_w, 5, COL_PROGRESS_BG);
   if (t->dur_s) {
@@ -281,44 +388,22 @@ static void render_progress(void) {
   }
 }
 
-// Now-playing title in a fixed box at (76 .. 250). If it doesn't fit, scroll
-// it left/right with a bounce so the whole title can be read. Redrawn every
-// frame from ui_render_playing() so the marquee animates.
-#define TITLE_X 76
-#define TITLE_Y (DRAWER_Y + 12)
-#define TITLE_W 174
-static void render_title(const track_t *t) {
-  const char *s = lib_str(t->title);
-  int len = t->title.len;
+static void render_title(void) {
+  const track_t *t = play_track_p();
   gfx_fill_rect(TITLE_X, TITLE_Y, TITLE_W, 13, COL_DRAWER_BG);
-  int tw = gfx_text_px_len(s, len, 0);
-  if (tw <= TITLE_W) {
-    gfx_textn(TITLE_X, TITLE_Y, s, len, TITLE_X + TITLE_W, COL_TRACK_TITLE);
-    return;
-  }
-  int overflow = tw - TITLE_W;
-  int hold = 30;                          // pause units at each end
-  int cyc = 2 * hold + 2 * overflow;
-  int p = (int)((anim >> 1) % (uint32_t)cyc);  // >>1 → ~30 px/s
-  int scroll;
-  if (p < hold) scroll = 0;                       // hold at start
-  else if (p < hold + overflow) scroll = p - hold;         // scroll out
-  else if (p < 2 * hold + overflow) scroll = overflow;     // hold at end
-  else scroll = cyc - p;                                   // scroll back
-  gfx_text_scroll(TITLE_X, TITLE_Y, s, len, TITLE_W, COL_TRACK_TITLE, scroll, 0);
+  draw_marquee(TITLE_X, TITLE_Y, TITLE_W, lib_str(t->title), t->title.len, COL_TRACK_TITLE, 0, 1);
 }
 
 static void render_drawer(void) {
-  const album_t *al = cur_album();
-  const track_t *t = cur_track_p();
+  const album_t *al = play_album_p();
+  const track_t *t = play_track_p();
 
   gfx_fill_rect(0, DRAWER_Y, SCREEN_W, DRAWER_H, COL_DRAWER_BG);
   gfx_hline(0, DRAWER_Y, SCREEN_W, COL_FOCUS);
 
   draw_cover_ph(10, DRAWER_Y + 10, 56, al->hue);
 
-  // title + play state
-  render_title(t);
+  render_title();
   if (!playing && last_start_err) {
     char e[16], *q = e; q = s_append(q, "ERR "); s_udec(q, (uint32_t)(-last_start_err));
     gfx_text_small(SCREEN_W - 10 - 7 * 5, DRAWER_Y + 14, e, COL_WHITE);
@@ -328,28 +413,21 @@ static void render_drawer(void) {
   }
 
   // "{album} · piste n/total"
-  int sx = gfx_textn_small(76, DRAWER_Y + 32, lib_str(al->title), al->title.len, 200,
-                           COL_ARTIST_DIM);
+  int sx = gfx_textn_small(76, DRAWER_Y + 32, lib_str(al->title), al->title.len, 200, COL_ARTIST_DIM);
   char sub[32], *p = sub;
   p = s_append(p, " \xc2\xb7 piste ");
-  p = s_udec(p, (uint32_t)cur_track + 1);
+  p = s_udec(p, (uint32_t)(play_gidx - al->first_track) + 1);
   *p++ = '/';
   p = s_udec(p, al->n_tracks);
   gfx_text_small(sx, DRAWER_Y + 32, sub, COL_ARTIST_DIM);
 
   render_progress();
 
-  // metadata lines (design: each field collapsible; absent = collapsed)
   char l1[64], *q = l1;
   if (t->dur_s) { q = s_time(q, t->dur_s); q = s_append(q, " total"); }
-  if (al->genre.len) {
-    if (q != l1) q = s_append(q, " \xc2\xb7 ");
-    // genre is a span — draw separately after the buffer part
-  }
   int lx = gfx_text_small(10, DRAWER_Y + 90, l1, COL_ARTIST_DIM);
-  if (al->genre.len) {
+  if (al->genre.len)
     lx = gfx_textn_small(lx, DRAWER_Y + 90, lib_str(al->genre), al->genre.len, 260, COL_ARTIST_DIM);
-  }
   if (al->year) {
     char yb[16], *yp = yb;
     yp = s_append(yp, " \xc2\xb7 ");
@@ -366,8 +444,7 @@ static void render_drawer(void) {
   }
   gfx_text_small(10, DRAWER_Y + 102, l2, COL_ARTIST_DIM);
 
-  // control hints pinned at the bottom
-  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 <> +/-10s \xc2\xb7 A pause \xc2\xb7 B retour",
+  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 <> +/-10s \xc2\xb7 A pause \xc2\xb7 B fermer",
                  COL_ARTIST_DIM);
 }
 
@@ -378,9 +455,38 @@ void ui_render_full(void) {
   if (drawer_open) render_drawer();
 }
 
+// Redraw just the currently-selected item's title so its marquee animates,
+// without repainting (and flickering) the whole screen every frame.
+static void animate_selection(void) {
+  if (focus == FOC_ARTISTS) {
+    if (sb_cursor < sb_scroll || sb_cursor >= sb_scroll + SB_ROWS) return;
+    int y = SB_Y0 + (sb_cursor - sb_scroll) * SB_ROW_H;
+    const artist_t *a = &lib_artists[sb_cursor];
+    uint8_t col = (sb_cursor == cur_artist) ? COL_ARTIST_ACTIVE : COL_ARTIST_DIM;
+    gfx_fill_rect(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
+    draw_marquee(SB_X, y, SB_TXT_W, lib_str(a->name), a->name.len, col, 0, 1);
+  } else if (focus == FOC_ALBUMS) {
+    const artist_t *ar = sel_artist();
+    if (album_cursor < album_scroll || album_cursor >= album_scroll + AL_ROWS) return;
+    int y = AL_Y0 + (album_cursor - album_scroll) * AL_ROW_H;
+    const album_t *al = &lib_albums[ar->first_album + album_cursor];
+    gfx_fill_rect(AL_TXT_X, y + 3, AL_TXT_W, 13, COL_BG);
+    draw_marquee(AL_TXT_X, y + 3, AL_TXT_W, lib_str(al->title), al->title.len, COL_TITLE, 0, 1);
+  } else {  // FOC_TRACKS
+    const album_t *al = sel_album();
+    if (track_cursor < track_scroll || track_cursor >= track_scroll + TR_ROWS) return;
+    int y = TR_Y0 + (track_cursor - track_scroll) * TR_ROW_H;
+    const track_t *t = &lib_tracks[al->first_track + track_cursor];
+    gfx_fill_rect(TR_TXT_X, y, TR_TXT_W, 13, COL_BG);
+    draw_marquee(TR_TXT_X, y, TR_TXT_W, lib_str(t->title), t->title.len, COL_TITLE, 0, 1);
+  }
+}
+
 void ui_render_playing(void) {
   if (drawer_open) {
-    render_title(cur_track_p());  // animate the marquee even while paused
+    render_title();      // animate the drawer title marquee (even while paused)
     render_progress();
+  } else {
+    animate_selection();  // animate the selected browse item's marquee
   }
 }
