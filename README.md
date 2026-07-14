@@ -1,8 +1,11 @@
 # Pocket Tunes
 
 A folder/metadata-driven **MP3 music player** (Opus later) as an **Analogue Pocket**
-openFPGA core, with a **MiSTer** port planned. UI is the amber-on-black terminal from
-`design_handoff_pocket_tunes_1b`.
+openFPGA core, with a **MiSTer** port planned. UI is the amber "90s console" design
+from `design_handoff_pocket_tunes_3a` (3-level browser, full-screen player with a
+live FFT equalizer, persistent mini-bar).
+
+**➡️ [Guide d'utilisation (boutons & écrans)](docs/guide-utilisation.md)**
 
 ## Status
 
