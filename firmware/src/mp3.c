@@ -9,6 +9,9 @@
 #include "file.h"
 #include "mmio.h"
 #include "mp3dec.h"
+#ifndef PT_HOST_TEST
+#include "eq.h"  // equalizer taps the decoded PCM
+#endif
 
 #define SLOT_AUDIO 1
 
@@ -153,6 +156,9 @@ static void resample_push(int n, int sr, int nch) {
     int32_t l = l0 + (((int32_t)(l1 - l0) * (int32_t)frac) >> 16);
     int32_t r = r0 + (((int32_t)(r1 - r0) * (int32_t)frac) >> 16);
     pcm_push(((uint32_t)(uint16_t)(int16_t)r << 16) | (uint16_t)(int16_t)l);
+#ifndef PT_HOST_TEST
+    eq_feed((int16_t)((l + r) >> 1));  // mono tap for the drawer equalizer
+#endif
     samples_pushed++;
     rs_phase += step;
   }

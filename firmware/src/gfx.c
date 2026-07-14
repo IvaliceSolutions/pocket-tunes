@@ -32,6 +32,35 @@ void gfx_rect(int x, int y, int w, int h, uint8_t color) {
   gfx_vline(x + w - 1, y, h, color);
 }
 
+// Vertical gradient fill: the LUT holds one palette index per band, top→bottom.
+void gfx_vgrad(int x, int y, int w, int h, const unsigned char *lut, int n) {
+  for (int j = 0; j < h; j++)
+    gfx_hline(x, y + j, w, lut[j * n / h]);
+}
+
+// Filled rectangle with 2px-cut corners — the "4px radius" of design 3a reads
+// as a 2px chamfer at our 320x288 scale.
+void gfx_fill_round(int x, int y, int w, int h, uint8_t color) {
+  for (int j = 0; j < h; j++) {
+    int inset = 0;
+    if (j == 0 || j == h - 1) inset = 2;
+    else if (j == 1 || j == h - 2) inset = 1;
+    gfx_hline(x + inset, y + j, w - 2 * inset, color);
+  }
+}
+
+// 1px outline with the same cut corners (focus borders on rows).
+void gfx_rect_round(int x, int y, int w, int h, uint8_t color) {
+  gfx_hline(x + 2, y, w - 4, color);
+  gfx_hline(x + 2, y + h - 1, w - 4, color);
+  gfx_vline(x, y + 2, h - 4, color);
+  gfx_vline(x + w - 1, y + 2, h - 4, color);
+  px(x + 1, y + 1, color);
+  px(x + w - 2, y + 1, color);
+  px(x + 1, y + h - 2, color);
+  px(x + w - 2, y + h - 2, color);
+}
+
 // Decode one UTF-8 sequence to a Latin-1 codepoint ('?' if outside 32..255).
 // Advances *i past the sequence.
 static unsigned utf8_next(const char *s, int len, int *i) {
@@ -66,25 +95,25 @@ static int draw_glyphs(int x, int y, const char *s, int len, int x_max,
 }
 
 int gfx_text(int x, int y, const char *s, uint8_t color) {
-  return draw_glyphs(x, y, s, 0x7FFF, SCREEN_W, color, &font7x13[0][0], FONT7X13_W, FONT7X13_H);
+  return draw_glyphs(x, y, s, 0x7FFF, SCREEN_W, color, &fontmain[0][0], FONTMAIN_W, FONTMAIN_H);
 }
 
 int gfx_text_small(int x, int y, const char *s, uint8_t color) {
-  return draw_glyphs(x, y, s, 0x7FFF, SCREEN_W, color, &font5x8[0][0], FONT5X8_W, FONT5X8_H);
+  return draw_glyphs(x, y, s, 0x7FFF, SCREEN_W, color, &fontsmall[0][0], FONTSMALL_W, FONTSMALL_H);
 }
 
 int gfx_textn(int x, int y, const char *s, int len, int x_max, uint8_t color) {
-  return draw_glyphs(x, y, s, len, x_max, color, &font7x13[0][0], FONT7X13_W, FONT7X13_H);
+  return draw_glyphs(x, y, s, len, x_max, color, &fontmain[0][0], FONTMAIN_W, FONTMAIN_H);
 }
 
 int gfx_textn_small(int x, int y, const char *s, int len, int x_max, uint8_t color) {
-  return draw_glyphs(x, y, s, len, x_max, color, &font5x8[0][0], FONT5X8_W, FONT5X8_H);
+  return draw_glyphs(x, y, s, len, x_max, color, &fontsmall[0][0], FONTSMALL_W, FONTSMALL_H);
 }
 
 // Pixel width the string would occupy (counts glyphs, not bytes — multi-byte
 // UTF-8 sequences count as one glyph).
 int gfx_text_px_len(const char *s, int len, int small) {
-  int gw = small ? FONT5X8_W : FONT7X13_W;
+  int gw = small ? FONTSMALL_W : FONTMAIN_W;
   int i = 0, n = 0;
   while (i < len && s[i]) { utf8_next(s, len, &i); n++; }
   return n * gw;
@@ -95,9 +124,9 @@ int gfx_text_px_len(const char *s, int len, int small) {
 // spill). Used to scroll long titles that don't fit.
 void gfx_text_scroll(int x, int y, const char *s, int len, int box_w,
                      uint8_t color, int scroll_px, int small) {
-  const unsigned char *font = small ? &font5x8[0][0] : &font7x13[0][0];
-  int gw = small ? FONT5X8_W : FONT7X13_W;
-  int gh = small ? FONT5X8_H : FONT7X13_H;
+  const unsigned char *font = small ? &fontsmall[0][0] : &fontmain[0][0];
+  int gw = small ? FONTSMALL_W : FONTMAIN_W;
+  int gh = small ? FONTSMALL_H : FONTMAIN_H;
   int cx0 = x, cx1 = x + box_w;
   int gx = x - scroll_px;
   int i = 0;

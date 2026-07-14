@@ -37,22 +37,62 @@ def nearest(rgb):
             best, bd = i, d
     return best
 
-# Design tokens (handoff README, oklch approximated as sRGB)
+def hsl(h, s, l):
+    """HSL (deg, %, %) → sRGB tuple, per the design-3a token notation."""
+    s /= 100.0
+    l /= 100.0
+    c = (1 - abs(2 * l - 1)) * s
+    x = c * (1 - abs((h / 60.0) % 2 - 1))
+    m = l - c / 2
+    r, g, b = {0: (c, x, 0), 1: (x, c, 0), 2: (0, c, x),
+               3: (0, x, c), 4: (x, 0, c), 5: (c, 0, x)}[int(h // 60) % 6]
+    return tuple(round((v + m) * 255) for v in (r, g, b))
+
+def mix(a, b, t):
+    return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+# Design tokens — design_handoff_pocket_tunes_3a (HSL) over the 1b oklch set.
+BG        = hsl(30, 45, 8)
+DRAWER_T  = hsl(28, 70, 15)   # drawer gradient top
+DRAWER_B  = hsl(22, 65, 9)    # drawer gradient bottom
+MBAR_T    = hsl(28, 60, 17)   # mini-bar gradient top
+MBAR_B    = hsl(24, 60, 11)
 named = {
-    "COL_BG":            (0x0B, 0x09, 0x04),  # screen background
-    "COL_DRAWER_BG":     (0x12, 0x0E, 0x07),
-    "COL_DIVIDER":       (0x6E, 0x4B, 0x18),  # oklch(.35 .1 55)
-    "COL_ARTIST_ACTIVE": (0xF5, 0xB1, 0x4E),  # oklch(.85 .15 55)
-    "COL_ARTIST_DIM":    (0x8A, 0x66, 0x33),  # oklch(.55 .1 55)
-    "COL_PATH":          (0xC2, 0x8A, 0x33),  # oklch(.65 .15 55)
-    "COL_TITLE":         (0xEB, 0xB5, 0x70),  # oklch(.85 .1 55)
-    "COL_FOCUS":         (0xD9, 0x93, 0x2B),  # oklch(.7 .18 55)
-    "COL_TRACK_TITLE":   (0xF2, 0xC2, 0x80),  # oklch(.88 .1 55)
-    "COL_PLAYSTATE":     (0xC9, 0x8F, 0x40),  # oklch(.7 .15 55)
-    "COL_PROGRESS_BG":   (0x47, 0x38, 0x26),  # oklch(.3 .05 55)
-    "COL_CURSOR_BG":     (0x33, 0x1E, 0x0A),  # rgba(255,150,50,.15) on black
+    "COL_BG":            BG,
+    "COL_DRAWER_BG":     mix(DRAWER_T, DRAWER_B, 0.5),   # mid — plain fills
+    "COL_DIVIDER":       mix(hsl(30, 80, 45), BG, 0.6),  # hsl/0.4 alpha on bg
+    "COL_ARTIST_ACTIVE": hsl(32, 90, 78),
+    "COL_ARTIST_DIM":    hsl(30, 40, 55),
+    "COL_PATH":          hsl(30, 90, 65),   # breadcrumb
+    "COL_TITLE":         hsl(35, 85, 82),
+    "COL_FOCUS":         hsl(32, 90, 55),   # focus border / progress fill kin
+    # hsl(35,90,88) is a pale cream the 6x6x6 cube can't hit — its nearest
+    # neighbour is pinkish #FFCCCC. Pin to the warm cream cube entry instead.
+    "COL_TRACK_TITLE":   (0xFF, 0xCC, 0x99),
+    "COL_PLAYSTATE":     hsl(32, 95, 60),
+    "COL_PROGRESS_BG":   hsl(28, 50, 25),
+    "COL_PROGRESS_FILL": hsl(32, 95, 55),
+    "COL_CURSOR_BG":     mix((255, 160, 60), BG, 0.82),  # rgba(255,160,60,.18)
+    "COL_SUBTITLE":      hsl(30, 55, 62),   # drawer artist·album line
+    "COL_META":          hsl(30, 50, 55),   # secondary meta
+    "COL_HINT":          hsl(30, 45, 48),   # footer hints
+    "COL_TOGGLE_ON":     hsl(32, 95, 60),   # shuffle/repeat active
+    "COL_TOGGLE_OFF":    hsl(30, 30, 42),
+    "COL_CLOCK":         hsl(35, 80, 70),   # replaces the battery readout
+    "COL_EQ_BG":         (0x05, 0x03, 0x01),
+    "COL_EQ_HI":         hsl(45, 95, 60),   # bars >70%
+    "COL_EQ_MID":        hsl(35, 95, 55),   # bars 40–70%
+    "COL_EQ_LO":         hsl(22, 90, 50),   # bars <40%
     "COL_WHITE":         (0xFF, 0xFF, 0xFF),
     "COL_BLACK":         (0x00, 0x00, 0x00),
+}
+
+# Vertical gradient LUTs (top → bottom), one palette index per band.
+gradients = {
+    "GRAD_DRAWER":  [mix(DRAWER_T, DRAWER_B, i / 15) for i in range(16)],
+    "GRAD_MINIBAR": [mix(MBAR_T, MBAR_B, i / 7) for i in range(8)],
+    # warm glow over the browser background (radial approximated in bands)
+    "GRAD_BG_GLOW": [mix(BG, hsl(30, 90, 30), a) for a in (0.25, 0.17, 0.10, 0.04)],
 }
 
 hex_path, h_path = sys.argv[1], sys.argv[2]
@@ -69,6 +109,11 @@ with open(h_path, "w") as f:
         i = nearest(rgb)
         f.write(f"#define {name} {i}  /* #{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X} -> "
                 f"#{pal[i][0]:02X}{pal[i][1]:02X}{pal[i][2]:02X} */\n")
+    f.write("\n// Vertical gradient LUTs (palette indices, top → bottom)\n")
+    for name, colors in gradients.items():
+        idxs = ", ".join(str(nearest(c)) for c in colors)
+        f.write(f"#define {name}_N {len(colors)}\n")
+        f.write(f"static const unsigned char {name}[{len(colors)}] = {{ {idxs} }};\n")
     f.write("\n#endif\n")
 
 print(f"wrote {hex_path} and {h_path}")

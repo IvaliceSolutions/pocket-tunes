@@ -1,10 +1,15 @@
-// Pocket Tunes browser UI — the amber-terminal design handoff
-// (design_handoff_pocket_tunes_1b) at 320x288. Three explicit navigation
-// levels — Artists (sidebar) → Albums → Tracks — with a now-playing drawer
-// that overlays the track list. Playback is independent of the browse cursor:
-// music keeps running while you browse, so "where am I" and "what's playing"
-// never conflate. The currently-selected item at every level scrolls its title
-// with a bounce (marquee) when it's too long to fit.
+// Pocket Tunes browser UI — design_handoff_pocket_tunes_3a at 320x288.
+//
+// Three browse levels (Artists sidebar → Albums → Tracks), an enriched
+// Now Playing drawer (~78% tall: status row, big header, progress with
+// elapsed/remaining, 18-band FFT equalizer) and a persistent mini-bar that
+// keeps playback visible while browsing. Playback is independent of the
+// browse cursor; closing the drawer never stops the music.
+//
+// Controls: D-pad + A/B navigate; in the drawer Up/Down = track, Left/Right =
+// seek. START = shuffle, SELECT = repeat (kept from the previous iteration —
+// the 3a mockup put these on L/R but the user chose to keep the mapping).
+// X reopens the drawer while browsing; Y toggles pause from the browser.
 
 #include "ui.h"
 #include "mmio.h"
@@ -12,46 +17,55 @@
 #include "lib.h"
 #include "palette.h"
 #include "mp3.h"
+#include "eq.h"
 
 // ----------------------------------------------------------------- layout
 #define SIDEBAR_W 95
 #define SB_X 8
 #define SB_ROW_H 17
-#define SB_ROWS 16
 #define SB_Y0 6
-#define SB_TXT_W (SIDEBAR_W - 4 - SB_X)
 
 #define MAIN_X (SIDEBAR_W + 5)
 #define MAIN_X_MAX (SCREEN_W - 4)
 
 #define AL_ROW_H 38
-#define AL_ROWS 6
 #define AL_Y0 24
 #define AL_TXT_X (MAIN_X + 40)
 #define AL_TXT_W (MAIN_X_MAX - AL_TXT_X)
 
 #define TR_ROW_H 22
-#define TR_ROWS 11
 #define TR_Y0 24
 #define TR_TXT_X (MAIN_X + 18)
 #define TR_TXT_W (MAIN_X_MAX - TR_TXT_X - 10)  // 10px kept for the ▶ marker
 
-#define DRAWER_H 184
+// Now Playing drawer: ~78% of the screen
+#define DRAWER_H 224
 #define DRAWER_Y (SCREEN_H - DRAWER_H)
-#define TITLE_X 76
-#define TITLE_Y (DRAWER_Y + 12)
-#define TITLE_W 174
+#define TITLE_X 84
+#define TITLE_Y (DRAWER_Y + 24)
+#define TITLE_W (MAIN_X_MAX - TITLE_X)
+
+// Persistent mini-bar (over the browser when a track is loaded)
+#define MBAR_H 42
+#define MBAR_Y (SCREEN_H - MBAR_H)
+
+// Equalizer strip inside the drawer
+#define EQ_X 8
+#define EQ_W (SCREEN_W - 2 * EQ_X)
+#define EQ_Y (DRAWER_Y + 120)
+#define EQ_H 48
+#define EQ_INNER (EQ_H - 8)  // bar area height
 
 // ------------------------------------------------------------------ state
 enum { FOC_ARTISTS, FOC_ALBUMS, FOC_TRACKS };
 static int focus;
-static int sb_cursor, sb_scroll;          // artists (sidebar)
-static int cur_artist;                     // artist whose albums are shown
-static int album_cursor, album_scroll;     // albums level cursor
-static int track_cursor, track_scroll;     // tracks level cursor
-// playback state — independent of the browse cursor above
-static int play_gidx = -1;                 // global track index loaded (-1 none)
-static int play_alb = -1;                  // global album index of that track
+static int sb_cursor, sb_scroll;
+static int cur_artist;
+static int album_cursor, album_scroll;
+static int track_cursor, track_scroll;
+// playback — independent of the browse cursor
+static int play_gidx = -1;  // global track index loaded (-1 = none)
+static int play_alb = -1;   // global album index of that track
 static int drawer_open, playing;
 static uint32_t pos_frames, anim;
 static char pathbuf[288];
@@ -83,30 +97,34 @@ static int clamp_scroll(int cursor, int scroll, int rows) {
 }
 
 static const artist_t *sel_artist(void) { return &lib_artists[cur_artist]; }
-static const album_t *sel_album(void) {  // album the tracks level is showing
+static const album_t *sel_album(void) {
   return &lib_albums[sel_artist()->first_album + album_cursor];
 }
 static const album_t *play_album_p(void) { return &lib_albums[play_alb]; }
 static const track_t *play_track_p(void) { return &lib_tracks[play_gidx]; }
-
-// Estimate the file byte offset for a given time (CBR: file-size ratio, else
-// nominal bitrate). Used by seek (FF/RW).
-static uint32_t seek_byte_off(const track_t *t, uint32_t sec) {
-  if (t->dur_s) return (uint32_t)((uint64_t)t->fsize * sec / t->dur_s);
-  if (t->kbps) return sec * (t->kbps * 1000u / 8u);
-  return 0;
+static const artist_t *play_artist_p(void) {  // artist owning the playing album
+  for (int i = 0; i < lib_n_artists; i++) {
+    const artist_t *a = &lib_artists[i];
+    if (play_alb >= a->first_album && play_alb < a->first_album + a->n_albums) return a;
+  }
+  return &lib_artists[0];
 }
+static int minibar_on(void) { return play_gidx >= 0 && !drawer_open; }
 
-// ---- repeat mode: cycled with SELECT. REP_ALL loops the album (default, what
-// the user asked for), REP_ONE loops the current track, REP_OFF stops at the end.
+// Visible rows shrink when the mini-bar overlays the bottom of the browser.
+static int reserved_bottom(void) { return minibar_on() ? MBAR_H + 14 : 14; }
+static int sb_rows(void) { return (SCREEN_H - SB_Y0 - reserved_bottom() + SB_ROW_H - 1) / SB_ROW_H - 1; }
+static int al_rows(void) { return (SCREEN_H - AL_Y0 - reserved_bottom()) / AL_ROW_H; }
+static int tr_rows(void) { return (SCREEN_H - TR_Y0 - reserved_bottom()) / TR_ROW_H; }
+
+// ---- repeat mode: cycled with SELECT
 enum { REP_ALL, REP_ONE, REP_OFF };
 static int repeat_mode = REP_ALL;
 static const char *repeat_str(void) {
   return repeat_mode == REP_ONE ? "RPT1" : repeat_mode == REP_OFF ? "RPT0" : "RPT";
 }
 
-// ---- shuffle: toggled with START. A tiny xorshift PRNG stirred by the
-// free-running cycle counter (unpredictable exactly when a track ends).
+// ---- shuffle: toggled with START; xorshift stirred by the cycle counter
 static int shuffle;
 static uint32_t rng_state = 0x2545F491u;
 static uint32_t rng_next(void) {
@@ -115,8 +133,6 @@ static uint32_t rng_next(void) {
   rng_state = x ? x : 0x2545F491u;
   return rng_state;
 }
-// Next track index in the album: random when shuffle is on, else sequential.
-// Both wrap; shuffle avoids immediately repeating the current track.
 static int next_rel(const album_t *pa, int cur_rel) {
   int n = pa->n_tracks;
   if (n <= 1) return 0;
@@ -126,7 +142,12 @@ static int next_rel(const album_t *pa, int cur_rel) {
   return r;
 }
 
-// Load and start playing lib_tracks[gidx] (in album `alb`).
+static uint32_t seek_byte_off(const track_t *t, uint32_t sec) {
+  if (t->dur_s) return (uint32_t)((uint64_t)t->fsize * sec / t->dur_s);
+  if (t->kbps) return sec * (t->kbps * 1000u / 8u);
+  return 0;
+}
+
 static void start_play(int gidx, int alb) {
   play_gidx = gidx;
   play_alb = alb;
@@ -144,8 +165,7 @@ static void start_play(int gidx, int alb) {
   }
 }
 
-// ---- marquee: draw text in [x, x+box_w). If `animate` and it overflows,
-// scroll it left/right with a bounce (only the selected item animates).
+// ---- marquee (selected item only)
 static void draw_marquee(int x, int y, int box_w, const char *s, int len,
                          uint8_t color, int small, int animate) {
   int tw = gfx_text_px_len(s, len, small);
@@ -155,9 +175,9 @@ static void draw_marquee(int x, int y, int box_w, const char *s, int len,
     return;
   }
   int overflow = tw - box_w;
-  int hold = 30;                               // pause units at each end
+  int hold = 30;
   int cyc = 2 * hold + 2 * overflow;
-  int p = (int)((anim >> 1) % (uint32_t)cyc);  // >>1 → ~30 px/s
+  int p = (int)((anim >> 1) % (uint32_t)cyc);
   int scroll;
   if (p < hold) scroll = 0;
   else if (p < hold + overflow) scroll = p - hold;
@@ -181,7 +201,20 @@ static void draw_cover_ph(int x, int y, int size, uint16_t hue) {
   hue_colors(hue, &hi, &lo);
   gfx_fill_rect(x, y, size, size / 2, hi);
   gfx_fill_rect(x, y + size / 2, size, size - size / 2, lo);
-  gfx_rect(x, y, size, size, COL_DIVIDER);
+  gfx_rect_round(x, y, size, size, COL_DIVIDER);
+}
+
+// "HH:MM" from the Pocket RTC (BCD 0x00HHMMSS). Right-aligned at x_right.
+static void draw_clock(int x_right, int y, uint8_t color) {
+  uint32_t v = REG_RTC;
+  char b[6];
+  b[0] = (char)('0' + ((v >> 20) & 0xF));
+  b[1] = (char)('0' + ((v >> 16) & 0xF));
+  b[2] = ':';
+  b[3] = (char)('0' + ((v >> 12) & 0xF));
+  b[4] = (char)('0' + ((v >> 8) & 0xF));
+  b[5] = 0;
+  gfx_text_small(x_right - 5 * 5, y, b, color);
 }
 
 // ------------------------------------------------------------------ input
@@ -197,23 +230,23 @@ void ui_init(void) {
 }
 
 int ui_input(uint16_t pressed) {
-  anim = 0;  // any key press restarts the selected item's marquee
+  anim = 0;  // restart the selected item's marquee
 
-  if (pressed & KEY_START) { shuffle = !shuffle; return 1; }         // toggle shuffle
-  if (pressed & KEY_SELECT) { repeat_mode = (repeat_mode + 1) % 3; return 1; }  // cycle repeat
+  if (pressed & KEY_START) { shuffle = !shuffle; return 1; }
+  if (pressed & KEY_SELECT) { repeat_mode = (repeat_mode + 1) % 3; return 1; }
 
   if (drawer_open) {
-    if (pressed & (KEY_UP | KEY_DOWN)) {  // prev/next track (wraps), auto-play
+    if (pressed & (KEY_UP | KEY_DOWN)) {  // prev/next track, auto-plays
       const album_t *pa = play_album_p();
       int cur_rel = play_gidx - pa->first_track;
-      int rel = (pressed & KEY_DOWN) ? next_rel(pa, cur_rel)          // shuffle-aware
+      int rel = (pressed & KEY_DOWN) ? next_rel(pa, cur_rel)
                                      : (cur_rel + pa->n_tracks - 1) % pa->n_tracks;
       start_play(pa->first_track + rel, play_alb);
-      track_cursor = rel;  // keep the track list in sync behind the drawer
-      track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+      track_cursor = rel;
+      track_scroll = clamp_scroll(track_cursor, track_scroll, tr_rows());
       return 1;
     }
-    if (pressed & (KEY_LEFT | KEY_RIGHT)) {  // FF / rewind ±10 s
+    if (pressed & (KEY_LEFT | KEY_RIGHT)) {  // seek ±10 s
       const track_t *t = play_track_p();
       uint32_t cur = mp3_pos_seconds();
       uint32_t tgt = (pressed & KEY_RIGHT) ? cur + 10 : (cur > 10 ? cur - 10 : 0);
@@ -234,14 +267,24 @@ int ui_input(uint16_t pressed) {
     return 0;
   }
 
+  // browsing with a loaded track: X reopens the drawer, Y toggles pause
+  if (play_gidx >= 0) {
+    if (pressed & KEY_X) { drawer_open = 1; return 1; }
+    if (pressed & KEY_Y) {
+      playing = !playing;
+      mp3_set_paused(!playing);
+      return 1;
+    }
+  }
+
   if (focus == FOC_ARTISTS) {
     if (pressed & (KEY_UP | KEY_DOWN)) {
       sb_cursor += (pressed & KEY_DOWN) ? 1 : lib_n_artists - 1;
       sb_cursor %= lib_n_artists;
-      sb_scroll = clamp_scroll(sb_cursor, sb_scroll, SB_ROWS);
+      sb_scroll = clamp_scroll(sb_cursor, sb_scroll, sb_rows());
       return 1;
     }
-    if (pressed & KEY_A) {  // → albums
+    if (pressed & KEY_A) {
       cur_artist = sb_cursor;
       focus = FOC_ALBUMS;
       album_cursor = album_scroll = 0;
@@ -253,15 +296,15 @@ int ui_input(uint16_t pressed) {
   if (focus == FOC_ALBUMS) {
     if (pressed & KEY_UP) {
       if (album_cursor > 0) album_cursor--;
-      album_scroll = clamp_scroll(album_cursor, album_scroll, AL_ROWS);
+      album_scroll = clamp_scroll(album_cursor, album_scroll, al_rows());
       return 1;
     }
     if (pressed & KEY_DOWN) {
       if (album_cursor < sel_artist()->n_albums - 1) album_cursor++;
-      album_scroll = clamp_scroll(album_cursor, album_scroll, AL_ROWS);
+      album_scroll = clamp_scroll(album_cursor, album_scroll, al_rows());
       return 1;
     }
-    if (pressed & KEY_A) {  // → tracks (does NOT start playback yet)
+    if (pressed & KEY_A) {  // → tracks (does NOT start playback)
       focus = FOC_TRACKS;
       track_cursor = track_scroll = 0;
       return 1;
@@ -273,18 +316,18 @@ int ui_input(uint16_t pressed) {
   // focus == FOC_TRACKS
   if (pressed & KEY_UP) {
     if (track_cursor > 0) track_cursor--;
-    track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+    track_scroll = clamp_scroll(track_cursor, track_scroll, tr_rows());
     return 1;
   }
   if (pressed & KEY_DOWN) {
     if (track_cursor < sel_album()->n_tracks - 1) track_cursor++;
-    track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+    track_scroll = clamp_scroll(track_cursor, track_scroll, tr_rows());
     return 1;
   }
-  if (pressed & KEY_A) {  // open drawer for the selected track
+  if (pressed & KEY_A) {
     int gidx = sel_album()->first_track + track_cursor;
     int alb = sel_artist()->first_album + album_cursor;
-    if (gidx != play_gidx)  // same track already loaded → resume, don't restart
+    if (gidx != play_gidx)  // same track already loaded → just reopen
       start_play(gidx, alb);
     drawer_open = 1;
     return 1;
@@ -294,23 +337,24 @@ int ui_input(uint16_t pressed) {
 }
 
 int ui_tick(void) {
-  anim++;  // drives the marquee at every level
+  anim++;
   if (playing) {
-    pos_frames = mp3_pos_seconds() * 60u;  // progress from real samples
-    if (mp3_at_eof()) {  // track ended
+    if (drawer_open) eq_tick();  // bars freeze on pause / when hidden
+    pos_frames = mp3_pos_seconds() * 60u;
+    if (mp3_at_eof()) {
       const album_t *pa = play_album_p();
       int cur_rel = play_gidx - pa->first_track;
-      if (repeat_mode == REP_ONE) {           // loop this track
+      if (repeat_mode == REP_ONE) {
         start_play(play_gidx, play_alb);
       } else if (repeat_mode == REP_OFF && !shuffle && cur_rel == pa->n_tracks - 1) {
-        playing = 0;                           // sequential end reached → stop
+        playing = 0;
         mp3_stop();
-      } else {                                 // REP_ALL (loop) / mid-album / shuffle
-        int rel = next_rel(pa, cur_rel);       // shuffle-aware next
+      } else {
+        int rel = next_rel(pa, cur_rel);
         start_play(pa->first_track + rel, play_alb);
         if (drawer_open || focus == FOC_TRACKS) {
           track_cursor = rel;
-          track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+          track_scroll = clamp_scroll(track_cursor, track_scroll, tr_rows());
         }
       }
       return 1;
@@ -321,44 +365,62 @@ int ui_tick(void) {
 
 // ----------------------------------------------------------------- render
 static void level_footer(uint32_t cur, uint32_t total, const char *noun) {
+  int y = minibar_on() ? MBAR_Y - 12 : SCREEN_H - 12;
   char f[48], *p = f;
   p = s_append(p, "NIVEAU : ");
   p = s_udec(p, cur);
   *p++ = '/';
   p = s_udec(p, total);
   *p++ = ' ';
-  p = s_append(p, noun);
-  int x = gfx_text_small(MAIN_X, SCREEN_H - 12, f, COL_ARTIST_DIM);
-  x = gfx_text_small(x + 6, SCREEN_H - 12, repeat_str(), COL_FOCUS);
-  if (shuffle) gfx_text_small(x + 6, SCREEN_H - 12, "ALEA", COL_FOCUS);
+  s_append(p, noun);
+  int x = gfx_text_small(MAIN_X, y, f, COL_META);
+  x = gfx_text_small(x + 6, y, repeat_str(), COL_TOGGLE_ON);
+  if (shuffle) x = gfx_text_small(x + 6, y, "ALEA", COL_TOGGLE_ON);
+  if (minibar_on()) gfx_text_small(x + 6, y, "\xc2\xb7 X lecteur", COL_HINT);
 }
 
 static void render_sidebar(void) {
-  gfx_vline(SIDEBAR_W, 0, SCREEN_H, COL_DIVIDER);
-  for (int i = 0; i < SB_ROWS; i++) {
+  int bottom = minibar_on() ? MBAR_Y : SCREEN_H;
+  gfx_vline(SIDEBAR_W, 0, bottom, COL_DIVIDER);
+  int rows = sb_rows();
+  for (int i = 0; i < rows; i++) {
     int idx = sb_scroll + i;
     if (idx >= lib_n_artists) break;
     int y = SB_Y0 + i * SB_ROW_H;
     int sel = (idx == sb_cursor && focus == FOC_ARTISTS && !drawer_open);
-    if (sel) gfx_fill_rect(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
+    if (sel) gfx_fill_round(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
     uint8_t col = (idx == cur_artist) ? COL_ARTIST_ACTIVE : COL_ARTIST_DIM;
     const artist_t *a = &lib_artists[idx];
-    draw_marquee(SB_X, y, SB_TXT_W, lib_str(a->name), a->name.len, col, 0, sel);
+    draw_marquee(SB_X, y, SIDEBAR_W - 4 - SB_X, lib_str(a->name), a->name.len, col, 0, sel);
   }
+}
+
+// Breadcrumb "{Artist}/" or "{Artist}/{Album}/" + clock on the right.
+static void render_breadcrumb(int tracks_level) {
+  const artist_t *ar = sel_artist();
+  int x_max = MAIN_X_MAX - 34;  // keep room for the clock
+  int x = gfx_textn_small(MAIN_X, 8, lib_str(ar->name), ar->name.len,
+                          tracks_level ? MAIN_X + 80 : x_max, COL_PATH);
+  x = gfx_text_small(x, 8, "/", COL_PATH);
+  if (tracks_level) {
+    const album_t *al = sel_album();
+    x = gfx_textn_small(x, 8, lib_str(al->title), al->title.len, x_max, COL_PATH);
+    gfx_text_small(x, 8, "/", COL_PATH);
+  }
+  draw_clock(MAIN_X_MAX, 8, COL_CLOCK);
 }
 
 static void render_albums(void) {
   const artist_t *ar = sel_artist();
-  int x = gfx_textn_small(MAIN_X, 8, lib_str(ar->name), ar->name.len, MAIN_X_MAX - 6, COL_PATH);
-  gfx_text_small(x, 8, "/", COL_PATH);
-
-  for (int i = 0; i < AL_ROWS; i++) {
+  render_breadcrumb(0);
+  int rows = al_rows();
+  for (int i = 0; i < rows; i++) {
     int idx = album_scroll + i;
     if (idx >= ar->n_albums) break;
     const album_t *al = &lib_albums[ar->first_album + idx];
     int y = AL_Y0 + i * AL_ROW_H;
     int sel = (idx == album_cursor && focus == FOC_ALBUMS && !drawer_open);
-    if (sel) gfx_rect(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, AL_ROW_H - 2, COL_FOCUS);
+    if (sel) gfx_rect_round(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, AL_ROW_H - 2, COL_FOCUS);
     draw_cover_ph(MAIN_X, y + 1, 32, al->hue);
     draw_marquee(AL_TXT_X, y + 3, AL_TXT_W, lib_str(al->title), al->title.len, COL_TITLE, 0, sel);
 
@@ -366,41 +428,36 @@ static void render_albums(void) {
     if (al->year) p = s_udec(p, al->year);
     if (al->year && al->genre.len) p = s_append(p, " \xc2\xb7 ");
     *p = 0;
-    int mx = gfx_text_small(AL_TXT_X, y + 20, meta, COL_ARTIST_DIM);
+    int mx = gfx_text_small(AL_TXT_X, y + 20, meta, COL_META);
     if (al->genre.len)
-      gfx_textn_small(mx, y + 20, lib_str(al->genre), al->genre.len, MAIN_X_MAX, COL_ARTIST_DIM);
+      gfx_textn_small(mx, y + 20, lib_str(al->genre), al->genre.len, MAIN_X_MAX, COL_META);
   }
 }
 
 static void render_tracks(void) {
-  const artist_t *ar = sel_artist();
   const album_t *al = sel_album();
-  // breadcrumb "{Artist}/{Album}/"
-  int x = gfx_textn_small(MAIN_X, 8, lib_str(ar->name), ar->name.len, MAIN_X_MAX - 40, COL_PATH);
-  x = gfx_text_small(x, 8, "/", COL_PATH);
-  x = gfx_textn_small(x, 8, lib_str(al->title), al->title.len, MAIN_X_MAX - 6, COL_PATH);
-  gfx_text_small(x, 8, "/", COL_PATH);
-
-  for (int i = 0; i < TR_ROWS; i++) {
+  render_breadcrumb(1);
+  int rows = tr_rows();
+  for (int i = 0; i < rows; i++) {
     int idx = track_scroll + i;
     if (idx >= al->n_tracks) break;
     const track_t *t = &lib_tracks[al->first_track + idx];
     int y = TR_Y0 + i * TR_ROW_H;
     int sel = (idx == track_cursor && focus == FOC_TRACKS && !drawer_open);
-    if (sel) gfx_rect(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, TR_ROW_H - 2, COL_FOCUS);
+    if (sel) gfx_rect_round(MAIN_X - 3, y - 2, MAIN_X_MAX - MAIN_X + 6, TR_ROW_H - 2, COL_FOCUS);
 
     char num[12];
     u32_to_dec((uint32_t)idx + 1, num);
-    gfx_text_small(MAIN_X, y + 2, num, COL_ARTIST_DIM);
+    gfx_text_small(MAIN_X, y + 2, num, COL_META);
 
     draw_marquee(TR_TXT_X, y, TR_TXT_W, lib_str(t->title), t->title.len, COL_TITLE, 0, sel);
 
     char m[24], *p = m;
     if (t->dur_s) { p = s_time(p, t->dur_s); p = s_append(p, " \xc2\xb7 "); }
     s_append(p, lib_format_name(t->format));
-    gfx_text_small(TR_TXT_X, y + 12, m, COL_ARTIST_DIM);
+    gfx_text_small(TR_TXT_X, y + 12, m, COL_META);
 
-    if (al->first_track + idx == play_gidx)  // currently loaded track marker
+    if (al->first_track + idx == play_gidx)
       gfx_text_small(MAIN_X_MAX - 6, y + 2, ">", COL_FOCUS);
   }
 }
@@ -418,108 +475,172 @@ static void render_main(void) {
   }
 }
 
+// ---- drawer pieces --------------------------------------------------------
 static void render_progress(void) {
   const track_t *t = play_track_p();
-  int bar_x = 10, bar_w = SCREEN_W - 20, bar_y = DRAWER_Y + 74;
-  gfx_fill_rect(bar_x, bar_y, bar_w, 5, COL_PROGRESS_BG);
+  int bar_x = 10, bar_w = SCREEN_W - 20, bar_y = DRAWER_Y + 94;
+  uint32_t sec = pos_frames / 60;
+  gfx_fill_round(bar_x, bar_y, bar_w, 5, COL_PROGRESS_BG);
   if (t->dur_s) {
-    uint32_t sec = pos_frames / 60;
     uint32_t w = (uint32_t)bar_w * sec / t->dur_s;
     if (w > (uint32_t)bar_w) w = bar_w;
-    gfx_fill_rect(bar_x, bar_y, (int)w, 5, COL_FOCUS);
+    if (w > 4) gfx_fill_round(bar_x, bar_y, (int)w, 5, COL_PROGRESS_FILL);
   }
+  // elapsed / -remaining
+  char b[12], *p;
+  gfx_fill_rect(bar_x, bar_y + 9, bar_w, 9,
+                GRAD_DRAWER[(bar_y + 9 - DRAWER_Y) * GRAD_DRAWER_N / DRAWER_H]);
+  s_time(b, sec);
+  gfx_text_small(bar_x, bar_y + 9, b, COL_META);
+  if (t->dur_s) {
+    uint32_t rem = sec < t->dur_s ? t->dur_s - sec : 0;
+    p = b;
+    *p++ = '-';
+    s_time(p, rem);
+    int tw = gfx_text_px_len(b, 11, 1);
+    gfx_text_small(bar_x + bar_w - tw, bar_y + 9, b, COL_META);
+  }
+}
+
+static void render_eq(void) {
+  gfx_fill_round(EQ_X, EQ_Y, EQ_W, EQ_H, COL_EQ_BG);
+  // 18 bars, 2px gaps, centered
+  int bw = (EQ_W - 8 - 17 * 2) / 18;                  // inner width minus gaps
+  int x0 = EQ_X + (EQ_W - (18 * bw + 17 * 2)) / 2;
+  int base = EQ_Y + EQ_H - 4;                          // bars grow upward
+  for (int b = 0; b < EQ_BANDS; b++) {
+    int h = eq_bars[b] * EQ_INNER / EQ_BAR_MAX;
+    if (h <= 0) continue;
+    uint8_t c = (h > EQ_INNER * 7 / 10) ? COL_EQ_HI
+              : (h > EQ_INNER * 4 / 10) ? COL_EQ_MID : COL_EQ_LO;
+    gfx_fill_rect(x0 + b * (bw + 2), base - h, bw, h, c);
+  }
+  // CRT scanlines over the bars: 1 dark line every 3 rows
+  for (int y = EQ_Y + 2; y < EQ_Y + EQ_H - 2; y += 3)
+    gfx_hline(EQ_X + 2, y, EQ_W - 4, COL_EQ_BG);
 }
 
 static void render_title(void) {
   const track_t *t = play_track_p();
-  gfx_fill_rect(TITLE_X, TITLE_Y, TITLE_W, 13, COL_DRAWER_BG);
-  draw_marquee(TITLE_X, TITLE_Y, TITLE_W, lib_str(t->title), t->title.len, COL_TRACK_TITLE, 0, 1);
+  gfx_fill_rect(TITLE_X, TITLE_Y, TITLE_W, 13,
+                GRAD_DRAWER[(TITLE_Y - DRAWER_Y) * GRAD_DRAWER_N / DRAWER_H]);
+  draw_marquee(TITLE_X, TITLE_Y, TITLE_W, lib_str(t->title), t->title.len,
+               COL_TRACK_TITLE, 0, 1);
 }
 
 static void render_drawer(void) {
+  const artist_t *par = play_artist_p();
   const album_t *al = play_album_p();
   const track_t *t = play_track_p();
 
-  gfx_fill_rect(0, DRAWER_Y, SCREEN_W, DRAWER_H, COL_DRAWER_BG);
+  gfx_vgrad(0, DRAWER_Y, SCREEN_W, DRAWER_H, GRAD_DRAWER, GRAD_DRAWER_N);
   gfx_hline(0, DRAWER_Y, SCREEN_W, COL_FOCUS);
+  gfx_hline(0, DRAWER_Y + 1, SCREEN_W, COL_DIVIDER);
 
-  draw_cover_ph(10, DRAWER_Y + 10, 56, al->hue);
+  // status row: badges left, clock right
+  int x = gfx_text_small(10, DRAWER_Y + 6, repeat_str(),
+                         repeat_mode == REP_OFF ? COL_TOGGLE_OFF : COL_TOGGLE_ON);
+  gfx_text_small(x + 8, DRAWER_Y + 6, "ALEA", shuffle ? COL_TOGGLE_ON : COL_TOGGLE_OFF);
+  draw_clock(SCREEN_W - 10, DRAWER_Y + 6, COL_CLOCK);
 
+  // header: cover + title/subtitle/meta
+  draw_cover_ph(10, DRAWER_Y + 20, 64, al->hue);
   render_title();
   if (!playing && last_start_err) {
-    char e[16], *q = e; q = s_append(q, "ERR "); s_udec(q, (uint32_t)(-last_start_err));
-    gfx_text_small(SCREEN_W - 10 - 7 * 5, DRAWER_Y + 14, e, COL_WHITE);
-  } else {
-    gfx_text_small(SCREEN_W - 10 - 9 * 5, DRAWER_Y + 14,
-                   playing ? "> LECTURE" : "|| PAUSE", COL_PLAYSTATE);
+    char e[16], *q = e;
+    q = s_append(q, "ERR ");
+    s_udec(q, (uint32_t)(-last_start_err));
+    gfx_text_small(SCREEN_W - 10 - 7 * 5, TITLE_Y + 2, e, COL_WHITE);
   }
 
-  // "{album} · piste n/total"
-  int sx = gfx_textn_small(76, DRAWER_Y + 32, lib_str(al->title), al->title.len, 200, COL_ARTIST_DIM);
-  char sub[32], *p = sub;
-  p = s_append(p, " \xc2\xb7 piste ");
+  // "{artist} · {album}"
+  int sx = gfx_textn_small(TITLE_X, DRAWER_Y + 42, lib_str(par->name), par->name.len,
+                           TITLE_X + 110, COL_SUBTITLE);
+  sx = gfx_text_small(sx, DRAWER_Y + 42, " \xc2\xb7 ", COL_SUBTITLE);
+  gfx_textn_small(sx, DRAWER_Y + 42, lib_str(al->title), al->title.len,
+                  MAIN_X_MAX, COL_SUBTITLE);
+
+  // "Piste n/total · MP3 · 128 kbps" + play state
+  char l[48], *p = l;
+  p = s_append(p, "Piste ");
   p = s_udec(p, (uint32_t)(play_gidx - al->first_track) + 1);
   *p++ = '/';
   p = s_udec(p, al->n_tracks);
-  gfx_text_small(sx, DRAWER_Y + 32, sub, COL_ARTIST_DIM);
-
-  int ix = gfx_text_small(76, DRAWER_Y + 50, repeat_str(), COL_FOCUS);
-  if (shuffle) gfx_text_small(ix + 8, DRAWER_Y + 50, "ALEA", COL_FOCUS);
+  p = s_append(p, " \xc2\xb7 ");
+  p = s_append(p, lib_format_name(t->format));
+  if (t->kbps) {
+    p = s_append(p, " \xc2\xb7 ");
+    p = s_udec(p, t->kbps);
+    p = s_append(p, " kbps");
+  }
+  gfx_text_small(TITLE_X, DRAWER_Y + 56, l, COL_META);
+  gfx_text_small(TITLE_X, DRAWER_Y + 70, playing ? "> LECTURE" : "|| PAUSE", COL_PLAYSTATE);
 
   render_progress();
+  render_eq();
 
-  char l1[64], *q = l1;
-  if (t->dur_s) { q = s_time(q, t->dur_s); q = s_append(q, " total"); }
-  int lx = gfx_text_small(10, DRAWER_Y + 90, l1, COL_ARTIST_DIM);
-  if (al->genre.len)
-    lx = gfx_textn_small(lx, DRAWER_Y + 90, lib_str(al->genre), al->genre.len, 260, COL_ARTIST_DIM);
-  if (al->year) {
-    char yb[16], *yp = yb;
-    yp = s_append(yp, " \xc2\xb7 ");
-    yp = s_udec(yp, al->year);
-    gfx_text_small(lx, DRAWER_Y + 90, yb, COL_ARTIST_DIM);
+  gfx_text_small(10, SCREEN_H - 14,
+                 "^v \xc2\xb7 <>10s \xc2\xb7 A pause \xc2\xb7 START alea \xc2\xb7 SEL rpt \xc2\xb7 B",
+                 COL_HINT);
+}
+
+// ---- persistent mini-bar ---------------------------------------------------
+static void render_minibar(void) {
+  const track_t *t = play_track_p();
+  const album_t *al = play_album_p();
+  gfx_vgrad(0, MBAR_Y, SCREEN_W, MBAR_H, GRAD_MINIBAR, GRAD_MINIBAR_N);
+  gfx_hline(0, MBAR_Y, SCREEN_W, COL_DIVIDER);
+
+  draw_cover_ph(6, MBAR_Y + 5, 32, al->hue);
+
+  // title (marquee) + thin progress line under it
+  draw_marquee(46, MBAR_Y + 6, SCREEN_W - 46 - 34, lib_str(t->title), t->title.len,
+               COL_TITLE, 0, 1);
+  int bw = SCREEN_W - 46 - 34;
+  gfx_fill_rect(46, MBAR_Y + 24, bw, 3, COL_PROGRESS_BG);
+  if (t->dur_s) {
+    uint32_t w = (uint32_t)bw * (pos_frames / 60) / t->dur_s;
+    if (w > (uint32_t)bw) w = bw;
+    gfx_fill_rect(46, MBAR_Y + 24, (int)w, 3, COL_PROGRESS_FILL);
   }
 
-  char l2[32], *r = l2;
-  r = s_append(r, lib_format_name(t->format));
-  if (t->kbps) {
-    r = s_append(r, " \xc2\xb7 ");
-    r = s_udec(r, t->kbps);
-    r = s_append(r, " kbps");
-  }
-  gfx_text_small(10, DRAWER_Y + 102, l2, COL_ARTIST_DIM);
-
-  gfx_text_small(10, SCREEN_H - 14, "^v \xc2\xb7 <>10s \xc2\xb7 A pause \xc2\xb7 START alea \xc2\xb7 SEL rpt \xc2\xb7 B",
-                 COL_ARTIST_DIM);
+  // play/pause glyph
+  gfx_text(SCREEN_W - 24, MBAR_Y + 10, playing ? ">" : "||", COL_TOGGLE_ON);
 }
 
 void ui_render_full(void) {
+  // re-clamp scrolls: the row count changes when the mini-bar (dis)appears
+  sb_scroll = clamp_scroll(sb_cursor, sb_scroll, sb_rows());
+  album_scroll = clamp_scroll(album_cursor, album_scroll, al_rows());
+  track_scroll = clamp_scroll(track_cursor, track_scroll, tr_rows());
+
   gfx_clear(COL_BG);
   render_sidebar();
   render_main();
   if (drawer_open) render_drawer();
+  else if (minibar_on()) render_minibar();
 }
 
-// Redraw just the currently-selected item's title so its marquee animates,
-// without repainting (and flickering) the whole screen every frame.
+// Per-frame animation: marquee of the selected item / drawer title, progress,
+// equalizer — without repainting the whole screen.
 static void animate_selection(void) {
   if (focus == FOC_ARTISTS) {
-    if (sb_cursor < sb_scroll || sb_cursor >= sb_scroll + SB_ROWS) return;
+    if (sb_cursor < sb_scroll || sb_cursor >= sb_scroll + sb_rows()) return;
     int y = SB_Y0 + (sb_cursor - sb_scroll) * SB_ROW_H;
     const artist_t *a = &lib_artists[sb_cursor];
     uint8_t col = (sb_cursor == cur_artist) ? COL_ARTIST_ACTIVE : COL_ARTIST_DIM;
-    gfx_fill_rect(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
-    draw_marquee(SB_X, y, SB_TXT_W, lib_str(a->name), a->name.len, col, 0, 1);
+    gfx_fill_round(0, y - 2, SIDEBAR_W, SB_ROW_H, COL_CURSOR_BG);
+    draw_marquee(SB_X, y, SIDEBAR_W - 4 - SB_X, lib_str(a->name), a->name.len, col, 0, 1);
   } else if (focus == FOC_ALBUMS) {
     const artist_t *ar = sel_artist();
-    if (album_cursor < album_scroll || album_cursor >= album_scroll + AL_ROWS) return;
+    if (album_cursor < album_scroll || album_cursor >= album_scroll + al_rows()) return;
     int y = AL_Y0 + (album_cursor - album_scroll) * AL_ROW_H;
     const album_t *al = &lib_albums[ar->first_album + album_cursor];
     gfx_fill_rect(AL_TXT_X, y + 3, AL_TXT_W, 13, COL_BG);
     draw_marquee(AL_TXT_X, y + 3, AL_TXT_W, lib_str(al->title), al->title.len, COL_TITLE, 0, 1);
-  } else {  // FOC_TRACKS
+  } else {
     const album_t *al = sel_album();
-    if (track_cursor < track_scroll || track_cursor >= track_scroll + TR_ROWS) return;
+    if (track_cursor < track_scroll || track_cursor >= track_scroll + tr_rows()) return;
     int y = TR_Y0 + (track_cursor - track_scroll) * TR_ROW_H;
     const track_t *t = &lib_tracks[al->first_track + track_cursor];
     gfx_fill_rect(TR_TXT_X, y, TR_TXT_W, 13, COL_BG);
@@ -529,9 +650,11 @@ static void animate_selection(void) {
 
 void ui_render_playing(void) {
   if (drawer_open) {
-    render_title();      // animate the drawer title marquee (even while paused)
+    render_title();
     render_progress();
+    render_eq();
   } else {
-    animate_selection();  // animate the selected browse item's marquee
+    animate_selection();
+    if (minibar_on()) render_minibar();
   }
 }

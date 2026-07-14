@@ -485,6 +485,8 @@ module core_top (
 
       .cont1_key(cont1_key),
 
+      .rtc_time_bcd(rtc_time),
+
       .audio_l(soc_audio_l),
       .audio_r(soc_audio_r),
       .audio_stb(soc_audio_stb),

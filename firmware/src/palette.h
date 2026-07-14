@@ -6,19 +6,38 @@
 #define PAL_CUBE(r, g, b) (32 + 36*(r) + 6*(g) + (b)) /* 0..5 each */
 #define PAL_GREY(i) (248 + (i))               /* 0..7 */
 
-#define COL_BG 1  /* #0B0904 -> #080602 */
-#define COL_DRAWER_BG 2  /* #120E07 -> #100B03 */
-#define COL_DIVIDER 13  /* #6E4B18 -> #6B4C15 */
-#define COL_ARTIST_ACTIVE 31  /* #F5B14E -> #FFB533 */
-#define COL_ARTIST_DIM 153  /* #8A6633 -> #996633 */
-#define COL_PATH 24  /* #C28A33 -> #C58C27 */
-#define COL_TITLE 238  /* #EBB570 -> #FFCC66 */
-#define COL_FOCUS 26  /* #D9932B -> #D6982B */
-#define COL_TRACK_TITLE 239  /* #F2C280 -> #FFCC99 */
-#define COL_PLAYSTATE 195  /* #C98F40 -> #CC9933 */
-#define COL_PROGRESS_BG 75  /* #473826 -> #333333 */
-#define COL_CURSOR_BG 6  /* #331E0A -> #31230A */
+#define COL_BG 4  /* #1E140B -> #211707 */
+#define COL_DRAWER_BG 6  /* #341C0A -> #31230A */
+#define COL_DIVIDER 11  /* #653A10 -> #5A4012 */
+#define COL_ARTIST_ACTIVE 239  /* #F9CA94 -> #FFCC99 */
+#define COL_ARTIST_DIM 196  /* #BA8C5E -> #CC9966 */
+#define COL_PATH 232  /* #F6A655 -> #FF9966 */
+#define COL_TITLE 239  /* #F8D8AA -> #FFCC99 */
+#define COL_FOCUS 231  /* #F49325 -> #FF9933 */
+#define COL_TRACK_TITLE 239  /* #FFCC99 -> #FFCC99 */
+#define COL_PLAYSTATE 231  /* #FA9F38 -> #FF9933 */
+#define COL_PROGRESS_BG 11  /* #603E20 -> #5A4012 */
+#define COL_PROGRESS_FILL 231  /* #F9941F -> #FF9933 */
+#define COL_CURSOR_BG 8  /* #462D14 -> #422F0D */
+#define COL_SUBTITLE 196  /* #D39E69 -> #CC9966 */
+#define COL_META 196  /* #C68C53 -> #CC9966 */
+#define COL_HINT 21  /* #B17A43 -> #AD7B23 */
+#define COL_TOGGLE_ON 231  /* #FA9F38 -> #FF9933 */
+#define COL_TOGGLE_OFF 153  /* #8B6B4B -> #996633 */
+#define COL_CLOCK 238  /* #F0BD75 -> #FFCC66 */
+#define COL_EQ_BG 1  /* #050301 -> #080602 */
+#define COL_EQ_HI 237  /* #FAC938 -> #FFCC33 */
+#define COL_EQ_MID 231  /* #F99E1F -> #FF9933 */
+#define COL_EQ_LO 224  /* #F2610D -> #FF6600 */
 #define COL_WHITE 247  /* #FFFFFF -> #FFFFFF */
 #define COL_BLACK 0  /* #000000 -> #000000 */
+
+// Vertical gradient LUTs (palette indices, top → bottom)
+#define GRAD_DRAWER_N 16
+static const unsigned char GRAD_DRAWER[16] = { 7, 7, 7, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 4, 4, 4 };
+#define GRAD_MINIBAR_N 8
+static const unsigned char GRAD_MINIBAR[8] = { 8, 7, 7, 7, 6, 6, 5, 5 };
+#define GRAD_BG_GLOW_N 4
+static const unsigned char GRAD_BG_GLOW[4] = { 6, 6, 5, 4 };
 
 #endif

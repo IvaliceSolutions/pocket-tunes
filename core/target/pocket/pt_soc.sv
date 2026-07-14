@@ -72,6 +72,10 @@ module pt_soc #(
     // controller (raw; synchronized internally)
     input wire [15:0] cont1_key,
 
+    // real-time clock (BCD 0x00HHMMSS, clk_74a domain; quasi-static — changes
+    // once a second — so a plain synchronizer is enough)
+    input wire [31:0] rtc_time_bcd,
+
     // audio samples out (clk_sys domain; updated at 48 kHz)
     output reg signed [15:0] audio_l,
     output reg signed [15:0] audio_r,
@@ -93,6 +97,8 @@ module pt_soc #(
   // ------------------------------------------------------------------ inputs
   wire [15:0] cont1_key_s;
   synch_3 #(.WIDTH(16)) key_s (cont1_key, cont1_key_s, clk_sys);
+  wire [31:0] rtc_time_s;
+  synch_3 #(.WIDTH(32)) rtc_s (rtc_time_bcd, rtc_time_s, clk_sys);
 
   // ------------------------------------------------------------------ video
   wire de, hs, vs, de_falling, frame_start;
@@ -378,6 +384,7 @@ module pt_soc #(
       8'h04:   mmio_rdata <= frame_count;
       8'h0C:   mmio_rdata <= {31'd0, in_vblank_s};
       8'h10:   mmio_rdata <= cycles;
+      8'h14:   mmio_rdata <= rtc_time_s;  // BCD 0x00HHMMSS
       8'h20:   mmio_rdata <= {16'd0, tgt_id};
       8'h24:   mmio_rdata <= tgt_offset;
       8'h28:   mmio_rdata <= tgt_bridgeaddr;

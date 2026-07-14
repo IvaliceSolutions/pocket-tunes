@@ -81,6 +81,7 @@ module tb_soc;
       .datatable_q   (dt_q),
 
       .cont1_key(cont1_key),
+      .rtc_time_bcd(32'h00123456),  // 12:34:56 BCD for the clock readout
 
       .audio_l(),
       .audio_r(),

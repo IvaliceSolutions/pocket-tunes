@@ -17,6 +17,7 @@
 #define REG_FRAME       MMIO32(0x04)
 #define REG_VBLANK      MMIO32(0x0C)
 #define REG_CYCLES      MMIO32(0x10)
+#define REG_RTC         MMIO32(0x14)  /* BCD 0x00HHMMSS (Pocket RTC) */
 
 // target-command engine (see pt_soc.sv)
 #define REG_TGT_ID         MMIO32(0x20)

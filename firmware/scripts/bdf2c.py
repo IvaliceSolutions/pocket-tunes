@@ -12,21 +12,22 @@ import sys
 
 def parse_bdf(path):
     glyphs = {}
-    fbb = None  # (w, h, xoff, yoff)
-    with open(path) as f:
+    dwidths = set()
+    with open(path, encoding="latin-1") as f:
         lines = f.read().splitlines()
     i = 0
     enc = None
+    dw = None
     while i < len(lines):
         parts = lines[i].split()
         if not parts:
             i += 1
             continue
         key = parts[0]
-        if key == "FONTBOUNDINGBOX":
-            fbb = tuple(int(v) for v in parts[1:5])
-        elif key == "ENCODING":
+        if key == "ENCODING":
             enc = int(parts[1])
+        elif key == "DWIDTH":
+            dw = int(parts[1])
         elif key == "BBX":
             bbx = tuple(int(v) for v in parts[1:5])
         elif key == "BITMAP":
@@ -37,8 +38,18 @@ def parse_bdf(path):
                 i += 1
             if enc is not None and 32 <= enc <= 255:
                 glyphs[enc] = (bbx, rows)
+                if dw:
+                    dwidths.add(dw)
             enc = None
+            dw = None
         i += 1
+    # Effective cell box computed from the KEPT glyphs only. Big Unicode fonts
+    # (Cozette…) have a global FONTBOUNDINGBOX inflated by box-drawing/CJK
+    # glyphs we never emit; trusting it breaks the cell size.
+    ascent = max(by + bh for (bw, bh, bx, by), _ in glyphs.values())
+    descent = max(0, max(-by for (bw, bh, bx, by), _ in glyphs.values()))
+    w = max(dwidths) if dwidths else max(bw + bx for (bw, bh, bx, by), _ in glyphs.values())
+    fbb = (w, ascent + descent, 0, -descent)
     return fbb, glyphs
 
 

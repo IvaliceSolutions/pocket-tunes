@@ -9,6 +9,9 @@ void gfx_fill_rect(int x, int y, int w, int h, uint8_t color);
 void gfx_hline(int x, int y, int w, uint8_t color);
 void gfx_vline(int x, int y, int h, uint8_t color);
 void gfx_rect(int x, int y, int w, int h, uint8_t color);  // 1px outline
+void gfx_vgrad(int x, int y, int w, int h, const unsigned char *lut, int n);
+void gfx_fill_round(int x, int y, int w, int h, uint8_t color);  // 2px-cut corners
+void gfx_rect_round(int x, int y, int w, int h, uint8_t color);
 
 // 7x13 primary font / 5x8 small font. UTF-8 → Latin-1. Return x after the
 // last glyph. The *n variants draw at most len bytes, clipped at x_max.

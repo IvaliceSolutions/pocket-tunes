@@ -15,7 +15,7 @@ OBJCOPY="${CC%gcc}objcopy"
 # regenerate palette + fonts (cheap, keeps them in sync with the scripts)
 python3 "$D/scripts/palette_gen.py" "$OUT/palette.hex" "$D/src/palette.h"
 python3 "$D/scripts/bdf2c.py" "$D/src/fonts.h" \
-  font7x13="$D/../third_party/7x13.bdf" font5x8="$D/../third_party/5x8.bdf" >/dev/null
+  fontmain="$D/../third_party/cozette.bdf" fontsmall="$D/../third_party/5x8.bdf" >/dev/null
 
 HELIX="$D/helix"
 CF="-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
@@ -26,7 +26,7 @@ OBJ="$D/obj"; rm -rf "$OBJ"; mkdir -p "$OBJ"; OBJS=""
 # App/UI/decoder-glue at -Os: the 128 KB CPU RAM is tight, and this code is not
 # the DSP hot path, so trade a little speed for several KB of code space
 # (headroom for the stack + future features).
-for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/ui.c src/file.c src/mp3.c; do
+for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/ui.c src/file.c src/mp3.c src/eq.c; do
   o="$OBJ/app_$(basename "${s%.*}").o"
   "$CC" $CF -Os -c "$D/$s" -o "$o"; OBJS="$OBJS $o"
 done
