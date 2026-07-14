@@ -1,14 +1,14 @@
 // Turns a cover source (embedded picture buffer or a sidecar image file) into
-// the two raw RGB565 thumbnails the core blits directly: 46x46 (drawer) and
-// 26x26 (list). No decoder runs on the soft-CPU — all image work happens here.
+// the two raw RGB565 thumbnails the core blits directly: 48x48 (drawer) and
+// 32x32 (list, reserved for a future list-cover pass). No decoder runs on the soft-CPU — all image work happens here.
 
 import { Jimp } from "jimp";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { rgbaToRgb565Buffer } from "./rgb565.js";
 
-export const LARGE = 46;
-export const SMALL = 26;
+export const LARGE = 48;
+export const SMALL = 32;
 
 // Sidecar cover filenames to look for in an album folder, in priority order.
 const SIDECAR_NAMES = ["cover", "folder", "front", "album", "albumart", "thumb"];
@@ -41,7 +41,7 @@ async function toThumb(image, size) {
 /**
  * Load `source` (a Buffer of encoded image bytes, or a filesystem path), rasterize
  * both thumbnails, and write them next to each other. Returns true on success.
- * Filenames: `${stem}.rgb565` (46) and `${stem}.s.rgb565` (26).
+ * Filenames: `${stem}.rgb565` (48) and `${stem}.s.rgb565` (32).
  */
 export async function writeThumbnails(source, outDir, stem) {
   let image;

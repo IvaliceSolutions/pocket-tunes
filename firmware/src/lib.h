@@ -40,10 +40,12 @@ typedef struct {
   uint16_t n_albums;
 } artist_t;
 
-#define MAX_ARTISTS 48
-#define MAX_ALBUMS  96
-#define MAX_TRACKS  256   // was 384; trimmed to give the CPU stack room (128 KB RAM is tight)
-#define POOL_SIZE   7168  // current library uses ~4.7 KB; trimmed for stack room
+// Trimmed to fund the 2.3 KB cover cache on the tight 128 KB RAM (current
+// library: 3 artists / 3 albums / 111 tracks / ~4.7 KB pool).
+#define MAX_ARTISTS 40
+#define MAX_ALBUMS  72
+#define MAX_TRACKS  192
+#define POOL_SIZE   6144
 
 extern artist_t lib_artists[MAX_ARTISTS];
 extern album_t  lib_albums[MAX_ALBUMS];

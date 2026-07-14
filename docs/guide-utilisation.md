@@ -52,7 +52,7 @@ progression et l'état de lecture sous les yeux à tous les niveaux.
 | `A` | Ouvrir (artiste → albums → pistes → lecture) |
 | `B` | Revenir au niveau précédent |
 | `X` | Rouvrir le lecteur (si un morceau est chargé) |
-| `Y` | Lecture / pause sans ouvrir le lecteur |
+| `Y` | Lecture / pause (marche partout, lecteur ouvert ou non) |
 
 ### Dans le lecteur (drawer plein écran)
 
@@ -60,7 +60,7 @@ progression et l'état de lecture sous les yeux à tous les niveaux.
 |---|---|
 | `▲` `▼` | Piste précédente / suivante (suit le mode aléatoire) |
 | `◄` `►` | Reculer / avancer de 10 secondes |
-| `A` | Lecture / pause |
+| `A` ou `Y` | Lecture / pause |
 | `B` | Fermer le lecteur — **la musique continue** |
 
 ### Partout

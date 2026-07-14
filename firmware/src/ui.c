@@ -18,6 +18,7 @@
 #include "palette.h"
 #include "mp3.h"
 #include "eq.h"
+#include "art.h"
 
 // ----------------------------------------------------------------- layout
 #define SIDEBAR_W 95
@@ -41,7 +42,7 @@
 // Now Playing drawer: ~78% of the screen
 #define DRAWER_H 224
 #define DRAWER_Y (SCREEN_H - DRAWER_H)
-#define TITLE_X 84
+#define TITLE_X 66
 #define TITLE_Y (DRAWER_Y + 24)
 #define TITLE_W (MAIN_X_MAX - TITLE_X)
 
@@ -158,6 +159,7 @@ static void start_play(int gidx, int alb) {
   if (n > 0 && t->format == FMT_MP3) {
     last_start_err = mp3_start(pathbuf, n, t->fsize);
     playing = (last_start_err == 0);
+    art_load(gidx);  // real cover for the drawer/mini-bar (placeholder if none)
   } else {
     last_start_err = (n <= 0) ? -20 : -21;  // -20 path, -21 non-MP3
     playing = 0;
@@ -255,7 +257,7 @@ int ui_input(uint16_t pressed) {
       pos_frames = tgt * 60u;
       return 1;
     }
-    if (pressed & KEY_A) {
+    if (pressed & (KEY_A | KEY_Y)) {  // Y mirrors A here so Y = pause EVERYWHERE
       playing = !playing;
       mp3_set_paused(!playing);
       return 1;
@@ -537,14 +539,19 @@ static void render_drawer(void) {
   gfx_hline(0, DRAWER_Y, SCREEN_W, COL_FOCUS);
   gfx_hline(0, DRAWER_Y + 1, SCREEN_W, COL_DIVIDER);
 
-  // status row: badges left, clock right
+  // status row: badges only — the breadcrumb clock stays visible above the
+  // drawer (78% tall), so repeating it here was a duplicate
   int x = gfx_text_small(10, DRAWER_Y + 6, repeat_str(),
                          repeat_mode == REP_OFF ? COL_TOGGLE_OFF : COL_TOGGLE_ON);
   gfx_text_small(x + 8, DRAWER_Y + 6, "ALEA", shuffle ? COL_TOGGLE_ON : COL_TOGGLE_OFF);
-  draw_clock(SCREEN_W - 10, DRAWER_Y + 6, COL_CLOCK);
 
   // header: cover + title/subtitle/meta
-  draw_cover_ph(10, DRAWER_Y + 20, 64, al->hue);
+  if (art_ready()) {
+    art_draw(10, DRAWER_Y + 20, 0);
+    gfx_rect_round(10, DRAWER_Y + 20, ART_SIZE, ART_SIZE, COL_DIVIDER);
+  } else {
+    draw_cover_ph(10, DRAWER_Y + 20, ART_SIZE, al->hue);
+  }
   render_title();
   if (!playing && last_start_err) {
     char e[16], *q = e;
@@ -591,17 +598,18 @@ static void render_minibar(void) {
   gfx_vgrad(0, MBAR_Y, SCREEN_W, MBAR_H, GRAD_MINIBAR, GRAD_MINIBAR_N);
   gfx_hline(0, MBAR_Y, SCREEN_W, COL_DIVIDER);
 
-  draw_cover_ph(6, MBAR_Y + 5, 32, al->hue);
+  if (art_ready()) art_draw(8, MBAR_Y + 9, 1);
+  else draw_cover_ph(8, MBAR_Y + 9, 24, al->hue);
 
   // title (marquee) + thin progress line under it
-  draw_marquee(46, MBAR_Y + 6, SCREEN_W - 46 - 34, lib_str(t->title), t->title.len,
+  draw_marquee(42, MBAR_Y + 6, SCREEN_W - 42 - 34, lib_str(t->title), t->title.len,
                COL_TITLE, 0, 1);
-  int bw = SCREEN_W - 46 - 34;
-  gfx_fill_rect(46, MBAR_Y + 24, bw, 3, COL_PROGRESS_BG);
+  int bw = SCREEN_W - 42 - 34;
+  gfx_fill_rect(42, MBAR_Y + 24, bw, 3, COL_PROGRESS_BG);
   if (t->dur_s) {
     uint32_t w = (uint32_t)bw * (pos_frames / 60) / t->dur_s;
     if (w > (uint32_t)bw) w = bw;
-    gfx_fill_rect(46, MBAR_Y + 24, (int)w, 3, COL_PROGRESS_FILL);
+    gfx_fill_rect(42, MBAR_Y + 24, (int)w, 3, COL_PROGRESS_FILL);
   }
 
   // play/pause glyph

@@ -167,7 +167,7 @@ async function main() {
         // Per-track cover from this file's own embedded art.
         let tCover = null, tCoverSmall = null;
         if (md.picture) {
-          const tstem = `t${String(coverSeq++).padStart(5, "0")}`;
+          const tstem = `x${String(coverSeq++).padStart(5, "0")}`;  // temp; renamed to t{gidx} in the final pass
           if (await writeThumbnails(md.picture, coversDir, tstem)) {
             tCover = `covers/${tstem}.rgb565`;
             tCoverSmall = `covers/${tstem}.s.rgb565`;
@@ -225,7 +225,7 @@ async function main() {
       let coverArt = outTracks[0].coverArt;
       let coverArtSmall = outTracks[0].coverArtSmall;
       if (sidecar) {
-        const stem = `a${String(id).padStart(4, "0")}`;
+        const stem = `y${String(id).padStart(4, "0")}`;  // temp; renamed to a{aidx} in the final pass
         if (await writeThumbnails(sidecar, coversDir, stem)) {
           coverArt = `covers/${stem}.rgb565`;
           coverArtSmall = `covers/${stem}.s.rgb565`;
@@ -253,6 +253,51 @@ async function main() {
 
   // Re-number artist ids to their final array position.
   artists.forEach((a, i) => (a.id = i));
+
+  // Rename cover files to their FINAL enumeration order: t{gidx:05} for tracks
+  // and a{aidx:04} for album sidecars, where gidx/aidx count tracks/albums in
+  // library.json order — the exact order the firmware parses. The core then
+  // derives every cover path from the index alone and stores nothing per track.
+  // (Scan-time names use the x/y namespace so renames can't collide.)
+  {
+    let gidx = 0, aidx = 0, renames = 0;
+    const ren = async (from, to) => {
+      try {
+        await fs.rename(path.join(outDir, from), path.join(outDir, to));
+        renames++;
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    for (const a of artists) {
+      for (const al of a.albums) {
+        for (const t of al.tracks) {
+          if (t.coverArt) {
+            const stem = `covers/t${String(gidx).padStart(5, "0")}`;
+            await ren(t.coverArt, `${stem}.rgb565`);
+            await ren(t.coverArtSmall, `${stem}.s.rgb565`);
+            t.coverArt = `${stem}.rgb565`;
+            t.coverArtSmall = `${stem}.s.rgb565`;
+          }
+          gidx++;
+        }
+        if (al.coverArt && al.coverArt.startsWith("covers/y")) {
+          const stem = `covers/a${String(aidx).padStart(4, "0")}`;
+          await ren(al.coverArt, `${stem}.rgb565`);
+          await ren(al.coverArtSmall, `${stem}.s.rgb565`);
+          al.coverArt = `${stem}.rgb565`;
+          al.coverArtSmall = `${stem}.s.rgb565`;
+        } else if (al.tracks.length) {
+          // album art borrowed from the first track: follow its renamed file
+          al.coverArt = al.tracks[0].coverArt;
+          al.coverArtSmall = al.tracks[0].coverArtSmall;
+        }
+        aidx++;
+      }
+    }
+    log(args.quiet, `Covers renamed to enumeration order (${renames} file renames)`);
+  }
 
   // All disk reads are done; now rename any accented files/folders to ASCII so
   // the ASCII paths recorded above resolve on the Pocket (openfile can't match
