@@ -1,7 +1,7 @@
 Archive member included to satisfy reference by file (symbol)
 
 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
-                              /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o (__udivdi3)
+                              /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o (__udivdi3)
 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
                               /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o) (__clz_tab)
 
@@ -18,362 +18,363 @@ RAM              0x00000000         0x00020000         xrw
 
 Linker script and memory map
 
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
-LOAD /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
+LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
 LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a
                 0x00000000                        . = 0x0
 
-.text           0x00000000     0xc494
+.text           0x00000000     0xb558
  *(.text.init)
- .text.init     0x00000000       0x30 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
+ .text.init     0x00000000       0x30 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
                 0x00000000                _start
  *(.text*)
- .text          0x00000030        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
- .text          0x00000030        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
- .text.startup  0x00000030      0x1f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
+ .text          0x00000030        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
+ .text          0x00000030        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
+ .text.startup  0x00000030      0x1c8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
                 0x00000030                main
- .text          0x00000220      0xab8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
-                0x000002c4                gfx_clear
-                0x000002f0                gfx_fill_rect
-                0x000003bc                gfx_hline
-                0x000003c8                gfx_vline
-                0x000003d8                gfx_rect
-                0x0000047c                gfx_text
-                0x000005c0                gfx_text_small
-                0x000006ec                gfx_textn
-                0x00000840                gfx_textn_small
-                0x0000097c                gfx_text_px_len
-                0x00000a1c                gfx_text_scroll
-                0x00000b98                u32_to_hex
-                0x00000bcc                u32_to_dec
-                0x00000c4c                memcpy
-                0x00000c70                memmove
-                0x00000cbc                memset
- .text          0x00000cd8     0x13d4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
-                0x00001410                lib_str
-                0x00001430                lib_format_name
-                0x00001464                lib_fetch_path
-                0x000014e8                lib_parse
- .text          0x000020ac     0x1b2c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
-                0x000026a8                ui_init
-                0x00002718                ui_input
-                0x00002b94                ui_tick
-                0x00002c94                ui_render_full
-                0x00003940                ui_render_playing
- .text          0x00003bd8      0x1f4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
-                0x00003cb0                file_read
-                0x00003cdc                file_open
-                0x00003d4c                file_slot_size
- .text          0x00003dcc      0x8a0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
-                0x00003f34                malloc
-                0x00003f6c                free
-                0x00003f70                mp3_start
-                0x000041a0                mp3_stop
-                0x000041bc                mp3_set_paused
-                0x000041c8                mp3_is_playing
-                0x000041e4                mp3_at_eof
-                0x00004200                mp3_pos_seconds
-                0x0000421c                mp3_seek
-                0x000042cc                mp3_pump
- .text          0x0000466c      0x7cc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
-                0x0000466c                MP3InitDecoder
-                0x00004670                MP3FreeDecoder
-                0x0000467c                MP3FindSyncWord
-                0x000046c8                MP3GetLastFrameInfo
-                0x00004764                MP3GetNextFrameInfo
-                0x00004828                MP3Decode
- .text          0x00004e38        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
- .text          0x00004e38      0x844 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
-                0x00004e38                xmp3_SetBitstreamPointer
-                0x00004e4c                xmp3_GetBits
-                0x00004f68                xmp3_CalcBitsUsed
-                0x00004f84                xmp3_CheckPadBit
-                0x00004fa4                xmp3_UnpackFrameHeader
-                0x0000528c                xmp3_UnpackSideInfo
- .text          0x0000567c      0x2cc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
-                0x0000567c                xmp3_FreeBuffers
-                0x00005718                xmp3_AllocateBuffers
- .text          0x00005948      0x8d4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
-                0x00005948                xmp3_FDCT32
- .text          0x0000621c      0x3f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
-                0x0000621c                xmp3_Dequantize
- .text          0x0000660c      0x5f0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
-                0x0000683c                xmp3_DequantChannel
- .text          0x00006bfc      0xb50 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
-                0x00006bfc                xmp3_DecodeHuffman
- .text          0x0000774c        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
- .text          0x0000774c     0x1610 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
-                0x00007aa4                xmp3_IMDCT
- .text          0x00008d5c     0x1d1c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
-                0x00008d5c                xmp3_PolyphaseMono
-                0x00009714                xmp3_PolyphaseStereo
- .text          0x0000aa78      0xaf4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
-                0x0000aa78                xmp3_UnpackScaleFactors
- .text          0x0000b56c      0x8c4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
-                0x0000b56c                xmp3_MidSideProc
-                0x0000b60c                xmp3_IntensityProcMPEG1
-                0x0000babc                xmp3_IntensityProcMPEG2
- .text          0x0000be30      0x1b4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
-                0x0000be30                xmp3_Subband
- .text          0x0000bfe4        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
- .text          0x0000bfe4      0x4b0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
-                0x0000bfe4                __udivdi3
- .text          0x0000c494        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+ .text          0x000001f8      0x6d8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
+                0x000003a0                gfx_clear
+                0x000003c8                gfx_fill_rect
+                0x00000444                gfx_hline
+                0x00000450                gfx_vline
+                0x00000460                gfx_rect
+                0x000004f8                gfx_text
+                0x00000534                gfx_text_small
+                0x00000570                gfx_textn
+                0x0000059c                gfx_textn_small
+                0x000005c8                gfx_text_px_len
+                0x00000640                gfx_text_scroll
+                0x00000794                u32_to_hex
+                0x000007cc                u32_to_dec
+                0x0000083c                memcpy
+                0x00000860                memmove
+                0x000008b4                memset
+ .text          0x000008d0      0xdcc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
+                0x00000eec                lib_str
+                0x00000f0c                lib_format_name
+                0x00000f40                lib_fetch_path
+                0x00000fb8                lib_parse
+ .text          0x0000169c     0x1730 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+                0x00001cfc                ui_init
+                0x00001d6c                ui_input
+                0x00002190                ui_tick
+                0x000022d0                ui_render_full
+                0x00002b68                ui_render_playing
+ .text          0x00002dcc      0x1cc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
+                0x00002e98                file_read
+                0x00002ec4                file_open
+                0x00002f30                file_slot_size
+ .text          0x00002f98      0x798 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
+                0x000030b0                malloc
+                0x000030e8                free
+                0x000030ec                mp3_stop
+                0x00003108                mp3_start
+                0x000032f4                mp3_set_paused
+                0x00003300                mp3_is_playing
+                0x0000331c                mp3_at_eof
+                0x00003338                mp3_pos_seconds
+                0x00003350                mp3_seek
+                0x000033ec                mp3_pump
+ .text          0x00003730      0x7cc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+                0x00003730                MP3InitDecoder
+                0x00003734                MP3FreeDecoder
+                0x00003740                MP3FindSyncWord
+                0x0000378c                MP3GetLastFrameInfo
+                0x00003828                MP3GetNextFrameInfo
+                0x000038ec                MP3Decode
+ .text          0x00003efc        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
+ .text          0x00003efc      0x844 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x00003efc                xmp3_SetBitstreamPointer
+                0x00003f10                xmp3_GetBits
+                0x0000402c                xmp3_CalcBitsUsed
+                0x00004048                xmp3_CheckPadBit
+                0x00004068                xmp3_UnpackFrameHeader
+                0x00004350                xmp3_UnpackSideInfo
+ .text          0x00004740      0x2cc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
+                0x00004740                xmp3_FreeBuffers
+                0x000047dc                xmp3_AllocateBuffers
+ .text          0x00004a0c      0x8d4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
+                0x00004a0c                xmp3_FDCT32
+ .text          0x000052e0      0x3f0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
+                0x000052e0                xmp3_Dequantize
+ .text          0x000056d0      0x5f0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+                0x00005900                xmp3_DequantChannel
+ .text          0x00005cc0      0xb50 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
+                0x00005cc0                xmp3_DecodeHuffman
+ .text          0x00006810        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
+ .text          0x00006810     0x1610 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+                0x00006b68                xmp3_IMDCT
+ .text          0x00007e20     0x1d1c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
+                0x00007e20                xmp3_PolyphaseMono
+                0x000087d8                xmp3_PolyphaseStereo
+ .text          0x00009b3c      0xaf4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
+                0x00009b3c                xmp3_UnpackScaleFactors
+ .text          0x0000a630      0x8c4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+                0x0000a630                xmp3_MidSideProc
+                0x0000a6d0                xmp3_IntensityProcMPEG1
+                0x0000ab80                xmp3_IntensityProcMPEG2
+ .text          0x0000aef4      0x1b4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
+                0x0000aef4                xmp3_Subband
+ .text          0x0000b0a8        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
+ .text          0x0000b0a8      0x4b0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+                0x0000b0a8                __udivdi3
+ .text          0x0000b558        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
 
-.rodata         0x0000c494     0x4824
+.rodata         0x0000b558     0x47ac
  *(.rodata*)
  .rodata.str1.4
-                0x0000c494      0x22c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
+                0x0000b558      0x235 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
                                  0xea (size before relaxing)
- .rodata        0x0000c6c0     0x1260 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
- .rodata        0x0000d920       0x98 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
+ *fill*         0x0000b78d        0x3 
+ .rodata        0x0000b790     0x1260 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .rodata.str1.4
-                0x0000d9b8        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
+                0x0000c9f0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
                                  0x90 (size before relaxing)
+ .rodata        0x0000c9f0       0x14 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
  .rodata.str1.4
-                0x0000d9b8        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
-                                 0xbc (size before relaxing)
- .rodata        0x0000d9b8       0x24 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
- .rodata        0x0000d9dc      0x500 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
-                0x0000d9dc                xmp3_sfBandTable
-                0x0000dc78                xmp3_slotTab
-                0x0000dd88                xmp3_sideBytesTab
-                0x0000dd94                xmp3_samplesPerFrameTab
-                0x0000dda8                xmp3_bitrateTab
-                0x0000deb8                xmp3_samplerateTab
- .rodata        0x0000dedc       0xc0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
- .rodata        0x0000df9c       0x16 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
- *fill*         0x0000dfb2        0x2 
- .rodata        0x0000dfb4     0x22f4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
-                0x0000dfb4                xmp3_quadTable
-                0x0000e004                xmp3_huffTabLookup
-                0x0000e104                xmp3_huffTabOffset
-                0x0000e184                xmp3_huffTable
- .rodata        0x000102a8       0x24 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
- .rodata        0x000102cc       0x68 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
- .rodata        0x00010334      0x864 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
-                0x00010334                xmp3_polyCoef
-                0x00010754                xmp3_coef32
-                0x000107d0                xmp3_csa
-                0x00010810                xmp3_ISFIIP
-                0x00010820                xmp3_ISFMpeg2
-                0x00010920                xmp3_ISFMpeg1
-                0x00010958                xmp3_imdctWin
- .rodata        0x00010b98      0x100 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
-                0x00010b98                __clz_tab
+                0x0000ca04        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+                                 0xc5 (size before relaxing)
+ .rodata        0x0000ca04       0x24 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+ .rodata        0x0000ca28      0x500 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
+                0x0000ca28                xmp3_sfBandTable
+                0x0000ccc4                xmp3_slotTab
+                0x0000cdd4                xmp3_sideBytesTab
+                0x0000cde0                xmp3_samplesPerFrameTab
+                0x0000cdf4                xmp3_bitrateTab
+                0x0000cf04                xmp3_samplerateTab
+ .rodata        0x0000cf28       0xc0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
+ .rodata        0x0000cfe8       0x16 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+ *fill*         0x0000cffe        0x2 
+ .rodata        0x0000d000     0x22f4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
+                0x0000d000                xmp3_quadTable
+                0x0000d050                xmp3_huffTabLookup
+                0x0000d150                xmp3_huffTabOffset
+                0x0000d1d0                xmp3_huffTable
+ .rodata        0x0000f2f4       0x24 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+ .rodata        0x0000f318       0x68 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
+ .rodata        0x0000f380      0x864 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
+                0x0000f380                xmp3_polyCoef
+                0x0000f7a0                xmp3_coef32
+                0x0000f81c                xmp3_csa
+                0x0000f85c                xmp3_ISFIIP
+                0x0000f86c                xmp3_ISFMpeg2
+                0x0000f96c                xmp3_ISFMpeg1
+                0x0000f9a4                xmp3_imdctWin
+ .rodata        0x0000fbe4      0x100 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+                0x0000fbe4                __clz_tab
  *(.srodata*)
- .srodata       0x00010c98        0x6 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
-                0x00010c98                xmp3_bitsPerSlotTab
- *fill*         0x00010c9e        0x2 
- .srodata       0x00010ca0       0x10 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
-                0x00010ca0                xmp3_quadTabMaxBits
-                0x00010ca8                xmp3_quadTabOffset
- .srodata       0x00010cb0        0x8 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
-                0x00010cb0                xmp3_uniqueIDTab
+ .srodata       0x0000fce4        0x6 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
+                0x0000fce4                xmp3_bitsPerSlotTab
+ *fill*         0x0000fcea        0x2 
+ .srodata       0x0000fcec       0x10 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
+                0x0000fcec                xmp3_quadTabMaxBits
+                0x0000fcf4                xmp3_quadTabOffset
+ .srodata       0x0000fcfc        0x8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
+                0x0000fcfc                xmp3_uniqueIDTab
 
-.eh_frame       0x00010cb8       0x28
- .eh_frame      0x00010cb8       0x28 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+.eh_frame       0x0000fd04       0x28
+ .eh_frame      0x0000fd04       0x28 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
 
-.rela.dyn       0x00010ce0        0x0
+.rela.dyn       0x0000fd2c        0x0
  .rela.text.init
-                0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
+                0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
 
-.data           0x00010ce0      0x28c
+.data           0x0000fd2c      0x28c
  *(.data*)
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
- .data          0x00010ce0        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
- .data          0x00010ce0      0x238 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
-                0x00010ce0                poly43lo
-                0x00010cf4                poly43hi
-                0x00010d08                pow43_14
-                0x00010e08                pow14
-                0x00010e18                pow43
-                0x00010ed8                pow2frac
-                0x00010ef8                pow2exp
- .data          0x00010f18        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
- .data          0x00010f18        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
- .data          0x00010f18       0x48 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
-                0x00010f18                fastWin36
- .data          0x00010f60        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
- .data          0x00010f60        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
- .data          0x00010f60        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
- .data          0x00010f60        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
- .data          0x00010f60        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
- .data          0x00010f60        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
- .data          0x00010f60        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
+ .data          0x0000fd2c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
+ .data          0x0000fd2c      0x238 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+                0x0000fd2c                poly43lo
+                0x0000fd40                poly43hi
+                0x0000fd54                pow43_14
+                0x0000fe54                pow14
+                0x0000fe64                pow43
+                0x0000ff24                pow2frac
+                0x0000ff44                pow2exp
+ .data          0x0000ff64        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
+ .data          0x0000ff64        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
+ .data          0x0000ff64       0x48 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+                0x0000ff64                fastWin36
+ .data          0x0000ffac        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
+ .data          0x0000ffac        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
+ .data          0x0000ffac        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+ .data          0x0000ffac        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
+ .data          0x0000ffac        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
+ .data          0x0000ffac        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+ .data          0x0000ffac        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
  *(.sdata*)
- .sdata         0x00010f60        0xc /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
+ .sdata         0x0000ffac        0xc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
 
-.bss            0x00010f70     0xe088
-                0x00010f70                        __bss_start = .
+.bss            0x0000ffb8     0xe08c
+                0x0000ffb8                        __bss_start = .
  *(.bss*)
- .bss           0x00010f70        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
- .bss           0x00010f70        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
- .bss           0x00010f70        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
- .bss           0x00010f70     0x6cc4 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
-                0x000110b4                lib_albums
-                0x000116b4                lib_artists
-                0x00011834                lib_stage
-                0x00016834                lib_tracks
- .bss           0x00017c34      0x120 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
- .bss           0x00017d54        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
- *fill*         0x00017d54        0x4 
- .bss           0x00017d58     0x7200 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
- .bss           0x0001ef58        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
- .bss           0x0001ef58        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
- .bss           0x0001ef58        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
+ .bss           0x0000ffb8        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
+ .bss           0x0000ffb8        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
+ .bss           0x0000ffb8        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
+ .bss           0x0000ffb8     0x6cc4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
+                0x000100fc                lib_albums
+                0x000106fc                lib_artists
+                0x0001087c                lib_stage
+                0x0001587c                lib_tracks
+ .bss           0x00016c7c      0x120 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+ .bss           0x00016d9c        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
+ *fill*         0x00016d9c        0x4 
+ .bss           0x00016da0     0x7200 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
+ .bss           0x0001dfa0        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
+ .bss           0x0001dfa0        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+ .bss           0x0001dfa0        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
  *(.sbss*)
- .sbss          0x0001ef58        0x2 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
- *fill*         0x0001ef5a        0x2 
- .sbss          0x0001ef5c       0x28 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
-                0x0001ef78                lib_n_tracks
-                0x0001ef7c                lib_n_albums
-                0x0001ef80                lib_n_artists
- .sbss          0x0001ef84       0x38 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
- .sbss          0x0001efbc       0x3c /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
+ .sbss          0x0001dfa0        0x2 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
+ *fill*         0x0001dfa2        0x2 
+ .sbss          0x0001dfa4       0x28 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
+                0x0001dfc0                lib_n_tracks
+                0x0001dfc4                lib_n_albums
+                0x0001dfc8                lib_n_artists
+ .sbss          0x0001dfcc       0x3c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
+ .sbss          0x0001e008       0x3c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
  *(COMMON)
-                0x0001eff8                        __bss_end = .
+                0x0001e044                        __bss_end = .
                 0x00020000                        _stack_top = (ORIGIN (RAM) + LENGTH (RAM))
 OUTPUT(/Users/jeremy/test_fpga/pocket-tunes/firmware/firmware.elf elf32-littleriscv)
 
 .riscv.attributes
                 0x00000000       0x2a
  .riscv.attributes
-                0x00000000       0x28 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccyGUZ45.o
+                0x00000000       0x28 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
  .riscv.attributes
-                0x00000028       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
+                0x00000028       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
  .riscv.attributes
-                0x00000052       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
+                0x00000052       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .riscv.attributes
-                0x0000007c       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
+                0x0000007c       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
  .riscv.attributes
-                0x000000a6       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
+                0x000000a6       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
  .riscv.attributes
-                0x000000d0       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
+                0x000000d0       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
  .riscv.attributes
-                0x000000fa       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
+                0x000000fa       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
  .riscv.attributes
-                0x00000124       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
+                0x00000124       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
  .riscv.attributes
-                0x0000014e       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
+                0x0000014e       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
  .riscv.attributes
-                0x00000178       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
+                0x00000178       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
  .riscv.attributes
-                0x000001a2       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
+                0x000001a2       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
  .riscv.attributes
-                0x000001cc       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
+                0x000001cc       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
  .riscv.attributes
-                0x000001f6       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
+                0x000001f6       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
  .riscv.attributes
-                0x00000220       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
+                0x00000220       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
  .riscv.attributes
-                0x0000024a       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
+                0x0000024a       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
  .riscv.attributes
-                0x00000274       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
+                0x00000274       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
  .riscv.attributes
-                0x0000029e       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
+                0x0000029e       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
  .riscv.attributes
-                0x000002c8       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
+                0x000002c8       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
  .riscv.attributes
-                0x000002f2       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
+                0x000002f2       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
  .riscv.attributes
-                0x0000031c       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
+                0x0000031c       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
  .riscv.attributes
-                0x00000346       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
+                0x00000346       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
  .riscv.attributes
-                0x00000370       0x2a /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
+                0x00000370       0x2a /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
  .riscv.attributes
                 0x0000039a       0x2a /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
  .riscv.attributes
                 0x000003c4       0x2a /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clz.o)
 
 .comment        0x00000000       0x12
- .comment       0x00000000       0x12 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
+ .comment       0x00000000       0x12 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
                                  0x13 (size before relaxing)
- .comment       0x00000012        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
+ .comment       0x00000012        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
                                  0x13 (size before relaxing)
  .comment       0x00000012        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
                                  0x13 (size before relaxing)
@@ -383,47 +384,47 @@ OUTPUT(/Users/jeremy/test_fpga/pocket-tunes/firmware/firmware.elf elf32-littleri
 .note.GNU-stack
                 0x00000000        0x0
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccCOrcuM.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc0rcrmF.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccrfJfiQ.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccA8KHwQ.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccRYL5YK.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_file.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccFSp2Yi.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6d6sRz.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccwFcOQj.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3tabs.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccN5axQf.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccdtD7mS.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5csyPP.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cclwO16W.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccSQBHHa.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccohCPRf.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccIVu5QK.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc5PFlen.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc6E3IcO.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccGb7xcE.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccC5rcVa.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//ccseW3b0.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
  .note.GNU-stack
-                0x00000000        0x0 /var/folders/nq/tz7k80vx2wd8tb19j2shmy4h0000gn/T//cc1k0w3v.o
+                0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
  .note.GNU-stack
                 0x00000000        0x0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
  .note.GNU-stack

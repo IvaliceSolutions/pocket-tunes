@@ -97,6 +97,14 @@ static uint32_t seek_byte_off(const track_t *t, uint32_t sec) {
   return 0;
 }
 
+// ---- repeat mode: cycled with SELECT. REP_ALL loops the album (default, what
+// the user asked for), REP_ONE loops the current track, REP_OFF stops at the end.
+enum { REP_ALL, REP_ONE, REP_OFF };
+static int repeat_mode = REP_ALL;
+static const char *repeat_str(void) {
+  return repeat_mode == REP_ONE ? "RPT1" : repeat_mode == REP_OFF ? "RPT0" : "RPT";
+}
+
 // ---- shuffle: toggled with START. A tiny xorshift PRNG stirred by the
 // free-running cycle counter (unpredictable exactly when a track ends).
 static int shuffle;
@@ -191,7 +199,8 @@ void ui_init(void) {
 int ui_input(uint16_t pressed) {
   anim = 0;  // any key press restarts the selected item's marquee
 
-  if (pressed & KEY_START) { shuffle = !shuffle; return 1; }  // toggle shuffle
+  if (pressed & KEY_START) { shuffle = !shuffle; return 1; }         // toggle shuffle
+  if (pressed & KEY_SELECT) { repeat_mode = (repeat_mode + 1) % 3; return 1; }  // cycle repeat
 
   if (drawer_open) {
     if (pressed & (KEY_UP | KEY_DOWN)) {  // prev/next track (wraps), auto-play
@@ -288,13 +297,21 @@ int ui_tick(void) {
   anim++;  // drives the marquee at every level
   if (playing) {
     pos_frames = mp3_pos_seconds() * 60u;  // progress from real samples
-    if (mp3_at_eof()) {  // track ended → next in the album (shuffle-aware, wraps)
+    if (mp3_at_eof()) {  // track ended
       const album_t *pa = play_album_p();
-      int rel = next_rel(pa, play_gidx - pa->first_track);
-      start_play(pa->first_track + rel, play_alb);
-      if (drawer_open || focus == FOC_TRACKS) {
-        track_cursor = rel;
-        track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+      int cur_rel = play_gidx - pa->first_track;
+      if (repeat_mode == REP_ONE) {           // loop this track
+        start_play(play_gidx, play_alb);
+      } else if (repeat_mode == REP_OFF && !shuffle && cur_rel == pa->n_tracks - 1) {
+        playing = 0;                           // sequential end reached → stop
+        mp3_stop();
+      } else {                                 // REP_ALL (loop) / mid-album / shuffle
+        int rel = next_rel(pa, cur_rel);       // shuffle-aware next
+        start_play(pa->first_track + rel, play_alb);
+        if (drawer_open || focus == FOC_TRACKS) {
+          track_cursor = rel;
+          track_scroll = clamp_scroll(track_cursor, track_scroll, TR_ROWS);
+        }
       }
       return 1;
     }
@@ -312,7 +329,8 @@ static void level_footer(uint32_t cur, uint32_t total, const char *noun) {
   *p++ = ' ';
   p = s_append(p, noun);
   int x = gfx_text_small(MAIN_X, SCREEN_H - 12, f, COL_ARTIST_DIM);
-  if (shuffle) gfx_text_small(x + 8, SCREEN_H - 12, "\xc2\xb7 ALEA", COL_FOCUS);
+  x = gfx_text_small(x + 6, SCREEN_H - 12, repeat_str(), COL_FOCUS);
+  if (shuffle) gfx_text_small(x + 6, SCREEN_H - 12, "ALEA", COL_FOCUS);
 }
 
 static void render_sidebar(void) {
@@ -445,7 +463,8 @@ static void render_drawer(void) {
   p = s_udec(p, al->n_tracks);
   gfx_text_small(sx, DRAWER_Y + 32, sub, COL_ARTIST_DIM);
 
-  if (shuffle) gfx_text_small(76, DRAWER_Y + 50, "ALEA", COL_FOCUS);
+  int ix = gfx_text_small(76, DRAWER_Y + 50, repeat_str(), COL_FOCUS);
+  if (shuffle) gfx_text_small(ix + 8, DRAWER_Y + 50, "ALEA", COL_FOCUS);
 
   render_progress();
 
@@ -470,7 +489,7 @@ static void render_drawer(void) {
   }
   gfx_text_small(10, DRAWER_Y + 102, l2, COL_ARTIST_DIM);
 
-  gfx_text_small(10, SCREEN_H - 14, "^v piste \xc2\xb7 <> 10s \xc2\xb7 A pause \xc2\xb7 START alea \xc2\xb7 B fermer",
+  gfx_text_small(10, SCREEN_H - 14, "^v \xc2\xb7 <>10s \xc2\xb7 A pause \xc2\xb7 START alea \xc2\xb7 SEL rpt \xc2\xb7 B",
                  COL_ARTIST_DIM);
 }
 

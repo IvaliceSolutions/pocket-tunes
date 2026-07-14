@@ -18,18 +18,29 @@ python3 "$D/scripts/bdf2c.py" "$D/src/fonts.h" \
   font7x13="$D/../third_party/7x13.bdf" font5x8="$D/../third_party/5x8.bdf" >/dev/null
 
 HELIX="$D/helix"
-"$CC" -march=rv32im -mabi=ilp32 -O2 -ffreestanding -nostdlib \
+CF="-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
   -Wall -Wextra -Werror=implicit-function-declaration \
-  -I "$D/shim" -I "$HELIX/pub" -I "$HELIX/real" \
-  "$D/src/crt0.S" "$D/src/main.c" "$D/src/gfx.c" "$D/src/lib.c" "$D/src/ui.c" \
-  "$D/src/file.c" "$D/src/mp3.c" \
-  "$HELIX/mp3dec.c" "$HELIX/mp3tabs.c" \
-  "$HELIX/real/bitstream.c" "$HELIX/real/buffers.c" "$HELIX/real/dct32.c" \
-  "$HELIX/real/dequant.c" "$HELIX/real/dqchan.c" "$HELIX/real/huffman.c" \
-  "$HELIX/real/hufftabs.c" "$HELIX/real/imdct.c" "$HELIX/real/polyphase.c" \
-  "$HELIX/real/scalfact.c" "$HELIX/real/stproc.c" "$HELIX/real/subband.c" \
-  "$HELIX/real/trigtabs.c" \
-  -T "$D/src/link.ld" -lgcc -Wl,-Map="$D/firmware.map" -o "$D/firmware.elf"
+  -I $D/shim -I $HELIX/pub -I $HELIX/real"
+OBJ="$D/obj"; rm -rf "$OBJ"; mkdir -p "$OBJ"; OBJS=""
+
+# App/UI/decoder-glue at -Os: the 128 KB CPU RAM is tight, and this code is not
+# the DSP hot path, so trade a little speed for several KB of code space
+# (headroom for the stack + future features).
+for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/ui.c src/file.c src/mp3.c; do
+  o="$OBJ/app_$(basename "${s%.*}").o"
+  "$CC" $CF -Os -c "$D/$s" -o "$o"; OBJS="$OBJS $o"
+done
+
+# Helix stays at -O2 — it IS the real-time decode hot path; keep it fast.
+for s in mp3dec.c mp3tabs.c real/bitstream.c real/buffers.c real/dct32.c \
+         real/dequant.c real/dqchan.c real/huffman.c real/hufftabs.c \
+         real/imdct.c real/polyphase.c real/scalfact.c real/stproc.c \
+         real/subband.c real/trigtabs.c; do
+  o="$OBJ/helix_$(basename "${s%.*}").o"
+  "$CC" $CF -O2 -c "$HELIX/$s" -o "$o"; OBJS="$OBJS $o"
+done
+
+"$CC" $CF $OBJS -T "$D/src/link.ld" -lgcc -Wl,-Map="$D/firmware.map" -o "$D/firmware.elf"
 
 "$OBJCOPY" -O binary "$D/firmware.elf" "$D/firmware.bin"
 
