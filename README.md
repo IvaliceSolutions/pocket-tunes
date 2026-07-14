@@ -9,12 +9,14 @@ openFPGA core, with a **MiSTer** port planned. UI is the amber-on-black terminal
 | Milestone | What | State |
 |---|---|---|
 | M0 | Repo scaffold + `library.json` schema (indexer↔core contract) | ✅ done |
-| M1 | Cross-platform library **indexer** (scan, tags, cover→RGB565, JSON) | ✅ done & validated |
+| M1 | Cross-platform library **indexer** (scan, tags, cover→RGB565, JSON, ASCII filename transliteration) | ✅ **validated on real Pocket** |
 | M2 | openFPGA core base: boot, video out, auto-load `library.json` into BRAM | ✅ **validated on real Pocket** |
-| M3 | Amber UI in a firmware-drawn framebuffer (sidebar / main / drawer, D-pad/A/B) | 🟡 M3a: PicoRV32 SoC + 8bpp palettized fb + input — simulated, awaiting Pocket test |
-| M4 | Audio: soft RISC-V + firmware MP3 decoder → PCM ring → I2S (real-time risk) | 🟡 **de-risked** — [feasible, ~17 MHz worst case](docs/derisk-m4.md) |
-| M5 | Integration: pick track → stream file → decode → progress from sample position | ⬜ |
-| M6 | MiSTer port (decode on ARM HPS, reuse indexer + UI logic) | ⬜ |
+| M3 | Amber UI in a firmware-drawn framebuffer: 3-level browse (artists → albums → tracks) + now-playing drawer, D-pad/A/B, bounce-scrolling (marquee) titles | ✅ **validated on real Pocket** |
+| M4 | Audio: soft **VexRiscv** RISC-V + Helix firmware MP3 decoder → PCM ring → I2S, **real-time** (~4× margin @72 MHz) | ✅ **validated on real Pocket** |
+| M5 | Playback: pick track → stream file → decode → progress; FF/RW seek, auto-advance (loops), **shuffle** (START), ID3v2-tag skip | ✅ **validated on real Pocket** |
+| M6 | MiSTer port (decode on ARM HPS, reuse indexer + UI logic) | ⬜ planned |
+
+**Backlog / polish:** real RGB565 cover thumbnails (indexer already emits them), repeat-one / repeat-off modes, WAV/PCM playback, Opus, PCM-flush-on-seek, skip-leading-silence. A `-Os` pass is needed before large additions — the firmware is near the CPU's 128 KB RAM ceiling.
 
 ## Why this architecture
 
