@@ -46,6 +46,12 @@ void pcm_push(uint32_t s);
 #define REG_DT_ADDR     MMIO32(0x50)
 #define REG_DT_DATA     MMIO32(0x54)
 
+// savestate/sleep: 4-phase handshake with ss_ctrl (levels)
+#define REG_SS_STATUS  MMIO32(0xA0)  // r: bit0 save requested, bit1 load pending
+#define REG_SS_CTRL    MMIO32(0xA4)  // w: bit0 save done, bit1 load done (clear when req drops)
+#define REG_SS_LOAD(i) MMIO32(0xC0 + 4*(i))  // r: captured state words 0..15
+// w: 16 state words served to the bridge at 0x4000_1000 (param RAM window)
+#define REG_SS_SAVE    ((volatile uint32_t *)0xF0001180u)
 #define REG_PARAM_RAM   ((volatile uint32_t *)0xF0001000u)  // param struct base
 
 // Pocket key bitmap (cont1_key)

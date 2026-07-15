@@ -99,6 +99,14 @@ la même).
   [README de l'indexeur](../indexer/README.md) (le cas classique : fichiers
   ajoutés sans avoir relancé l'indexeur).
 
+## Mode veille
+
+Appuie sur le **bouton power** : la Pocket sauvegarde l'état du lecteur
+(piste, position, modes, écran) et s'éteint. Au réveil, tout reprend
+exactement où c'était — si la musique jouait, elle reprend à la seconde
+près. Si la bibliothèque a changé entre-temps (ré-indexation), le lecteur
+revient à l'accueil sans relancer la lecture.
+
 ## Préparer la carte SD
 
 1. Copier la musique dans `/Assets/pockettunes/common/Music/Artiste/Album/…`

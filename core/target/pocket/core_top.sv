@@ -321,22 +321,46 @@ module core_top (
 
   wire dataslot_allcomplete;
 
-  wire savestate_supported = 0;
-  wire [31:0] savestate_addr = 0;
-  wire [31:0] savestate_size = 0;
-  wire [31:0] savestate_maxloadsize = 0;
+  // Savestate = the Pocket's sleep mode: on power-press the OS reads our
+  // 64-byte state blob from bridge 0x4000_1000 and shuts down; on wake it
+  // writes the blob back and pulses load. The firmware serializes/applies
+  // through pt_soc's MMIO window; ss_ctrl sequences the protocol.
+  wire savestate_supported = 1;
+  wire [31:0] savestate_addr = 32'h4000_1000;
+  wire [31:0] savestate_size = 32'd64;
+  wire [31:0] savestate_maxloadsize = 32'd64;
 
   wire savestate_start;
-  wire savestate_start_ack = 0;
-  wire savestate_start_busy = 0;
-  wire savestate_start_ok = 0;
-  wire savestate_start_err = 0;
-
+  wire savestate_start_ack, savestate_start_busy, savestate_start_ok, savestate_start_err;
   wire savestate_load;
-  wire savestate_load_ack = 0;
-  wire savestate_load_busy = 0;
-  wire savestate_load_ok = 0;
-  wire savestate_load_err = 0;
+  wire savestate_load_ack, savestate_load_busy, savestate_load_ok, savestate_load_err;
+
+  wire ss_save_req, ss_load_req;    // clk_74a levels → pt_soc
+  wire ss_save_done, ss_load_done;  // clk_sys levels ← pt_soc
+  wire ss_save_done_74, ss_load_done_74;
+  synch_3 ss_sd74 (ss_save_done, ss_save_done_74, clk_74a);
+  synch_3 ss_ld74 (ss_load_done, ss_load_done_74, clk_74a);
+
+  ss_ctrl issc (
+      .clk_74a(clk_74a),
+      .reset_n(reset_n),
+
+      .ss_start(savestate_start),
+      .ss_load (savestate_load),
+      .ss_start_ack (savestate_start_ack),
+      .ss_start_busy(savestate_start_busy),
+      .ss_start_ok  (savestate_start_ok),
+      .ss_start_err (savestate_start_err),
+      .ss_load_ack (savestate_load_ack),
+      .ss_load_busy(savestate_load_busy),
+      .ss_load_ok  (savestate_load_ok),
+      .ss_load_err (savestate_load_err),
+
+      .save_req (ss_save_req),
+      .save_done(ss_save_done_74),
+      .load_req (ss_load_req),
+      .load_done(ss_load_done_74)
+  );
 
   wire osnotify_inmenu;
 
@@ -486,6 +510,11 @@ module core_top (
       .cont1_key(cont1_key),
 
       .rtc_time_bcd(rtc_time),
+
+      .ss_save_req (ss_save_req),
+      .ss_load_req (ss_load_req),
+      .ss_save_done(ss_save_done),
+      .ss_load_done(ss_load_done),
 
       .audio_l(soc_audio_l),
       .audio_r(soc_audio_r),

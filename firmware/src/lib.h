@@ -44,7 +44,7 @@ typedef struct {
 // library: 3 artists / 3 albums / 111 tracks / ~4.7 KB pool).
 #define MAX_ARTISTS 40
 #define MAX_ALBUMS  72
-#define MAX_TRACKS  192
+#define MAX_TRACKS  176
 #define POOL_SIZE   6144
 
 extern artist_t lib_artists[MAX_ARTISTS];

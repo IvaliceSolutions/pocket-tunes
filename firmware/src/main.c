@@ -50,8 +50,33 @@ int main(void) {
   // wait_vblank() here would starve the PCM fifo (the CPU would spend most of
   // each frame spinning instead of decoding) → slow-motion audio.
   uint32_t last_frame = REG_FRAME;
+  uint32_t ss_done = 0;  // our two done levels (bit0 save, bit1 load)
   for (;;) {
     mp3_pump();  // keep the audio fifo topped up (returns fast when it's full)
+
+    // sleep/wake: serve savestate requests (4-phase with ss_ctrl)
+    uint32_t ss = REG_SS_STATUS;
+    if ((ss & 1) && !(ss_done & 1)) {        // sleep: serialize the player
+      uint32_t w[SS_WORDS];
+      ui_get_state(w);
+      for (int i = 0; i < SS_WORDS; i++) REG_SS_SAVE[i] = w[i];
+      ss_done |= 1;
+      REG_SS_CTRL = ss_done;
+    } else if (!(ss & 1) && (ss_done & 1)) {
+      ss_done &= ~1u;
+      REG_SS_CTRL = ss_done;
+    }
+    if ((ss & 2) && !(ss_done & 2)) {        // wake: restore the player
+      uint32_t w[SS_WORDS];
+      for (int i = 0; i < SS_WORDS; i++) w[i] = REG_SS_LOAD(i);
+      ui_apply_state(w);
+      ss_done |= 2;
+      REG_SS_CTRL = ss_done;
+      ui_render_full();
+    } else if (!(ss & 2) && (ss_done & 2)) {
+      ss_done &= ~2u;
+      REG_SS_CTRL = ss_done;
+    }
 
     uint32_t f = REG_FRAME;
     if (f == last_frame) continue;  // not a new frame yet — go decode more

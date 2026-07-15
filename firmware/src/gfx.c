@@ -76,6 +76,14 @@ static unsigned utf8_next(const char *s, int len, int *i) {
   return '?';
 }
 
+// Font tables hold 191 glyphs: 32..126 then 160..255. Map a codepoint to its
+// row, folding the unused 127..159 hole (and anything odd) to '?'.
+static int glyph_row(unsigned cp) {
+  if (cp >= 32 && cp <= 126) return (int)cp - 32;
+  if (cp >= 160 && cp <= 255) return (int)cp - 160 + 95;
+  return '?' - 32;
+}
+
 // Draw at most `len` bytes, clipped to x < x_max. Returns final x.
 static int draw_glyphs(int x, int y, const char *s, int len, int x_max,
                        uint8_t color, const unsigned char *font, int gw, int gh) {
@@ -83,7 +91,7 @@ static int draw_glyphs(int x, int y, const char *s, int len, int x_max,
   while (i < len && s[i]) {
     unsigned cp = utf8_next(s, len, &i);
     if (x + gw > x_max) break;
-    const unsigned char *g = font + (cp - 32) * gh;
+    const unsigned char *g = font + glyph_row(cp) * gh;
     for (int r = 0; r < gh; r++) {
       unsigned bits = g[r];
       for (int c = 0; c < gw; c++)
@@ -134,7 +142,7 @@ void gfx_text_scroll(int x, int y, const char *s, int len, int box_w,
     unsigned cp = utf8_next(s, len, &i);
     if (gx >= cx1) break;             // rest is past the right edge
     if (gx + gw > cx0) {              // at least partly inside the window
-      const unsigned char *g = font + (cp - 32) * gh;
+      const unsigned char *g = font + glyph_row(cp) * gh;
       for (int r = 0; r < gh; r++) {
         unsigned bits = g[r];
         for (int c = 0; c < gw; c++) {

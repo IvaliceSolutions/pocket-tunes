@@ -76,6 +76,12 @@ module pt_soc #(
     // once a second — so a plain synchronizer is enough)
     input wire [31:0] rtc_time_bcd,
 
+    // savestate/sleep handshake (levels; reqs are clk_74a, dones are clk_sys)
+    input  wire ss_save_req,
+    input  wire ss_load_req,
+    output wire ss_save_done,
+    output wire ss_load_done,
+
     // audio samples out (clk_sys domain; updated at 48 kHz)
     output reg signed [15:0] audio_l,
     output reg signed [15:0] audio_r,
@@ -309,9 +315,30 @@ module pt_soc #(
     if (mmio_wr && param_sel) param_ram[dbus_addr[8:2]] <= dbus_wdata;
   end
   always @(posedge clk_74a) begin
-    if (bridge_rd) param_q_74 <= param_ram[bridge_addr[8:2]];
+    if (bridge_rd)
+      param_q_74 <= param_ram[bridge_addr[12] ? (7'd96 + {3'd0, bridge_addr[5:2]})
+                                              : bridge_addr[8:2]];
   end
   assign param_rd_data = param_q_74;
+
+  // -------------------------------------------------- savestate (sleep/wake)
+  // Wake: the host writes the 64-byte state blob to bridge 0x4000_1000..103F;
+  // capture it into registers (quasi-static: written before ss_load fires,
+  // read by the CPU only after the synchronized load_req is seen).
+  reg [31:0] ss_load_word[0:15];
+  always @(posedge clk_74a) begin
+    if (bridge_wr && bridge_addr[31:28] == 4'h4 && bridge_addr[12]
+        && bridge_addr[11:6] == 6'd0)
+      ss_load_word[bridge_addr[5:2]] <= bridge_wr_data;
+  end
+
+  // req levels → clk_sys for the firmware; done levels → back to clk_74a
+  wire ss_save_req_s, ss_load_req_s;
+  synch_3 ss_sv_s (ss_save_req, ss_save_req_s, clk_sys);
+  synch_3 ss_ld_s (ss_load_req, ss_load_req_s, clk_sys);
+  reg [1:0] ss_done;  // bit0 save_done, bit1 load_done (firmware-owned levels)
+  assign ss_save_done = ss_done[0];
+  assign ss_load_done = ss_done[1];
 
   // datatable window
   reg [9:0] dt_addr = 0;
@@ -372,6 +399,7 @@ module pt_soc #(
         8'h2C: tgt_length <= dbus_wdata;
         8'h30: tgt_cmd <= dbus_wdata[1:0];
         8'h50: dt_addr <= dbus_wdata[9:0];
+        8'hA4: ss_done <= dbus_wdata[1:0];
         default: ;
       endcase
     end
@@ -393,7 +421,9 @@ module pt_soc #(
       8'h34:   mmio_rdata <= {25'd0, tgt_err_s, 2'b00, tgt_done_s, tgt_ack_s};
       8'h40:   mmio_rdata <= {20'd0, pcm_free};
       8'h54:   mmio_rdata <= dt_q_s;
-      default: mmio_rdata <= 32'd0;
+      8'hA0:   mmio_rdata <= {30'd0, ss_load_req_s, ss_save_req_s};
+      default: mmio_rdata <= (dbus_addr[7:6] == 2'b11) ? ss_load_word[dbus_addr[5:2]]
+                                                       : 32'd0;
     endcase
   end
 

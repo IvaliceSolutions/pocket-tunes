@@ -666,3 +666,66 @@ void ui_render_playing(void) {
     if (minibar_on()) render_minibar();
   }
 }
+
+// ------------------------------------------------- savestate (sleep / wake)
+// 64-byte blob: everything needed to come back exactly where the user left.
+#define SS_MAGIC 0x50545331u  /* "PTS1" */
+
+void ui_get_state(uint32_t w[SS_WORDS]) {
+  for (int i = 0; i < SS_WORDS; i++) w[i] = 0;
+  w[0] = SS_MAGIC;
+  w[1] = ((uint32_t)(uint16_t)play_gidx) | ((uint32_t)(uint16_t)play_alb << 16);
+  w[2] = mp3_pos_seconds();
+  w[3] = (playing ? 1u : 0) | (drawer_open ? 2u : 0) | (shuffle ? 4u : 0) |
+         ((uint32_t)repeat_mode << 3) | ((uint32_t)focus << 5);
+  w[4] = ((uint32_t)(uint8_t)sb_cursor) | ((uint32_t)(uint8_t)cur_artist << 8) |
+         ((uint32_t)(uint8_t)album_cursor << 16) | ((uint32_t)(uint8_t)track_cursor << 24);
+  w[5] = ((uint32_t)(uint8_t)sb_scroll) | ((uint32_t)(uint8_t)album_scroll << 16) |
+         ((uint32_t)(uint8_t)track_scroll << 24);
+  w[6] = (play_gidx >= 0) ? lib_tracks[play_gidx].fsize : 0;
+}
+
+static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+void ui_apply_state(const uint32_t w[SS_WORDS]) {
+  if (w[0] != SS_MAGIC || lib_n_artists == 0) return;
+
+  // modes first — cheap and always valid
+  shuffle = (w[3] >> 2) & 1;
+  repeat_mode = clampi((int)((w[3] >> 3) & 3), 0, 2);
+
+  // browse position, clamped against the (possibly re-indexed) library
+  cur_artist = clampi((int)((w[4] >> 8) & 0xFF), 0, lib_n_artists - 1);
+  sb_cursor = clampi((int)(w[4] & 0xFF), 0, lib_n_artists - 1);
+  const artist_t *ar = &lib_artists[cur_artist];
+  album_cursor = clampi((int)((w[4] >> 16) & 0xFF), 0,
+                        ar->n_albums ? ar->n_albums - 1 : 0);
+  track_cursor = clampi((int)((w[4] >> 24) & 0xFF), 0,
+                        sel_album()->n_tracks ? sel_album()->n_tracks - 1 : 0);
+  sb_scroll = clamp_scroll(sb_cursor, clampi((int)(w[5] & 0xFF), 0, sb_cursor), sb_rows());
+  album_scroll = clamp_scroll(album_cursor, clampi((int)((w[5] >> 16) & 0xFF), 0, album_cursor), al_rows());
+  track_scroll = clamp_scroll(track_cursor, clampi((int)((w[5] >> 24) & 0xFF), 0, track_cursor), tr_rows());
+  focus = clampi((int)((w[3] >> 5) & 3), FOC_ARTISTS, FOC_TRACKS);
+
+  // playback: only if the saved track still exists and looks like the same file
+  int gidx = (int)(int16_t)(w[1] & 0xFFFF);
+  int alb = (int)(int16_t)(w[1] >> 16);
+  if (gidx >= 0 && gidx < lib_n_tracks && alb >= 0 && alb < lib_n_albums &&
+      lib_tracks[gidx].fsize == w[6] && w[6] != 0) {
+    start_play(gidx, alb);
+    if (last_start_err == 0) {
+      const track_t *t = &lib_tracks[gidx];
+      uint32_t pos = w[2];
+      if (t->dur_s && pos >= t->dur_s) pos = 0;
+      if (pos > 0) {
+        mp3_seek(pos, seek_byte_off(t, pos));
+        pos_frames = pos * 60u;
+      }
+      if (!(w[3] & 1)) {  // was paused
+        playing = 0;
+        mp3_set_paused(1);
+      }
+      drawer_open = (w[3] >> 1) & 1;
+    }
+  }
+}

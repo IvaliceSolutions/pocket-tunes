@@ -83,8 +83,9 @@ def main():
         w, h = fbb[0], fbb[1]
         out.append(f"#define {name.upper()}_W {w}")
         out.append(f"#define {name.upper()}_H {h}")
-        out.append(f"static const unsigned char {name}[224][{h}] = {{")
-        for enc in range(32, 256):
+        out.append(f"// 191 glyphs: 32..126 then 160..255 (127..159 unused by UTF-8->Latin-1)")
+        out.append(f"static const unsigned char {name}[191][{h}] = {{")
+        for enc in list(range(32, 127)) + list(range(160, 256)):
             cell = render(fbb, glyphs, enc)
             hexrow = ", ".join(f"0x{v:02x}" for v in cell)
             ch = chr(enc).replace("\\", "backslash").replace("*/", "* /") if enc < 127 else f"x{enc:02x}"
