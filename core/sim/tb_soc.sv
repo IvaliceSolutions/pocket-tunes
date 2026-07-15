@@ -45,16 +45,32 @@ module tb_soc;
   wire de, hs, vs;
   wire [23:0] rgb;
 
+  // M7a: firmware code lives in the external SRAM — the model is preloaded
+  // with the image (skipping the APF load, which tb_sramload covers).
+  wire [16:0] sram_a;
+  wire [15:0] sram_dq;
+  wire sram_oe_n, sram_we_n, sram_ub_n, sram_lb_n;
+  sram_model #(
+      .PRELOAD("../projects/firmware_sram.hex")
+  ) sram (
+      .a(sram_a), .dq(sram_dq),
+      .oe_n(sram_oe_n), .we_n(sram_we_n), .ub_n(sram_ub_n), .lb_n(sram_lb_n)
+  );
+
   pt_soc #(
-      .FIRMWARE_B0 ("../projects/firmware_b0.hex"),
-      .FIRMWARE_B1 ("../projects/firmware_b1.hex"),
-      .FIRMWARE_B2 ("../projects/firmware_b2.hex"),
-      .FIRMWARE_B3 ("../projects/firmware_b3.hex"),
       .PALETTE_FILE("../projects/palette.hex")
   ) dut (
       .clk_sys(clk_sys),
       .clk_vid(clk_vid),
       .reset_n(reset_n),
+
+      .sram_a   (sram_a),
+      .sram_dq  (sram_dq),
+      .sram_oe_n(sram_oe_n),
+      .sram_we_n(sram_we_n),
+      .sram_ub_n(sram_ub_n),
+      .sram_lb_n(sram_lb_n),
+      .cpu_run  (1'b1),
 
       .clk_74a             (clk_74a),
       .bridge_wr           (bridge_wr),

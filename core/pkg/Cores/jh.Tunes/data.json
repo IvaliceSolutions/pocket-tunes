@@ -32,6 +32,18 @@
         "deferload": true,
         "address": "0x30000000",
         "size_maximum": "0x4000"
+      },
+      {
+        "name": "Firmware",
+        "id": 3,
+        "required": true,
+        "parameters": "0x0",
+        "filename": "firmware.bin",
+        "extensions": [
+          "bin"
+        ],
+        "address": "0x50000000",
+        "size_maximum": "0x40000"
       }
     ]
   }

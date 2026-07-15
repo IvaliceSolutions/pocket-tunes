@@ -21,3 +21,4 @@ core/sim/*.ppm
 core/sim/*.png
 core/sim/*.vvp
 firmware/obj/
+rollback/

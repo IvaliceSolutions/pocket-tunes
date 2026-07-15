@@ -44,20 +44,19 @@ done
 
 "$OBJCOPY" -O binary "$D/firmware.elf" "$D/firmware.bin"
 
-# binary → one hex file per byte lane (the RAM is four 8-bit banks so that
-# Quartus RAM inference never has to deal with byte enables), padded to 32K
+# M7a: the whole image (text + fast rodata/data copy source) lives in external
+# SRAM, loaded at boot by the APF "Firmware" data slot; BRAM has no init.
+# Emit the SD blob plus a 16-bit little-endian hex for the sim SRAM model.
 python3 - "$D/firmware.bin" "$OUT" <<'EOF'
 import sys, os
 data = open(sys.argv[1], "rb").read()
-data += b"\0" * (-len(data) % 4)
-words = len(data) // 4
-for lane in range(4):
-    with open(os.path.join(sys.argv[2], f"firmware_b{lane}.hex"), "w") as f:
-        for i in range(words):
-            f.write(f"{data[i*4+lane]:02x}\n")
-        for _ in range(32768 - words):
-            f.write("00\n")
-print(f"firmware: {len(data)} bytes → firmware_b0..3.hex ({words} words)")
+data += b"\0" * (-len(data) % 2)
+halves = len(data) // 2
+assert len(data) <= 256 * 1024, f"firmware {len(data)} bytes > 256K SRAM"
+with open(os.path.join(sys.argv[2], "firmware_sram.hex"), "w") as f:
+    for i in range(halves):
+        f.write(f"{data[2*i+1]:02x}{data[2*i]:02x}\n")
+print(f"firmware: {len(data)} bytes -> firmware.bin + firmware_sram.hex ({halves} halfwords)")
 EOF
 
 ls -l "$D/firmware.bin" | awk '{print "firmware.bin: "$5" bytes"}'
