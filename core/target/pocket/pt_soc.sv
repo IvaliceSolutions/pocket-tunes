@@ -10,7 +10,7 @@
 //                here: 0x0180 target-read responses aimed at bridge 0x1000_0000)
 //   0x2000_0000  framebuffer 320x288 @ 8bpp (92,160 bytes), write-only
 //   0x5000_0000  external async SRAM, 256 KB: firmware code (iBus, cached)
-//   0x6000_0000  instruction TCM, 32 KB BRAM: hot Opus decode code (M7d) —
+//   0x6000_0000  instruction TCM, 16 KB BRAM: hot Opus decode code (M7d) —
 //                iBus refills at 1 cycle/word instead of the SRAM's ~10;
 //                dBus writes here only during the crt0 boot copy
 //   0xF000_0000  MMIO:
@@ -355,12 +355,12 @@ module pt_soc #(
   // dBus write port for the crt0 copy.
   wire        d_itcm_sel = (dregion == 4'h6);
   wire [31:0] itcm_rdata;
-  itcm #(.WORDS(8192), .AW(13)) itcm_i (
+  itcm #(.WORDS(4096), .AW(12)) itcm_i (
       .clk    (clk_sys),
       .reset_n(sram_rst_n),   // alive with the clock, like the SRAM subsystem
       .d_sel  (d_acc & d_itcm_sel),
       .d_wr   (dbus_wr),
-      .d_addr (dbus_addr[14:0]),
+      .d_addr (dbus_addr[13:0]),
       .d_wdata(dbus_wdata),
       .d_mask (dbus_mask),
       .d_rdata(itcm_rdata),

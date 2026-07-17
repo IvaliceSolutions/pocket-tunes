@@ -1,5 +1,5 @@
-/* M7d memory layout — code in the 256 KB external async SRAM, the hot
- * CELT decode kernels in a 32 KB instruction TCM (1-cycle BRAM), data in the
+/* M7d memory layout — code in the 256 KB external async SRAM, the hottest
+ * CELT decode kernels in a 16 KB instruction TCM (1-cycle BRAM), data in the
  * 128 KB BRAM.
  *
  * The whole firmware image (text + .itcm + rodata + .data init) is one flat
@@ -17,7 +17,7 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 MEMORY {
   SRAM (rx)  : ORIGIN = 0x50000000, LENGTH = 256K
-  ITCM (rwx) : ORIGIN = 0x60000000, LENGTH = 32K
+  ITCM (rwx) : ORIGIN = 0x60000000, LENGTH = 16K
   RAM  (rwx) : ORIGIN = 0x00000000, LENGTH = 128K
 }
 SECTIONS {
@@ -28,8 +28,7 @@ SECTIONS {
     *(.text.init)
     EXCLUDE_FILE(
       *opus_kiss_fft.o *opus_mdct.o *opus_celt.o *opus_entdec.o
-      *opus_entcode.o *opus_mathops.o *opus_laplace.o *opus_vq.o *opus_cwrs.o
-      *opus_celt_decoder.o
+      *opus_entcode.o *opus_mathops.o *opus_laplace.o
     ) *(.text*)
   } > SRAM
 
@@ -44,9 +43,6 @@ SECTIONS {
     *opus_entcode.o(.text .text.*)
     *opus_mathops.o(.text .text.*)
     *opus_laplace.o(.text .text.*)
-    *opus_vq.o(.text .text.*)
-    *opus_cwrs.o(.text .text.*)
-    *opus_celt_decoder.o(.text .text.*)
     __itcm_end = .;
   } > ITCM AT> SRAM
   __itcm_lma = LOADADDR(.itcm);
