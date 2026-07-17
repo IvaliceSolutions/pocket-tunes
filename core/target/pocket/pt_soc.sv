@@ -37,6 +37,12 @@ module pt_soc #(
     input wire clk_sys,
     input wire clk_vid,
     input wire reset_n,  // async-ish (bridge domain); synchronized internally
+    // Memory-subsystem reset: PLL lock, NOT the APF core reset. The APF pushes
+    // the Firmware slot into SRAM WHILE the core is held in reset (log: the
+    // 0x5000_0000 load lands well before "Reset Exit"), so anything gated by
+    // reset_n would drop every loader write and the CPU would boot into an
+    // empty SRAM. Same reason bridge_rx_ram's writes carry no reset at all.
+    input wire pll_locked,
 
     // APF bridge (clk_74a domain)
     input  wire        clk_74a,
@@ -103,6 +109,8 @@ module pt_soc #(
   // ------------------------------------------------------------------ resets
   wire reset_n_sys;
   synch_3 rst_sys_s (reset_n, reset_n_sys, clk_sys);
+  wire sram_rst_n;  // memory subsystem: alive as soon as the clock is stable
+  synch_3 rst_sram_s (pll_locked, sram_rst_n, clk_sys);
   // hold the CPU until the Firmware data slot finished loading into SRAM
   wire cpu_run_s;
   synch_3 cpurun_s (cpu_run, cpu_run_s, clk_sys);
@@ -295,7 +303,7 @@ module pt_soc #(
 
   sram_ctrl sramc (
       .clk    (clk_sys),
-      .reset_n(reset_n_sys),
+      .reset_n(sram_rst_n),  // NOT the core reset — see pll_locked above
 
       .sram_a   (sram_a),
       .sram_dq  (sram_dq),

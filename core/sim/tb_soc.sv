@@ -17,6 +17,8 @@ module tb_soc;
   always #6.734 clk_74a = ~clk_74a;  // 74.25 MHz
 
   reg reset_n = 0;
+  reg cpu_run = 0;   // APF releases the CPU only once the Firmware slot landed
+  reg pll_locked = 0;
   reg [15:0] cont1_key = 0;
 
   localparam LIB_SIZE = 390;
@@ -45,13 +47,16 @@ module tb_soc;
   wire de, hs, vs;
   wire [23:0] rgb;
 
-  // M7a: firmware code lives in the external SRAM — the model is preloaded
-  // with the image (skipping the APF load, which tb_sramload covers).
+  // M7a: firmware code lives in the external SRAM. The model starts EMPTY on
+  // purpose — the image must arrive the way the real APF delivers it: bridge
+  // writes to 0x5xxx_xxxx WHILE the core is still held in reset. Preloading it
+  // here (and forcing cpu_run) is what let a reset-gated sram_ctrl pass sim and
+  // black-screen on hardware.
   wire [16:0] sram_a;
   wire [15:0] sram_dq;
   wire sram_oe_n, sram_we_n, sram_ub_n, sram_lb_n;
   sram_model #(
-      .PRELOAD("../projects/firmware_sram.hex")
+      .PRELOAD("")
   ) sram (
       .a(sram_a), .dq(sram_dq),
       .oe_n(sram_oe_n), .we_n(sram_we_n), .ub_n(sram_ub_n), .lb_n(sram_lb_n)
@@ -63,6 +68,7 @@ module tb_soc;
       .clk_sys(clk_sys),
       .clk_vid(clk_vid),
       .reset_n(reset_n),
+      .pll_locked(pll_locked),
 
       .sram_a   (sram_a),
       .sram_dq  (sram_dq),
@@ -70,7 +76,7 @@ module tb_soc;
       .sram_we_n(sram_we_n),
       .sram_ub_n(sram_ub_n),
       .sram_lb_n(sram_lb_n),
-      .cpu_run  (1'b1),
+      .cpu_run  (cpu_run),
 
       .clk_74a             (clk_74a),
       .bridge_wr           (bridge_wr),
@@ -279,9 +285,31 @@ module tb_soc;
     end
   endtask
 
+  // Push the firmware image into SRAM through the bridge, exactly like the APF
+  // Firmware data slot does (16-bit words at 0x5000_0000), while in reset.
+  reg [15:0] fw_img[0:131071];
+  integer fw_words, fi;
+  task load_firmware_via_bridge;
+    begin
+      $readmemh("../projects/firmware_sram.hex", fw_img);
+      fw_words = 0;
+      while (fw_words < 131072 && fw_img[fw_words] !== 16'hxxxx) fw_words = fw_words + 1;
+      $display("APF model: pushing %0d firmware halfwords to 0x5000_0000 (in reset)", fw_words);
+      for (fi = 0; fi < fw_words; fi = fi + 1)
+        do_bridge_write(32'h5000_0000 + fi * 2, {16'd0, fw_img[fi]});
+      $display("APF model: firmware load done at t=%0t", $time);
+    end
+  endtask
+
   initial begin
     repeat (20) @(posedge clk_sys);
-    reset_n = 1;
+    pll_locked = 1;               // clock stable: the memory subsystem is alive
+    repeat (10) @(posedge clk_sys);
+    load_firmware_via_bridge;     // ... all of this happens while reset_n = 0
+    repeat (20) @(posedge clk_sys);
+    reset_n = 1;                  // "Reset Exit"
+    cpu_run = 1;                  // slots complete → CPU released
+    $display("APF model: reset released, CPU running");
 
     // tiny library parses in ~2 frames
     wait (frame_no == 6);

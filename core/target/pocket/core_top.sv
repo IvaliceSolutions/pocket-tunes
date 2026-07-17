@@ -474,6 +474,7 @@ module core_top (
   wire               soc_audio_stb;
 
   pt_soc soc (
+      .pll_locked(pll_core_locked),
       .clk_sys(clk_sys_48),
       .clk_vid(clk_vid_12),
       .reset_n(reset_n),
