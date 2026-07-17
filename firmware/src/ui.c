@@ -36,6 +36,11 @@
 #define ROW_X 14
 #define ROW_X_MAX (SCREEN_W - 14)
 
+// Persistent mini-bar over the lists while a track is loaded (user request:
+// keep playback visible without the Lecture screen)
+#define MBAR_H 42
+#define MBAR_Y (SCREEN_H - MBAR_H)
+
 // Lecture (Now Playing)
 #define NOW_COVER 96
 #define NOW_COVER_X ((SCREEN_W - NOW_COVER) / 2)
@@ -119,9 +124,11 @@ static int clamp_scroll(int cursor, int scroll, int rows) {
 }
 static int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 
-static int lib_rows(void) { return (SCREEN_H - LIST_Y0) / ROW_H; }
-static int alb_rows(void) { return (SCREEN_H - LIST_Y0) / ALB_ROW_H; }
-static int trk_rows(void) { return (SCREEN_H - LIST_Y0) / ROW_H; }
+static int minibar_on(void);  // below (needs play state)
+static int list_h(void) { return SCREEN_H - LIST_Y0 - (minibar_on() ? MBAR_H : 0); }
+static int lib_rows(void) { return list_h() / ROW_H; }
+static int alb_rows(void) { return list_h() / ALB_ROW_H; }
+static int trk_rows(void) { return list_h() / ROW_H; }
 
 // Bibliothèque rows: the artists then the library-root loose tracks.
 static int n_lib_rows(void) { return lib_n_artists + lib_n_root_tracks; }
@@ -132,6 +139,8 @@ static int n_alb_rows(void) {
 }
 
 static const track_t *play_track_p(void) { return &lib_tracks[play_gidx]; }
+
+static int minibar_on(void) { return play_gidx >= 0 && screen != SCR_NOW; }
 
 static void derive_play_ctx(void) {
   if (play_alb >= 0) {
@@ -713,7 +722,7 @@ static void render_now(void) {
   render_status("Lecture", 7);
 
   if (art_ready()) {
-    art_draw_2x(NOW_COVER_X, NOW_COVER_Y);
+    art_draw_big(NOW_COVER_X, NOW_COVER_Y);
     gfx_rect_round(NOW_COVER_X, NOW_COVER_Y, NOW_COVER, NOW_COVER, COL_DIVIDER);
   } else
     draw_cover_ph(NOW_COVER_X, NOW_COVER_Y, NOW_COVER, play_hue());
@@ -772,6 +781,32 @@ static void render_now(void) {
   }
 }
 
+// ---- persistent mini-bar (lists only): cover, title marquee, progress ----
+static void render_minibar_progress(void) {
+  const track_t *t = play_track_p();
+  int bw = SCREEN_W - 42 - 34;
+  gfx_fill_rect(42, MBAR_Y + 24, bw, 3, COL_PROGRESS_BG);
+  if (t->dur_s) {
+    uint32_t w = (uint32_t)bw * codec_pos_seconds() / t->dur_s;
+    if (w > (uint32_t)bw) w = bw;
+    gfx_fill_rect(42, MBAR_Y + 24, (int)w, 3, COL_PROGRESS_FILL);
+  }
+}
+
+static void render_minibar(void) {
+  const track_t *t = play_track_p();
+  gfx_vgrad(0, MBAR_Y, SCREEN_W, MBAR_H, GRAD_MINIBAR, GRAD_MINIBAR_N);
+  gfx_hline(0, MBAR_Y, SCREEN_W, COL_DIVIDER);
+
+  if (art_ready()) art_draw_mini(8, MBAR_Y + 9);
+  else draw_cover_ph(8, MBAR_Y + 9, 24, play_hue());
+
+  draw_marquee(42, MBAR_Y + 6, SCREEN_W - 42 - 34, lib_str(t->title),
+               t->title.len, COL_TITLE, 0, 1);
+  render_minibar_progress();
+  gfx_text(SCREEN_W - 24, MBAR_Y + 10, playing ? ">" : "||", COL_TOGGLE_ON);
+}
+
 void ui_render_full(void) {
   lib_scroll = clamp_scroll(lib_cursor, lib_scroll, lib_rows());
   alb_scroll = clamp_scroll(alb_cursor, alb_scroll, alb_rows());
@@ -779,9 +814,12 @@ void ui_render_full(void) {
 
   gfx_clear(COL_BG);
   if (screen == SCR_NOW && play_gidx >= 0) render_now();
-  else if (screen == SCR_ALBUMS) render_albums();
-  else if (screen == SCR_TRACKS) render_tracks();
-  else render_lib();
+  else {
+    if (screen == SCR_ALBUMS) render_albums();
+    else if (screen == SCR_TRACKS) render_tracks();
+    else render_lib();
+    if (minibar_on()) render_minibar();
+  }
 }
 
 // Per-frame animation: selected row marquee on lists; title/chapter/EQ/
@@ -835,8 +873,10 @@ void ui_render_playing(void) {
     render_now_chapter();
     render_now_eq();
     render_now_progress();
-  } else
+  } else {
     animate_selection();
+    if (minibar_on()) render_minibar();  // cheap: cover comes from the cache
+  }
 }
 
 // ------------------------------------------------- savestate (sleep / wake)

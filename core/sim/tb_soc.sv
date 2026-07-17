@@ -348,6 +348,11 @@ module tb_soc;
     $display("PCM captured: %0d samples", pcm_n);
     $fclose(fpcm);
 
+    // B: back to the list — the mini-bar must appear at the bottom
+    press(16'h0020);
+    start_capture("out_soc_d.ppm");
+    wait_frames(2);
+
     $display("DONE");
     $finish;
   end

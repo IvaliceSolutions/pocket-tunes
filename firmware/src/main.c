@@ -11,7 +11,11 @@
 #include "ui.h"
 #include "codec.h"
 
-static uint16_t keys_now, keys_prev;
+// Keys are sampled on EVERY main-loop iteration and rising edges accumulate
+// until the next frame tick. Sampling only once per frame lost quick taps
+// whenever an iteration sat inside a long decode burst (post-seek refill,
+// opus chunk): the press rose AND fell entirely between two samples.
+static uint16_t keys_raw_prev, pressed_accum;
 
 static void error_screen(int code) {
   gfx_clear(COL_BG);
@@ -54,6 +58,13 @@ int main(void) {
   for (;;) {
     codec_pump();  // keep the audio fifo topped up (returns fast when it's full)
 
+    // edge-accumulate the buttons (see keys_raw_prev above)
+    {
+      uint16_t k = (uint16_t)REG_KEYS;
+      pressed_accum |= (uint16_t)(k & (uint16_t)~keys_raw_prev);
+      keys_raw_prev = k;
+    }
+
     // sleep/wake: serve savestate requests (4-phase with ss_ctrl)
     uint32_t ss = REG_SS_STATUS;
     if ((ss & 1) && !(ss_done & 1)) {        // sleep: serialize the player
@@ -82,9 +93,8 @@ int main(void) {
     if (f == last_frame) continue;  // not a new frame yet — go decode more
     last_frame = f;
 
-    keys_prev = keys_now;
-    keys_now = (uint16_t)REG_KEYS;
-    uint16_t pressed = keys_now & (uint16_t)~keys_prev;
+    uint16_t pressed = pressed_accum;
+    pressed_accum = 0;
 
     int redraw = 0;
     if (pressed) redraw |= ui_input(pressed);

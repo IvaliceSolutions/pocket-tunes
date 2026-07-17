@@ -192,8 +192,12 @@ int mp3_pump(void) {
   if (!playing || paused || eof_decode) return 0;
 
   int worked = 0;
-  // keep ~1 frame of headroom: one 44.1k frame → ≤1254 samples at 48k
-  while (pcm_free() >= 1400) {
+  int frames = 0;
+  // keep ~1 frame of headroom: one 44.1k frame → ≤1254 samples at 48k.
+  // At most 2 frames per call: after a seek the fifo is empty and an
+  // unbounded loop decodes 3-4 frames back to back (~50 ms) — long enough
+  // for the main loop to miss a quick button tap.
+  while (frames < 2 && pcm_free() >= 1400) {
     if (in_len - (in_ptr - INBUF) < 2048) {
       in_compact_and_fill();
       if (in_len < 4 && f_off >= f_size) { eof_decode = 1; break; }
@@ -224,6 +228,7 @@ int mp3_pump(void) {
     int n = fi.outputSamps / nch;
     if (n > 0 && fi.samprate > 0) resample_push(n, fi.samprate, nch);
     worked = 1;
+    frames++;
   }
   return worked;
 }

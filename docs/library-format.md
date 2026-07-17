@@ -19,9 +19,9 @@ coverArt, tracks: [...] }] }`. Field names below are the canonical on-disk form.
 /Assets/pockettunes/common/
   library.json            # this file
   covers/
-    t00000.rgb565         # 48x48 now-playing thumbnail (global track 0)
-    t00000.s.rgb565       # 32x32 list thumbnail       (global track 0)
-    a0000.rgb565          # 48x48 album sidecar thumbnail (album 0), when present
+    t00000.rgb565         # 96x96 Lecture cover (global track 0)
+    t00000.s.rgb565       # 32x32 list thumbnail (global track 0)
+    a0000.rgb565          # 96x96 album sidecar cover (album 0), when present
     ...
 ```
 
@@ -61,8 +61,8 @@ under synthetic `"(unknown)"`/`"(singles)"` buckets:
           "year": 1998,             // integer or null
           "genre": "Electronic",    // string or null
           "hue": 174,               // 0-359, deterministic fallback tint when coverArt is null
-          "coverArt": "covers/a0000.rgb565",     // 48x48 thumb, or null
-          "coverArtSmall": "covers/a0000.s.rgb565", // 32x32 thumb, or null
+          "coverArt": "covers/a0000.rgb565",     // 96x96 cover, or null
+          "coverArtSmall": "covers/a0000.s.rgb565", // 32x32 list thumb, or null
           "tracks": [
             {
               "index": 0,           // 0-based position within the album (== play order)
@@ -74,7 +74,7 @@ under synthetic `"(unknown)"`/`"(singles)"` buckets:
               "sampleRate": 44100,  // Hz
               "channels": 2,
               "fileSize": 3129344,  // bytes
-              "coverArt": "covers/t00000.rgb565",     // this track's own 48x48 art, or null
+              "coverArt": "covers/t00000.rgb565",     // this track's own 96x96 art, or null
               "coverArtSmall": "covers/t00000.s.rgb565", // 32x32, or null
               "chapters": [ { "s": 0, "t": "Chapitre 1" } ],  // OMITTED when the file has none
               "path": "/Music/Boards of Canada/MHTRTC/01 Wildlife Analysis.mp3"
@@ -105,7 +105,8 @@ under synthetic `"(unknown)"`/`"(singles)"` buckets:
   order. The core keeps its cursor state in terms of these.
 - **coverArt** — pre-decoded raw pixels so the core blits directly (no JPEG decoder
   on the soft-CPU). Format `RGB565` little-endian, tightly packed, no header:
-  `48*48*2 = 4608` bytes and `32*32*2 = 2048` bytes. When no embedded/sidecar art is
+  `96*96*2 = 18432` bytes and `32*32*2 = 2048` bytes (the core also accepts the
+  older 48x48 files by size, pixel-doubled). When no embedded/sidecar art is
   found, `coverArt` is `null` and the core paints the `hue` gradient placeholder.
   Covers exist at **two levels**: each **track** carries its own `coverArt` from that
   file's embedded art (`covers/t#####.*`) — important for compilations/audiobooks where

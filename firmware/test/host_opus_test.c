@@ -36,7 +36,17 @@ uint32_t file_slot_size(uint16_t id) { (void)id; return g_file_size; }
 #define CAP_MAX (48000 * 30)
 static int16_t cap_l[CAP_MAX], cap_r[CAP_MAX];
 static int cap_n;
-uint32_t pcm_free(void) { return (cap_n < CAP_MAX - 4) ? 4096 : 0; }
+// Pseudo-random free space (varies per CALL, so a stalled pump always
+// unblocks): 0 forces mid-packet suspends, small values force partial
+// flushes, larger ones let chunk reads through — the exact hardware
+// conditions of the ogg suspend/resume path. Byte-exactness of the output
+// against ffmpeg proves no sample is lost or duplicated across suspends.
+uint32_t pcm_free(void) {
+  static uint32_t fc;
+  if (cap_n >= CAP_MAX - 4) return 0;
+  fc = fc * 1664525u + 1013904223u;
+  return (fc >> 20) & 0xFFF;  // 0..4095
+}
 void pcm_push(uint32_t s) {
   if (cap_n < CAP_MAX) {
     cap_l[cap_n] = (int16_t)(s & 0xFFFF);

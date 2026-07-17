@@ -31,7 +31,7 @@
         "parameters": "0x0",
         "deferload": true,
         "address": "0x30000000",
-        "size_maximum": "0x4000"
+        "size_maximum": "0x8000"
       },
       {
         "name": "Firmware",

@@ -2,15 +2,24 @@
 // fixed-point decode → PCM fifo. Mirrors mp3.c, minus the resampler (Opus is
 // natively 48 kHz).
 //
-// Memory: libopus' decoder state (~26 KB stereo) comes out of a static arena
-// (no real heap, same trick as Helix); its temporary scratch is on the real
-// stack via VAR_ARRAYS (build.sh), not the arena. Code lives in SRAM (M7a),
-// which is the only reason a ~107 KB decoder fits.
+// Flow control: the PCM fifo holds 85 ms but one 8 KB chunk decodes to ~0.5 s
+// of audio, so the demuxer must be able to PAUSE mid-chunk — ogg_push
+// suspends on the packet emit refuses and re-presents it next time, and the
+// decoded-but-unpushed samples of the current packet wait in pcm[]/pend.
+// Nothing is dropped (the old emit threw away every chunk's tail → crackle).
+// A per-call budget also bounds how long one pump can hog the CPU, so button
+// sampling in the main loop never starves.
+//
+// Memory: libopus' decoder state (~26 KB stereo) comes out of the codec
+// arena shared with mp3.c (no real heap, same trick as Helix); its temporary
+// scratch is on the real stack via VAR_ARRAYS (build.sh), not the arena.
+// Code lives in SRAM (M7a), which is the only reason a ~107 KB decoder fits.
 
 #include "opus_play.h"
 #include "ogg.h"
 #include "file.h"
 #include "mmio.h"
+#include "eq.h"
 #include <opus.h>
 
 #define SLOT_AUDIO 1
@@ -48,24 +57,45 @@ static int playing, paused, eof_decode;
 static uint32_t samples_pushed;      // at 48 kHz
 static uint32_t skip_samples;        // OpusHead pre-skip, dropped on start
 static int16_t pcm[960 * 2 * 3];     // up to 60 ms stereo @ 48 kHz
-static int pump_full;                // emit() sets this when the fifo filled up
+static int pend_n, pend_i;           // decoded samples not yet in the fifo
+static uint32_t in_len, in_off;      // current chunk window inside INBUF
+static int pump_budget;              // samples this pump call may still push
 
-// Push one decoded packet's samples into the PCM fifo.
-static void emit_packet(const uint8_t *pkt, int len, void *user) {
-  (void)user;
-  if (!dec || pump_full) return;
-  int n = opus_decode(dec, pkt, len, pcm, sizeof pcm / (2 * 2), 0);
-  if (n <= 0) return;  // damaged packet: skip it, keep the stream going
-
+// Push pending decoded samples into the fifo. 1 = fifo full, some remain.
+static int flush_pending(void) {
   int ch = ogg.channels ? ogg.channels : 2;
-  for (int i = 0; i < n; i++) {
-    if (skip_samples) { skip_samples--; continue; }  // OpusHead pre-skip
-    int16_t l = pcm[ch == 2 ? 2 * i : i];
-    int16_t r = pcm[ch == 2 ? 2 * i + 1 : i];
-    if (!pcm_free()) { pump_full = 1; return; }
+  while (pend_i < pend_n) {
+    if (skip_samples) {  // OpusHead pre-skip
+      skip_samples--;
+      pend_i++;
+      continue;
+    }
+    if (!pcm_free()) return 1;
+    int16_t l = pcm[ch == 2 ? 2 * pend_i : pend_i];
+    int16_t r = pcm[ch == 2 ? 2 * pend_i + 1 : pend_i];
     pcm_push(((uint32_t)(uint16_t)r << 16) | (uint16_t)l);
+#ifndef PT_HOST_TEST
+    eq_feed((int16_t)(((int)l + (int)r) >> 1));  // mono tap for the equalizer
+#endif
     samples_pushed++;
+    pend_i++;
+    if (pump_budget > 0) pump_budget--;
   }
+  return 0;
+}
+
+// ogg_push callback: 0 = packet taken, 1 = park it (fifo full / budget spent)
+static int emit_packet(const uint8_t *pkt, int len, void *user) {
+  (void)user;
+  if (!dec) return 0;   // no decoder: swallow, keep the stream moving
+  if (pend_i < pend_n)  // re-presented after a suspend: these are its samples
+    return flush_pending();
+  if (pump_budget <= 0) return 1;  // cap reached: decode it next pump
+  int n = opus_decode(dec, pkt, len, pcm, sizeof pcm / (2 * 2), 0);
+  if (n <= 0) return 0;  // damaged packet: skip it, keep the stream going
+  pend_n = n;
+  pend_i = 0;
+  return flush_pending();
 }
 
 int opus_start(const char *path, int path_len, uint32_t file_size) {
@@ -84,6 +114,8 @@ int opus_start(const char *path, int path_len, uint32_t file_size) {
   f_off = 0;
   samples_pushed = 0;
   skip_samples = 0;
+  pend_n = pend_i = 0;
+  in_len = in_off = 0;
   eof_decode = 0;
   playing = 1;
   paused = 0;
@@ -99,26 +131,44 @@ uint32_t opus_pos_seconds(void) { return samples_pushed / 48000u; }
 int opus_pump(void) {
   if (!playing || paused || eof_decode) return 0;
   int worked = 0;
-  pump_full = 0;
+  pump_budget = 2880;  // ≤60 ms of audio per call: keep the UI loop live
 
-  // Keep ~one packet of headroom (60 ms stereo max = 2880 samples).
-  while (!pump_full && pcm_free() >= 3000) {
-    if (f_off >= f_size) { eof_decode = 1; break; }
+  // NOTE: leftover pend samples are NOT flushed here. A partial flush always
+  // leaves the demuxer suspended on that same packet, and the resume path
+  // below re-presents it to emit_packet, which finishes the flush and
+  // reports it consumed. Flushing early would clear pend and make the
+  // re-presented packet look new — it would be decoded (and heard) twice.
+
+  for (;;) {
+    if (in_off < in_len) {  // (resume) demux the current chunk
+      uint8_t had_head = ogg.headers_done;
+      int r = ogg_push(&ogg, INBUF + in_off, (int)(in_len - in_off),
+                       emit_packet, 0);
+      if (r < 0) { eof_decode = 1; return 1; }
+      if (r > 0) worked = 1;
+      in_off += (uint32_t)r;
+      if (!had_head && ogg.headers_done && samples_pushed == 0)
+        skip_samples = ogg.pre_skip;
+      if (in_off < in_len || ogg.suspended || pump_budget <= 0)
+        return worked;  // fifo full or budget spent — resume next call
+    }
+    // chunk exhausted: read the next one
+    if (f_off >= f_size) {
+      if (!ogg.suspended && pend_i >= pend_n) eof_decode = 1;
+      return 1;
+    }
+    if (pcm_free() < 1200) return worked;  // let the fifo drain first
     uint32_t want = f_size - f_off;
     if (want > RX_SIZE / 2) want = RX_SIZE / 2;  // 8 KB chunks
-    if (file_read(SLOT_AUDIO, f_off, want)) break;
+    if (file_read(SLOT_AUDIO, f_off, want)) return worked;
 
     volatile const uint8_t *src = RX_BYTES;
     for (uint32_t i = 0; i < want; i++) INBUF[i] = src[i];
     f_off += want;
-
-    // pre-skip becomes known once OpusHead is parsed
-    uint8_t had_head = ogg.headers_done;
-    if (ogg_push(&ogg, INBUF, (int)want, emit_packet, 0) < 0) { eof_decode = 1; break; }
-    if (!had_head && ogg.headers_done && samples_pushed == 0) skip_samples = ogg.pre_skip;
+    in_len = want;
+    in_off = 0;
     worked = 1;
   }
-  return worked;
 }
 
 void opus_seek(uint32_t to_seconds, uint32_t byte_off) {
@@ -128,6 +178,8 @@ void opus_seek(uint32_t to_seconds, uint32_t byte_off) {
   eof_decode = 0;
   samples_pushed = to_seconds * 48000u;
   skip_samples = 0;
+  pend_n = pend_i = 0;  // decoded leftovers belong to the old position
+  in_len = in_off = 0;  // so does the chunk window
   // Resync: Ogg pages are self-framing (OggS capture pattern), so the demuxer
   // finds the next page boundary on its own; the decoder rebuilds its state
   // from the first intra packet. Keep the channel/pre-skip info we already have.

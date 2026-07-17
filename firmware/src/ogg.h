@@ -16,6 +16,7 @@ typedef struct {
   uint8_t  pkt[OGG_MAX_PACKET];
   uint16_t pkt_len;
   uint8_t  pkt_cont;     // current packet continues into the next page
+  uint8_t  suspended;    // a finished packet is held, emit refused it
   // page walk
   uint8_t  seg_table[255];
   uint8_t  nsegs;
@@ -33,10 +34,14 @@ typedef struct {
 
 void ogg_init(ogg_t *o);
 
-// Push `n` bytes; calls emit(pkt, len, user) for each COMPLETE audio packet.
-// Returns 0, or -1 on a malformed stream (bad capture pattern / oversized
-// packet) — the caller should stop the track.
+// Push up to `n` bytes; calls emit(pkt, len, user) for each COMPLETE audio
+// packet. emit returns 0 to accept the packet, nonzero to SUSPEND: the
+// demuxer holds that packet and stops consuming input, and the next
+// ogg_push re-presents the SAME packet to emit before anything else (so a
+// full PCM fifo pauses the stream instead of dropping audio).
+// Returns the number of input bytes consumed (resume with data+consumed),
+// or -1 on a malformed stream — the caller should stop the track.
 int ogg_push(ogg_t *o, const uint8_t *data, int n,
-             void (*emit)(const uint8_t *pkt, int len, void *user), void *user);
+             int (*emit)(const uint8_t *pkt, int len, void *user), void *user);
 
 #endif

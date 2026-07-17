@@ -1,13 +1,14 @@
 // Turns a cover source (embedded picture buffer or a sidecar image file) into
-// the two raw RGB565 thumbnails the core blits directly: 48x48 (drawer) and
-// 32x32 (list, reserved for a future list-cover pass). No decoder runs on the soft-CPU — all image work happens here.
+// the two raw RGB565 thumbnails the core blits directly: 96x96 (Lecture
+// screen, drawn 1:1 at 96 px) and 32x32 (list, reserved for a future
+// list-cover pass). No decoder runs on the soft-CPU — all image work happens here.
 
 import { Jimp } from "jimp";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { rgbaToRgb565Buffer } from "./rgb565.js";
 
-export const LARGE = 48;
+export const LARGE = 96;
 export const SMALL = 32;
 
 // Sidecar cover filenames to look for in an album folder, in priority order.
