@@ -9,6 +9,10 @@
 //   0x1000_0000  bridge RX RAM, 16 KB, read-only for the CPU (APF writes land
 //                here: 0x0180 target-read responses aimed at bridge 0x1000_0000)
 //   0x2000_0000  framebuffer 320x288 @ 8bpp (92,160 bytes), write-only
+//   0x5000_0000  external async SRAM, 256 KB: firmware code (iBus, cached)
+//   0x6000_0000  instruction TCM, 32 KB BRAM: hot Opus decode code (M7d) —
+//                iBus refills at 1 cycle/word instead of the SRAM's ~10;
+//                dBus writes here only during the crt0 boot copy
 //   0xF000_0000  MMIO:
 //     +0x00  r   cont1_key (buttons, synchronized)
 //     +0x04  r   frame counter (increments each vblank)
@@ -301,6 +305,15 @@ module pt_soc #(
       .write_data(sram_ld_data)
   );
 
+  // I-cache refill mux wires (driven below): hot Opus code (region 6) is
+  // served from the 1-cycle ITCM BRAM, everything else from the SRAM.
+  wire        ic_itcm_sel = (ibus_addr[31:28] == 4'h6);
+  wire        sram_ic_valid = ibus_cmd_valid & ~ic_itcm_sel;
+  wire        itcm_ic_valid = ibus_cmd_valid &  ic_itcm_sel;
+  wire        sram_ic_ready, itcm_ic_ready;
+  wire        sram_ic_rsp_valid, itcm_ic_rsp_valid;
+  wire [31:0] sram_ic_rsp_data, itcm_ic_rsp_data;
+
   sram_ctrl sramc (
       .clk    (clk_sys),
       .reset_n(sram_rst_n),  // NOT the core reset — see pll_locked above
@@ -325,11 +338,37 @@ module pt_soc #(
       .d_mask  (dbus_mask),
       .d_rdata (d_sram_rdata),
 
-      .ic_valid    (ibus_cmd_valid),
-      .ic_ready    (ibus_cmd_ready),
+      .ic_valid    (sram_ic_valid),
+      .ic_ready    (sram_ic_ready),
       .ic_addr     (ibus_addr),
-      .ic_rsp_valid(ibus_rsp_valid),
-      .ic_rsp_data (ibus_rsp_data)
+      .ic_rsp_valid(sram_ic_rsp_valid),
+      .ic_rsp_data (sram_ic_rsp_data)
+  );
+
+  // ---- I-cache refill mux: only one refill is in flight at a time, so the
+  // response is muxed by whichever side is currently pulsing rsp_valid.
+  assign ibus_cmd_ready = ic_itcm_sel ? itcm_ic_ready : sram_ic_ready;
+  assign ibus_rsp_valid = sram_ic_rsp_valid | itcm_ic_rsp_valid;
+  assign ibus_rsp_data  = itcm_ic_rsp_valid ? itcm_ic_rsp_data : sram_ic_rsp_data;
+
+  // ITCM (region 6): boot-copied hot decode code, iBus 1-cycle refills + a
+  // dBus write port for the crt0 copy.
+  wire        d_itcm_sel = (dregion == 4'h6);
+  wire [31:0] itcm_rdata;
+  itcm #(.WORDS(8192), .AW(13)) itcm_i (
+      .clk    (clk_sys),
+      .reset_n(sram_rst_n),   // alive with the clock, like the SRAM subsystem
+      .d_sel  (d_acc & d_itcm_sel),
+      .d_wr   (dbus_wr),
+      .d_addr (dbus_addr[14:0]),
+      .d_wdata(dbus_wdata),
+      .d_mask (dbus_mask),
+      .d_rdata(itcm_rdata),
+      .ic_valid    (itcm_ic_valid),
+      .ic_ready    (itcm_ic_ready),
+      .ic_addr     (ibus_addr),
+      .ic_rsp_valid(itcm_ic_rsp_valid),
+      .ic_rsp_data (itcm_ic_rsp_data)
   );
 
   wire [31:0] rx_rdata;
@@ -511,6 +550,7 @@ module pt_soc #(
 
   assign dbus_rdata = d_sram_rsp_q ? d_sram_rdata_q
                     : (dregion_q == 4'h0) ? ram_b_rdata
+                    : (dregion_q == 4'h6) ? itcm_rdata
                     : (dregion_q == 4'h1) ? rx_rdata
                     : (dregion_q == 4'h2) ? 32'd0
                     : mmio_rdata;

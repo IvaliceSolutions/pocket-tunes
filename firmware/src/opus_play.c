@@ -162,8 +162,13 @@ int opus_pump(void) {
     if (want > RX_SIZE / 2) want = RX_SIZE / 2;  // 8 KB chunks
     if (file_read(SLOT_AUDIO, f_off, want)) return worked;
 
-    volatile const uint8_t *src = RX_BYTES;
-    for (uint32_t i = 0; i < want; i++) INBUF[i] = src[i];
+    // Word copy out of the RX window: `want` is always a multiple of 4
+    // (RX_SIZE/2 chunks) and both buffers are word-aligned. This loop is hot
+    // (per profile), so 1 op per 4 bytes instead of per byte matters.
+    volatile const uint32_t *srcw = RX_BASE;
+    uint32_t *dstw = (uint32_t *)INBUF;
+    uint32_t nwords = (want + 3u) >> 2;
+    for (uint32_t i = 0; i < nwords; i++) dstw[i] = srcw[i];
     f_off += want;
     in_len = want;
     in_off = 0;
