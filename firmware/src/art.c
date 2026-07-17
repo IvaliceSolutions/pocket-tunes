@@ -62,3 +62,11 @@ void art_draw(int x, int y, int shift) {
     for (int i = 0; i < n; i++) dst[i] = row[i << shift];
   }
 }
+
+void art_draw_2x(int x, int y) {
+  for (int j = 0; j < ART_SIZE * 2; j++) {
+    const uint8_t *row = &cover_px[(j >> 1) * ART_SIZE];
+    volatile uint8_t *dst = &FB_BASE[(y + j) * SCREEN_W + x];
+    for (int i = 0; i < ART_SIZE * 2; i++) dst[i] = row[i >> 1];
+  }
+}

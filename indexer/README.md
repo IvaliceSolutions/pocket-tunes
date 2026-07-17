@@ -35,11 +35,15 @@ Re-run whenever the library changes ("library refresh").
 ## What it reads
 
 - Tree from folder structure: `Artist/Album/track`. Nested album subfolders (CD1/CD2)
-  flatten into the album; loose files fall into `(singles)` / `(unknown)` buckets.
+  flatten into the album. Loose files keep their real depth (schema v2 / design 4a):
+  files directly in an artist folder become that artist's `rootTracks`, files directly
+  in the music root become the library's `rootTracks` — the UI shows them in place.
 - Tags via `music-metadata` (ID3, Vorbis comments, etc.): title, artist, album, year,
   genre, track/disc number, duration, bitrate, sample rate, channels.
+- ID3 CHAP chapters (audiobooks): start time + title per chapter, emitted as the
+  track's `chapters` array — the core navigates them with L/R.
 - Cover art: a same-folder `cover/folder/front.*` image, else the first embedded
-  picture. Rasterized to raw RGB565 thumbnails (46×46 + 26×26) so the core blits them
+  picture. Rasterized to raw RGB565 thumbnails (48×48 + 32×32) so the core blits them
   directly — no image decoder on the FPGA soft-CPU.
 
 Output schema: [`../docs/library-format.md`](../docs/library-format.md).

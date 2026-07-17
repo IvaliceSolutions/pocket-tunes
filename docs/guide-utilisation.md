@@ -1,21 +1,21 @@
 # Pocket Tunes — Guide d'utilisation
 
-Lecteur MP3 pour Analogue Pocket. Interface « terminal ambre » : navigation
-Artiste → Album → Piste, lecteur plein écran avec égaliseur, et mini-barre de
-lecture qui te suit pendant que tu navigues.
+Lecteur MP3/Opus pour Analogue Pocket. Interface façon iPod Classic en ambre :
+une pile de listes plein écran (Bibliothèque → Albums → Titres → Lecture),
+pochette 96×96, égaliseur 18 bandes, chapitres de livres audio au L/R.
 
 ## La console
 
 ```
              ┌─────────────────────────────┐
-        L ═══╡                             ╞═══ R        (non utilisés)
-             │   ┌─────────────────────┐   │
-             │   │  Artistes │ Albums  │   │
-             │   │  ─────────┼──────── │   │
-             │   │           │ Pistes  │   │
-             │   │       ÉCRAN         │   │
-             │   │  ~~~~~~~~~~~~~~~~~  │   │
-             │   │  ♪ mini-barre   ►   │   │
+        L ═══╡                             ╞═══ R     chapitre − / chapitre +
+             │   ┌─────────────────────┐   │            (livres audio)
+             │   │ ‹ Menu   Titre  12:34│  │
+             │   │  ─────────────────── │  │
+             │   │  Artiste           › │  │
+             │   │  Artiste           › │  │
+             │   │  ♪ Piste libre  3:12 │  │
+             │   │       ÉCRAN          │  │
              │   └─────────────────────┘   │
              │                             │
              │       ▲                (X)  │
@@ -28,40 +28,49 @@ lecture qui te suit pendant que tu navigues.
              └─────────────────────────────┘
 ```
 
-## Les trois écrans
+## Les écrans
 
 ```
-  ARTISTES  ──A──►  ALBUMS  ──A──►  PISTES  ──A──►  LECTEUR (plein écran)
-     ▲                 │               │                │
-     └───────B─────────┴───────B───────┘                B (la musique continue,
-                                                           la mini-barre apparaît)
+  BIBLIOTHÈQUE ──A──► ALBUMS ──A──► TITRES ──A──► LECTURE
+       ▲                │             │              │
+       └───────B────────┴──────B──────┘              B (la musique continue,
+                                                        ♪ reste dans la barre d'état)
 ```
 
-Ouvrir un dossier (`A`) ne lance jamais la lecture — seul le choix d'une
-**piste** la lance. Fermer le lecteur (`B`) ne l'arrête jamais : la musique
-continue en fond et la **mini-barre** en bas de l'écran garde le titre, la
-progression et l'état de lecture sous les yeux à tous les niveaux.
+- **Bibliothèque** : les dossiers d'artistes (`›`), plus les fichiers audio
+  posés directement à la racine de `Music/` (lancés d'un `A`).
+- **Albums** : les albums de l'artiste, plus ses fichiers « en vrac » (posés
+  dans son dossier hors de tout album), listés après les albums.
+- Un artiste **sans dossier d'album** s'ouvre directement sur ses Titres —
+  l'écran Albums est sauté à l'aller comme au retour (`B`).
+- Ouvrir un dossier (`A`) ne lance jamais la lecture — seul le choix d'une
+  **piste** la lance. Quitter Lecture (`B`) ne l'arrête jamais : le glyphe
+  `►`/`❚❚` reste dans la barre d'état et `X` y retourne d'une pression.
 
 ## Commandes
 
-### Pendant la navigation (artistes / albums / pistes)
+### Dans les listes (Bibliothèque / Albums / Titres)
 
 | Bouton | Action |
 |---|---|
 | `▲` `▼` | Déplacer le curseur |
-| `A` | Ouvrir (artiste → albums → pistes → lecture) |
-| `B` | Revenir au niveau précédent |
-| `X` | Rouvrir le lecteur (si un morceau est chargé) |
-| `Y` | Lecture / pause (marche partout, lecteur ouvert ou non) |
+| `A` | Ouvrir le dossier / lire la piste |
+| `B` | Revenir à l'écran précédent |
+| `X` | Retourner à l'écran Lecture (si un morceau est chargé) |
+| `Y` | Lecture / pause (marche partout) |
 
-### Dans le lecteur (drawer plein écran)
+### Sur l'écran Lecture
 
 | Bouton | Action |
 |---|---|
 | `▲` `▼` | Piste précédente / suivante (suit le mode aléatoire) |
 | `◄` `►` | Reculer / avancer de 10 secondes |
+| `L` `R` | Chapitre précédent / suivant (livres audio) |
 | `A` ou `Y` | Lecture / pause |
-| `B` | Fermer le lecteur — **la musique continue** |
+| `B` | Revenir à la liste d'où l'on vient — **la musique continue** |
+
+`L` relance d'abord le chapitre en cours (comme un lecteur CD) ; un second
+appui dans les 3 premières secondes saute au chapitre précédent.
 
 ### Partout
 
@@ -74,30 +83,33 @@ progression et l'état de lecture sous les yeux à tous les niveaux.
 
 | Badge | Comportement en fin de piste |
 |---|---|
-| `RPT` | Piste suivante ; à la fin de l'album, reboucle sur la première *(défaut)* |
+| `RPT` | Piste suivante ; à la fin de la liste, reboucle sur la première *(défaut)* |
 | `RPT1` | Rejoue la même piste en boucle |
-| `RPT0` | Piste suivante ; s'arrête à la fin de l'album |
+| `RPT0` | Piste suivante ; s'arrête à la fin de la liste |
 
-Le mode aléatoire (`ALEA`) se combine avec la répétition : la « piste
-suivante » est alors tirée au hasard dans l'album (jamais deux fois de suite
-la même).
+La « liste » est le contexte de la piste lancée : son album, les pistes en
+vrac de l'artiste, ou les pistes libres de la racine. Le mode aléatoire
+(`ALEA`) se combine avec la répétition (jamais deux fois de suite la même).
 
 ## Ce qu'affiche l'écran
 
-- **En-tête** : le chemin (`Artiste/Album/`) et **l'heure** (horloge de la
-  Pocket) en haut à droite.
-- **Pied de page** : `NIVEAU : n/total` (position dans la liste), les badges
-  `RPT`/`ALEA` actifs, et le rappel `X lecteur` quand un morceau est chargé.
-- **Liste des pistes** : `►` à droite marque la piste chargée dans le lecteur.
-- **Lecteur** : état `► LECTURE` / `❚❚ PAUSE`, temps écoulé à gauche et
-  temps restant (`-m:ss`) à droite de la barre de progression, et
-  l'**égaliseur** 18 bandes qui suit le spectre du morceau (graves à gauche,
-  aigus à droite — il se fige en pause).
+- **Barre d'état** (partout) : `‹ Menu` à gauche (= bouton `B`), le titre de
+  l'écran au centre, l'état de lecture (`►`/`❚❚`) et **l'heure** de la Pocket
+  à droite.
+- **Listes** : `›` marque un dossier, `►` orange la piste en cours de
+  lecture, la durée à droite des pistes.
+- **Lecture** : pochette 96×96 (vraie pochette si l'indexeur l'a extraite,
+  dégradé sinon), titre, `Artiste · Album`, l'**égaliseur** 18 bandes (il se
+  fige en pause), la barre de progression avec temps écoulé / restant et
+  `Piste n/total`, puis les badges `ALEA` / format · débit / `RPT`.
+- **Livres audio** : la ligne `Chap. n/total · titre du chapitre` suit la
+  lecture ; `L`/`R` naviguent (les chapitres viennent des métadonnées ID3 —
+  l'indexeur les lit tout seul).
 - **Titres trop longs** : l'élément sélectionné défile automatiquement
   (aller-retour) pour être lisible en entier.
-- **`ERR n`** dans le lecteur : la piste n'a pas pu être ouverte — voir le
-  [README de l'indexeur](../indexer/README.md) (le cas classique : fichiers
-  ajoutés sans avoir relancé l'indexeur).
+- **`ERR n`** sur l'écran Lecture : la piste n'a pas pu être ouverte — voir
+  le [README de l'indexeur](../indexer/README.md) (le cas classique :
+  fichiers ajoutés sans avoir relancé l'indexeur).
 
 ## Mode veille
 
@@ -109,8 +121,10 @@ revient à l'accueil sans relancer la lecture.
 
 ## Préparer la carte SD
 
-1. Copier la musique dans `/Assets/pockettunes/common/Music/Artiste/Album/…`
-   sur la carte.
+1. Copier la musique dans `/Assets/pockettunes/common/Music/` sur la carte :
+   `Artiste/Album/…` pour les albums, mais un fichier peut aussi être posé
+   directement dans le dossier de l'artiste, ou à la racine de `Music/` —
+   il apparaîtra au bon endroit.
 2. Lancer l'indexeur (il renomme au besoin les fichiers accentués — l'écran
    garde les accents, seul le nom sur disque devient ASCII) :
 

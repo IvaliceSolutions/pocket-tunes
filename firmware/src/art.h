@@ -20,4 +20,7 @@ int art_ready(void);
 // Blit the cached cover at (x, y): shift=0 → 48x48, shift=1 → 24x24.
 void art_draw(int x, int y, int shift);
 
+// Pixel-doubled blit: 96x96 (Now Playing, design 4a).
+void art_draw_2x(int x, int y);
+
 #endif

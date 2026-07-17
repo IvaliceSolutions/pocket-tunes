@@ -104,6 +104,13 @@ module tb_soc;
 
       .cont1_key(cont1_key),
       .rtc_time_bcd(32'h00123456),  // 12:34:56 BCD for the clock readout
+      // Sleep handshake idle. Left unconnected these float 'x' into
+      // REG_SS_STATUS and the CPU branches on x — a phantom savestate
+      // restore with garbage words that starts playback all by itself.
+      .ss_save_req(1'b0),
+      .ss_load_req(1'b0),
+      .ss_save_done(),
+      .ss_load_done(),
 
       .audio_l(),
       .audio_r(),
