@@ -30,7 +30,7 @@ OBJ="$D/obj"; rm -rf "$OBJ"; mkdir -p "$OBJ"; OBJS=""
 # App/UI/decoder-glue at -Os: the 128 KB CPU RAM is tight, and this code is not
 # the DSP hot path, so trade a little speed for several KB of code space
 # (headroom for the stack + future features).
-for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/ui.c src/file.c src/mp3.c src/eq.c src/art.c src/ogg.c src/opus_play.c src/codec.c; do
+for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/chap.c src/ui.c src/file.c src/mp3.c src/eq.c src/art.c src/ogg.c src/opus_play.c src/codec.c; do
   o="$OBJ/app_$(basename "${s%.*}").o"
   "$CC" $CF -Os -c "$D/$s" -o "$o"; OBJS="$OBJS $o"
 done

@@ -12,6 +12,7 @@ artist_t lib_artists[MAX_ARTISTS];
 album_t  lib_albums[MAX_ALBUMS];
 track_t  lib_tracks[MAX_TRACKS];
 int lib_n_artists, lib_n_albums, lib_n_tracks;
+int lib_root_first_track, lib_n_root_tracks;
 
 static char pool[POOL_SIZE];
 static uint32_t pool_used;
@@ -220,6 +221,21 @@ static int parse_track(void) {
     } else if (key_is("format")) {
       if (parse_string()) return -1;
       t.format = format_code();
+    } else if (key_is("chapters")) {
+      // Only the offset of the first element is kept; chap.c re-reads the
+      // array from the file when the track starts. Empty array → 0 (none).
+      if (expect('[')) return -1;
+      if (peek() == ']') adv();
+      else {
+        t.chap_off = f_pos;  // peek() left the cursor on the first '{'
+        for (;;) {
+          if (skip_value()) return -1;
+          int c = peek();
+          if (c == ',') { adv(); continue; }
+          if (c == ']') { adv(); break; }
+          return -1;
+        }
+      }
     } else {
       if (skip_value()) return -1;
     }
@@ -231,6 +247,19 @@ static int parse_track(void) {
 store:
   if (lib_n_tracks < MAX_TRACKS) lib_tracks[lib_n_tracks++] = t;
   return 0;
+}
+
+// "rootTracks": [...] — loose tracks (library root or artist root)
+static int parse_track_array(void) {
+  if (expect('[')) return -1;
+  if (peek() == ']') { adv(); return 0; }
+  for (;;) {
+    if (parse_track()) return -1;
+    int c = peek();
+    if (c == ',') { adv(); continue; }
+    if (c == ']') { adv(); return 0; }
+    return -1;
+  }
 }
 
 static int parse_album(void) {
@@ -304,6 +333,11 @@ static int parse_artist(void) {
           if (c == ']') { adv(); break; }
           return -1;
         }
+      ar.n_albums = (uint16_t)(lib_n_albums - ar.first_album);
+    } else if (key_is("rootTracks")) {
+      ar.first_rtrack = (uint16_t)lib_n_tracks;
+      if (parse_track_array()) return -1;
+      ar.n_rtracks = (uint16_t)(lib_n_tracks - ar.first_rtrack);
     } else {
       if (skip_value()) return -1;
     }
@@ -313,8 +347,8 @@ static int parse_artist(void) {
     return -1;
   }
 store:
-  ar.n_albums = (uint16_t)(lib_n_albums - ar.first_album);
-  if (lib_n_artists < MAX_ARTISTS && ar.n_albums > 0) lib_artists[lib_n_artists++] = ar;
+  if (lib_n_artists < MAX_ARTISTS && (ar.n_albums > 0 || ar.n_rtracks > 0))
+    lib_artists[lib_n_artists++] = ar;
   return 0;
 }
 
@@ -330,6 +364,7 @@ int lib_fetch_path(const track_t *t, char *out, int max) {
 
 int lib_parse(void) {
   lib_n_artists = lib_n_albums = lib_n_tracks = 0;
+  lib_root_first_track = lib_n_root_tracks = 0;
   pool_used = 0;
   f_pos = 0;
   win_valid = 0;
@@ -353,6 +388,10 @@ int lib_parse(void) {
           if (c == ']') { adv(); break; }
           return -1;
         }
+    } else if (key_is("rootTracks")) {  // schema v2: loose tracks at the root
+      lib_root_first_track = lib_n_tracks;
+      if (parse_track_array()) return -1;
+      lib_n_root_tracks = lib_n_tracks - lib_root_first_track;
     } else {
       if (skip_value()) return -1;
     }
@@ -362,5 +401,5 @@ int lib_parse(void) {
     return -1;
   }
   if (f_err) return -4;  // a chunk read failed mid-parse
-  return (lib_n_artists > 0) ? 0 : -3;
+  return (lib_n_artists > 0 || lib_n_root_tracks > 0) ? 0 : -3;
 }

@@ -1,7 +1,10 @@
 // Folder-driven tree discovery: top-level folders under the music root are
 // artists, their subfolders are albums, audio files inside (at any depth) are
-// tracks. Loose audio files get synthetic artist/album buckets. This pass only
-// discovers *files*; metadata is read later (metadata.js).
+// tracks. Loose audio files keep their real depth (schema v2 / design 4a):
+// files directly in an artist folder are that artist's `rootTracks`, files
+// directly in the music root are the library's `rootTracks` — no synthetic
+// "(singles)"/"(unknown)" buckets. This pass only discovers *files*;
+// metadata is read later (metadata.js).
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -45,7 +48,8 @@ async function listAudioShallow(dir) {
 }
 
 /**
- * Returns [{ name, albums: [{ title, dir, files: [absPath...] }] }].
+ * Returns { artists: [{ name, albums: [{ title, dir, files }], rootTracks: [absPath...] }],
+ *           rootTracks: [absPath...] }.
  * `dir` is the folder used to look for a sidecar cover image.
  */
 export async function scanLibrary(root) {
@@ -67,18 +71,14 @@ export async function scanLibrary(root) {
       if (files.length) albums.push({ title: sub.name, dir: albumDir, files });
     }
 
-    // Audio sitting directly in the artist folder → a "(singles)" album.
-    const loose = await listAudioShallow(artistDir);
-    if (loose.length) albums.push({ title: "(singles)", dir: artistDir, files: loose });
+    // Audio sitting directly in the artist folder → the artist's rootTracks.
+    const rootTracks = await listAudioShallow(artistDir);
 
-    if (albums.length) artists.push({ name: entry.name, albums });
+    if (albums.length || rootTracks.length) artists.push({ name: entry.name, albums, rootTracks });
   }
 
-  // Audio sitting directly in the music root → "(unknown)" artist.
-  const rootLoose = await listAudioShallow(root);
-  if (rootLoose.length) {
-    artists.push({ name: "(unknown)", albums: [{ title: "(singles)", dir: root, files: rootLoose }] });
-  }
+  // Audio sitting directly in the music root → the library's rootTracks.
+  const rootTracks = await listAudioShallow(root);
 
-  return artists;
+  return { artists, rootTracks };
 }

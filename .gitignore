@@ -22,3 +22,11 @@ core/sim/*.png
 core/sim/*.vvp
 firmware/obj/
 rollback/
+
+# host test binaries + generated lib-parser fixture
+firmware/test/host_mp3_test
+firmware/test/host_opus_test
+firmware/test/host_lib_test
+firmware/test/host_pcm.raw
+firmware/test/fixture-v2/
+firmware/test/fixture-out/
