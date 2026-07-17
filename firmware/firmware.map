@@ -1617,11 +1617,11 @@ LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
 LOAD /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_trigtabs.o
 LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a
 
-.text           0x50000000    0x24134
+.text           0x50000000    0x22ddc
  *(.text.init)
  .text.init     0x50000000       0x8c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
                 0x50000000                _start
- EXCLUDE_FILE(*opus_laplace.o *opus_mathops.o *opus_entcode.o *opus_entdec.o *opus_celt.o *opus_mdct.o *opus_kiss_fft.o) *(.text*)
+ EXCLUDE_FILE(*opus_cwrs.o *opus_vq.o *opus_laplace.o *opus_mathops.o *opus_entcode.o *opus_entdec.o *opus_celt.o *opus_mdct.o *opus_kiss_fft.o) *(.text*)
  .text.startup.main
                 0x5000008c      0x280 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_main.o
                 0x5000008c                main
@@ -1952,341 +1952,314 @@ LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32
                 0x50008d18       0xd0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
                 0x50008d18                bitexact_log2tan
  .text.compute_theta
-                0x50008de8      0xa5c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x50008de8      0xa64 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
  .text.quant_partition
-                0x50009844      0x6ac /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x5000984c      0x6b8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
  .text.denormalise_bands
-                0x50009ef0      0x2b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
-                0x50009ef0                denormalise_bands
+                0x50009f04      0x2b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x50009f04                denormalise_bands
  .text.anti_collapse
-                0x5000a1a0      0x534 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
-                0x5000a1a0                anti_collapse
- .text.haar1    0x5000a6d4       0x80 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
-                0x5000a6d4                haar1
+                0x5000a1b4      0x538 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x5000a1b4                anti_collapse
+ .text.haar1    0x5000a6ec       0x80 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x5000a6ec                haar1
  .text.quant_band
-                0x5000a754      0x4c0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x5000a76c      0x4c0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
  .text.quant_band_stereo
-                0x5000ac14      0x700 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x5000ac2c      0x700 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
  .text.quant_all_bands
-                0x5000b314     0x141c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
-                0x5000b314                quant_all_bands
+                0x5000b32c     0x141c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bands.o
+                0x5000b32c                quant_all_bands
  .text.prefilter_and_fold
-                0x5000c730      0x1e8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000c748      0x1e8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
  .text.deemphasis
-                0x5000c918      0x414 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000c930      0x414 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
  .text.celt_synthesis
-                0x5000cd2c      0x594 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000cd44      0x594 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
  .text.celt_decode_lost
-                0x5000d2c0      0xed4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000d2d8      0xed8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
  .text.celt_decoder_get_size
-                0x5000e194       0x68 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
-                0x5000e194                celt_decoder_get_size
+                0x5000e1b0       0x68 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000e1b0                celt_decoder_get_size
  .text.celt_decode_with_ec_dred
-                0x5000e1fc     0x1330 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
-                0x5000e1fc                celt_decode_with_ec_dred
+                0x5000e218     0x1330 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000e218                celt_decode_with_ec_dred
  .text.celt_decode_with_ec
-                0x5000f52c        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
-                0x5000f52c                celt_decode_with_ec
+                0x5000f548        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000f548                celt_decode_with_ec
  .text.opus_custom_decoder_ctl
-                0x5000f530      0x318 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
-                0x5000f530                opus_custom_decoder_ctl
+                0x5000f54c      0x318 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000f54c                opus_custom_decoder_ctl
  .text.celt_decoder_init
-                0x5000f848      0x118 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
-                0x5000f848                celt_decoder_init
+                0x5000f864      0x118 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_decoder.o
+                0x5000f864                celt_decoder_init
  .text.xcorr_kernel_c
-                0x5000f960      0x288 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
+                0x5000f97c      0x288 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
  .text._celt_lpc
-                0x5000fbe8      0x470 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
-                0x5000fbe8                _celt_lpc
+                0x5000fc04      0x470 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
+                0x5000fc04                _celt_lpc
  .text.celt_fir_c
-                0x50010058      0x2b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
-                0x50010058                celt_fir_c
+                0x50010074      0x2b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
+                0x50010074                celt_fir_c
  .text.celt_iir
-                0x50010308      0x400 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
-                0x50010308                celt_iir
+                0x50010324      0x400 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
+                0x50010324                celt_iir
  .text._celt_autocorr
-                0x50010708      0x41c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
-                0x50010708                _celt_autocorr
- .text.encode_pulses
-                0x50010b24      0x1b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_cwrs.o
-                0x50010b24                encode_pulses
- .text.decode_pulses
-                0x50010cd4      0x2d4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_cwrs.o
-                0x50010cd4                decode_pulses
+                0x50010724      0x41c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_celt_lpc.o
+                0x50010724                _celt_autocorr
  .text.ec_enc_carry_out.part.0
-                0x50010fa8       0xa8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
+                0x50010b40       0xa8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
  .text.ec_encode
-                0x50011050       0xd0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
-                0x50011050                ec_encode
+                0x50010be8       0xd0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
+                0x50010be8                ec_encode
  .text.ec_enc_bit_logp
-                0x50011120       0xb4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
-                0x50011120                ec_enc_bit_logp
+                0x50010cb8       0xb4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
+                0x50010cb8                ec_enc_bit_logp
  .text.ec_enc_bits
-                0x500111d4       0xa8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
-                0x500111d4                ec_enc_bits
+                0x50010d6c       0xa8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
+                0x50010d6c                ec_enc_bits
  .text.ec_enc_uint
-                0x5001127c       0xb4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
-                0x5001127c                ec_enc_uint
+                0x50010e14       0xb4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_entenc.o
+                0x50010e14                ec_enc_uint
  .text.opus_custom_mode_create
-                0x50011330       0x60 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_modes.o
-                0x50011330                opus_custom_mode_create
+                0x50010ec8       0x60 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_modes.o
+                0x50010ec8                opus_custom_mode_create
  .text.find_best_pitch
-                0x50011390      0x204 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
+                0x50010f28      0x204 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
  .text.pitch_downsample
-                0x50011594      0x484 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
-                0x50011594                pitch_downsample
+                0x5001112c      0x484 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
+                0x5001112c                pitch_downsample
  .text.celt_pitch_xcorr_c
-                0x50011a18      0x384 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
-                0x50011a18                celt_pitch_xcorr_c
+                0x500115b0      0x384 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
+                0x500115b0                celt_pitch_xcorr_c
  .text.pitch_search
-                0x50011d9c      0x4ac /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
-                0x50011d9c                pitch_search
+                0x50011934      0x4ac /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_pitch.o
+                0x50011934                pitch_search
  .text.unquant_coarse_energy
-                0x50012248      0x284 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_quant_bands.o
-                0x50012248                unquant_coarse_energy
+                0x50011de0      0x284 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_quant_bands.o
+                0x50011de0                unquant_coarse_energy
  .text.unquant_fine_energy
-                0x500124cc       0xdc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_quant_bands.o
-                0x500124cc                unquant_fine_energy
+                0x50012064       0xdc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_quant_bands.o
+                0x50012064                unquant_fine_energy
  .text.unquant_energy_finalise
-                0x500125a8      0x1c8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_quant_bands.o
-                0x500125a8                unquant_energy_finalise
+                0x50012140      0x1c8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_quant_bands.o
+                0x50012140                unquant_energy_finalise
  .text.clt_compute_allocation
-                0x50012770      0xe28 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_rate.o
-                0x50012770                clt_compute_allocation
- .text.exp_rotation1
-                0x50013598       0xdc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
- .text.normalise_residual
-                0x50013674       0xec /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
- .text.exp_rotation.part.0
-                0x50013760      0x280 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
- .text.op_pvq_search_c
-                0x500139e0      0x394 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
-                0x500139e0                op_pvq_search_c
- .text.alg_quant
-                0x50013d74      0x1dc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
-                0x50013d74                alg_quant
- .text.alg_unquant
-                0x50013f50      0x130 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
-                0x50013f50                alg_unquant
- .text.renormalise_vector
-                0x50014080      0x10c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
-                0x50014080                renormalise_vector
- .text.stereo_itheta
-                0x5001418c      0x2fc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
-                0x5001418c                stereo_itheta
+                0x50012308      0xe28 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_rate.o
+                0x50012308                clt_compute_allocation
  .text.silk_CNG_Reset
-                0x50014488       0x60 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_CNG.o
-                0x50014488                silk_CNG_Reset
+                0x50013130       0x60 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_CNG.o
+                0x50013130                silk_CNG_Reset
  .text.silk_CNG
-                0x500144e8      0xa3c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_CNG.o
-                0x500144e8                silk_CNG
+                0x50013190      0xa3c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_CNG.o
+                0x50013190                silk_CNG
  .text.silk_LPC_analysis_filter
-                0x50014f24      0x168 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_LPC_analysis_filter.o
-                0x50014f24                silk_LPC_analysis_filter
+                0x50013bcc      0x168 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_LPC_analysis_filter.o
+                0x50013bcc                silk_LPC_analysis_filter
  .text.silk_LPC_fit
-                0x5001508c      0x25c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_LPC_fit.o
-                0x5001508c                silk_LPC_fit
+                0x50013d34      0x25c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_LPC_fit.o
+                0x50013d34                silk_LPC_fit
  .text.silk_LPC_inverse_pred_gain_c
-                0x500152e8      0x474 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_LPC_inv_pred_gain.o
-                0x500152e8                silk_LPC_inverse_pred_gain_c
+                0x50013f90      0x474 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_LPC_inv_pred_gain.o
+                0x50013f90                silk_LPC_inverse_pred_gain_c
  .text.silk_NLSF2A
-                0x5001575c      0x3e8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF2A.o
-                0x5001575c                silk_NLSF2A
+                0x50014404      0x3e8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF2A.o
+                0x50014404                silk_NLSF2A
  .text.silk_NLSF_decode
-                0x50015b44      0x190 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF_decode.o
-                0x50015b44                silk_NLSF_decode
+                0x500147ec      0x190 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF_decode.o
+                0x500147ec                silk_NLSF_decode
  .text.silk_NLSF_stabilize
-                0x50015cd4      0x350 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF_stabilize.o
-                0x50015cd4                silk_NLSF_stabilize
+                0x5001497c      0x350 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF_stabilize.o
+                0x5001497c                silk_NLSF_stabilize
  .text.silk_NLSF_unpack
-                0x50016024       0xb8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF_unpack.o
-                0x50016024                silk_NLSF_unpack
+                0x50014ccc       0xb8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_NLSF_unpack.o
+                0x50014ccc                silk_NLSF_unpack
  .text.silk_PLC_Reset
-                0x500160dc       0x34 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_PLC.o
-                0x500160dc                silk_PLC_Reset
+                0x50014d84       0x34 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_PLC.o
+                0x50014d84                silk_PLC_Reset
  .text.silk_PLC
-                0x50016110      0xf00 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_PLC.o
-                0x50016110                silk_PLC
+                0x50014db8      0xf00 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_PLC.o
+                0x50014db8                silk_PLC
  .text.silk_PLC_glue_frames
-                0x50017010      0x298 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_PLC.o
-                0x50017010                silk_PLC_glue_frames
+                0x50015cb8      0x298 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_PLC.o
+                0x50015cb8                silk_PLC_glue_frames
  .text.silk_bwexpander
-                0x500172a8       0x78 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bwexpander.o
-                0x500172a8                silk_bwexpander
+                0x50015f50       0x78 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bwexpander.o
+                0x50015f50                silk_bwexpander
  .text.silk_bwexpander_32
-                0x50017320       0xcc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bwexpander_32.o
-                0x50017320                silk_bwexpander_32
+                0x50015fc8       0xcc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_bwexpander_32.o
+                0x50015fc8                silk_bwexpander_32
  .text.silk_decode_signs
-                0x500173ec      0x130 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_code_signs.o
-                0x500173ec                silk_decode_signs
+                0x50016094      0x130 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_code_signs.o
+                0x50016094                silk_decode_signs
  .text.silk_Get_Decoder_Size
-                0x5001751c       0x14 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
-                0x5001751c                silk_Get_Decoder_Size
+                0x500161c4       0x14 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
+                0x500161c4                silk_Get_Decoder_Size
  .text.silk_ResetDecoder
-                0x50017530       0x70 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
-                0x50017530                silk_ResetDecoder
+                0x500161d8       0x70 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
+                0x500161d8                silk_ResetDecoder
  .text.silk_InitDecoder
-                0x500175a0       0x70 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
-                0x500175a0                silk_InitDecoder
+                0x50016248       0x70 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
+                0x50016248                silk_InitDecoder
  .text.silk_Decode
-                0x50017610      0xcec /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
-                0x50017610                silk_Decode
+                0x500162b8      0xcec /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_dec_API.o
+                0x500162b8                silk_Decode
  .text.silk_decode_core
-                0x500182fc      0xce0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_core.o
-                0x500182fc                silk_decode_core
+                0x50016fa4      0xce0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_core.o
+                0x50016fa4                silk_decode_core
  .text.silk_decode_frame
-                0x50018fdc      0x250 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_frame.o
-                0x50018fdc                silk_decode_frame
+                0x50017c84      0x250 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_frame.o
+                0x50017c84                silk_decode_frame
  .text.silk_decode_indices
-                0x5001922c      0x45c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_indices.o
-                0x5001922c                silk_decode_indices
+                0x50017ed4      0x45c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_indices.o
+                0x50017ed4                silk_decode_indices
  .text.silk_decode_parameters
-                0x50019688      0x298 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_parameters.o
-                0x50019688                silk_decode_parameters
+                0x50018330      0x298 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_parameters.o
+                0x50018330                silk_decode_parameters
  .text.silk_decode_pitch
-                0x50019920      0x108 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_pitch.o
-                0x50019920                silk_decode_pitch
+                0x500185c8      0x108 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_pitch.o
+                0x500185c8                silk_decode_pitch
  .text.silk_decode_pulses
-                0x50019a28      0x278 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_pulses.o
-                0x50019a28                silk_decode_pulses
+                0x500186d0      0x278 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decode_pulses.o
+                0x500186d0                silk_decode_pulses
  .text.silk_decoder_set_fs
-                0x50019ca0      0x278 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decoder_set_fs.o
-                0x50019ca0                silk_decoder_set_fs
+                0x50018948      0x278 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_decoder_set_fs.o
+                0x50018948                silk_decoder_set_fs
  .text.silk_gains_dequant
-                0x50019f18      0x128 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_gain_quant.o
-                0x50019f18                silk_gains_dequant
+                0x50018bc0      0x128 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_gain_quant.o
+                0x50018bc0                silk_gains_dequant
  .text.silk_reset_decoder
-                0x5001a040       0x68 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_init_decoder.o
-                0x5001a040                silk_reset_decoder
+                0x50018ce8       0x68 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_init_decoder.o
+                0x50018ce8                silk_reset_decoder
  .text.silk_init_decoder
-                0x5001a0a8       0x78 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_init_decoder.o
-                0x5001a0a8                silk_init_decoder
+                0x50018d50       0x78 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_init_decoder.o
+                0x50018d50                silk_init_decoder
  .text.silk_log2lin
-                0x5001a120       0x80 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_log2lin.o
-                0x5001a120                silk_log2lin
+                0x50018dc8       0x80 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_log2lin.o
+                0x50018dc8                silk_log2lin
  .text.silk_resampler_init
-                0x5001a1a0      0x3c4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler.o
-                0x5001a1a0                silk_resampler_init
+                0x50018e48      0x3c4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler.o
+                0x50018e48                silk_resampler_init
  .text.silk_resampler
-                0x5001a564      0x190 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler.o
-                0x5001a564                silk_resampler
+                0x5001920c      0x190 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler.o
+                0x5001920c                silk_resampler
  .text.silk_resampler_private_AR2
-                0x5001a6f4       0x78 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_AR2.o
-                0x5001a6f4                silk_resampler_private_AR2
+                0x5001939c       0x78 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_AR2.o
+                0x5001939c                silk_resampler_private_AR2
  .text.silk_resampler_private_IIR_FIR
-                0x5001a76c      0x21c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_IIR_FIR.o
-                0x5001a76c                silk_resampler_private_IIR_FIR
+                0x50019414      0x21c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_IIR_FIR.o
+                0x50019414                silk_resampler_private_IIR_FIR
  .text.silk_resampler_private_down_FIR
-                0x5001a988      0xaf4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_down_FIR.o
-                0x5001a988                silk_resampler_private_down_FIR
+                0x50019630      0xaf4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_down_FIR.o
+                0x50019630                silk_resampler_private_down_FIR
  .text.silk_resampler_private_up2_HQ
-                0x5001b47c      0x260 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_up2_HQ.o
-                0x5001b47c                silk_resampler_private_up2_HQ
+                0x5001a124      0x260 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_up2_HQ.o
+                0x5001a124                silk_resampler_private_up2_HQ
  .text.silk_resampler_private_up2_HQ_wrapper
-                0x5001b6dc        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_up2_HQ.o
-                0x5001b6dc                silk_resampler_private_up2_HQ_wrapper
+                0x5001a384        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_resampler_private_up2_HQ.o
+                0x5001a384                silk_resampler_private_up2_HQ_wrapper
  .text.silk_shell_decoder
-                0x5001b6e0      0x54c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_shell_coder.o
-                0x5001b6e0                silk_shell_decoder
+                0x5001a388      0x54c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_shell_coder.o
+                0x5001a388                silk_shell_decoder
  .text.silk_insertion_sort_increasing_all_values_int16
-                0x5001bc2c       0x48 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_sort.o
-                0x5001bc2c                silk_insertion_sort_increasing_all_values_int16
+                0x5001a8d4       0x48 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_sort.o
+                0x5001a8d4                silk_insertion_sort_increasing_all_values_int16
  .text.silk_stereo_MS_to_LR
-                0x5001bc74      0x310 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_stereo_MS_to_LR.o
-                0x5001bc74                silk_stereo_MS_to_LR
+                0x5001a91c      0x310 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_stereo_MS_to_LR.o
+                0x5001a91c                silk_stereo_MS_to_LR
  .text.silk_stereo_decode_pred
-                0x5001bf84      0x188 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_stereo_decode_pred.o
-                0x5001bf84                silk_stereo_decode_pred
+                0x5001ac2c      0x188 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_stereo_decode_pred.o
+                0x5001ac2c                silk_stereo_decode_pred
  .text.silk_stereo_decode_mid_only
-                0x5001c10c       0x38 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_stereo_decode_pred.o
-                0x5001c10c                silk_stereo_decode_mid_only
+                0x5001adb4       0x38 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_stereo_decode_pred.o
+                0x5001adb4                silk_stereo_decode_mid_only
  .text.silk_sum_sqr_shift
-                0x5001c144      0x1f8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_sum_sqr_shift.o
-                0x5001c144                silk_sum_sqr_shift
+                0x5001adec      0x1f8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_sum_sqr_shift.o
+                0x5001adec                silk_sum_sqr_shift
  .text.MP3InitDecoder
-                0x5001c33c        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
-                0x5001c33c                MP3InitDecoder
+                0x5001afe4        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+                0x5001afe4                MP3InitDecoder
  .text.MP3FindSyncWord
-                0x5001c340       0x4c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
-                0x5001c340                MP3FindSyncWord
+                0x5001afe8       0x4c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+                0x5001afe8                MP3FindSyncWord
  .text.MP3GetLastFrameInfo
-                0x5001c38c       0x9c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
-                0x5001c38c                MP3GetLastFrameInfo
+                0x5001b034       0x9c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+                0x5001b034                MP3GetLastFrameInfo
  .text.MP3Decode
-                0x5001c428      0x610 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
-                0x5001c428                MP3Decode
+                0x5001b0d0      0x610 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_mp3dec.o
+                0x5001b0d0                MP3Decode
  .text.xmp3_SetBitstreamPointer
-                0x5001ca38       0x14 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
-                0x5001ca38                xmp3_SetBitstreamPointer
+                0x5001b6e0       0x14 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x5001b6e0                xmp3_SetBitstreamPointer
  .text.xmp3_GetBits
-                0x5001ca4c      0x11c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
-                0x5001ca4c                xmp3_GetBits
+                0x5001b6f4      0x11c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x5001b6f4                xmp3_GetBits
  .text.xmp3_CalcBitsUsed
-                0x5001cb68       0x1c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
-                0x5001cb68                xmp3_CalcBitsUsed
+                0x5001b810       0x1c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x5001b810                xmp3_CalcBitsUsed
  .text.xmp3_CheckPadBit
-                0x5001cb84       0x20 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
-                0x5001cb84                xmp3_CheckPadBit
+                0x5001b82c       0x20 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x5001b82c                xmp3_CheckPadBit
  .text.xmp3_UnpackFrameHeader
-                0x5001cba4      0x2e8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
-                0x5001cba4                xmp3_UnpackFrameHeader
+                0x5001b84c      0x2e8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x5001b84c                xmp3_UnpackFrameHeader
  .text.xmp3_UnpackSideInfo
-                0x5001ce8c      0x3f0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
-                0x5001ce8c                xmp3_UnpackSideInfo
+                0x5001bb34      0x3f0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_bitstream.o
+                0x5001bb34                xmp3_UnpackSideInfo
  .text.xmp3_FreeBuffers
-                0x5001d27c       0x9c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
-                0x5001d27c                xmp3_FreeBuffers
+                0x5001bf24       0x9c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
+                0x5001bf24                xmp3_FreeBuffers
  .text.xmp3_AllocateBuffers
-                0x5001d318      0x230 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
-                0x5001d318                xmp3_AllocateBuffers
+                0x5001bfc0      0x230 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_buffers.o
+                0x5001bfc0                xmp3_AllocateBuffers
  .text.xmp3_FDCT32
-                0x5001d548      0x8d4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
-                0x5001d548                xmp3_FDCT32
+                0x5001c1f0      0x8d4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dct32.o
+                0x5001c1f0                xmp3_FDCT32
  .text.xmp3_Dequantize
-                0x5001de1c      0x3f0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
-                0x5001de1c                xmp3_Dequantize
+                0x5001cac4      0x3f0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dequant.o
+                0x5001cac4                xmp3_Dequantize
  .text.DequantBlock
-                0x5001e20c      0x264 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+                0x5001ceb4      0x264 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
  .text.xmp3_DequantChannel
-                0x5001e470      0x3c0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
-                0x5001e470                xmp3_DequantChannel
+                0x5001d118      0x3c0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
+                0x5001d118                xmp3_DequantChannel
  .text.xmp3_DecodeHuffman
-                0x5001e830      0xb50 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
-                0x5001e830                xmp3_DecodeHuffman
+                0x5001d4d8      0xb50 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_huffman.o
+                0x5001d4d8                xmp3_DecodeHuffman
  .text.FreqInvertRescale
-                0x5001f380      0x1c4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+                0x5001e028      0x1c4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
  .text.WinPrevious
-                0x5001f544      0x194 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+                0x5001e1ec      0x194 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
  .text.xmp3_IMDCT
-                0x5001f6d8     0x12b8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
-                0x5001f6d8                xmp3_IMDCT
+                0x5001e380     0x12b8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_imdct.o
+                0x5001e380                xmp3_IMDCT
  .text.xmp3_PolyphaseMono
-                0x50020990      0x9b8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
-                0x50020990                xmp3_PolyphaseMono
+                0x5001f638      0x9b8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
+                0x5001f638                xmp3_PolyphaseMono
  .text.xmp3_PolyphaseStereo
-                0x50021348     0x1364 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
-                0x50021348                xmp3_PolyphaseStereo
+                0x5001fff0     0x1364 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_polyphase.o
+                0x5001fff0                xmp3_PolyphaseStereo
  .text.xmp3_UnpackScaleFactors
-                0x500226ac      0xaf4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
-                0x500226ac                xmp3_UnpackScaleFactors
+                0x50021354      0xaf4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_scalfact.o
+                0x50021354                xmp3_UnpackScaleFactors
  .text.xmp3_MidSideProc
-                0x500231a0       0xa0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
-                0x500231a0                xmp3_MidSideProc
+                0x50021e48       0xa0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+                0x50021e48                xmp3_MidSideProc
  .text.xmp3_IntensityProcMPEG1
-                0x50023240      0x4b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
-                0x50023240                xmp3_IntensityProcMPEG1
+                0x50021ee8      0x4b0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+                0x50021ee8                xmp3_IntensityProcMPEG1
  .text.xmp3_IntensityProcMPEG2
-                0x500236f0      0x374 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
-                0x500236f0                xmp3_IntensityProcMPEG2
+                0x50022398      0x374 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_stproc.o
+                0x50022398                xmp3_IntensityProcMPEG2
  .text.xmp3_Subband
-                0x50023a64      0x1b4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
-                0x50023a64                xmp3_Subband
- .text          0x50023c18       0x6c /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clzsi2.o)
-                0x50023c18                __clzsi2
- .text          0x50023c84      0x4b0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
-                0x50023c84                __udivdi3
+                0x5002270c      0x1b4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_subband.o
+                0x5002270c                xmp3_Subband
+ .text          0x500228c0       0x6c /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_clzsi2.o)
+                0x500228c0                __clzsi2
+ .text          0x5002292c      0x4b0 /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32im/ilp32/libgcc.a(_udivdi3.o)
+                0x5002292c                __udivdi3
 
-.itcm           0x60000000     0x2644 load address 0x50024134
+.itcm           0x60000000     0x3984 load address 0x50022ddc
                 0x60000000                        __itcm_start = .
  *opus_kiss_fft.o(.text .text.*)
  .text.opus_fft_impl
@@ -2359,13 +2332,42 @@ LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32
  .text.ec_laplace_decode
                 0x60002544      0x100 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_laplace.o
                 0x60002544                ec_laplace_decode
-                0x60002644                        __itcm_end = .
-                0x50024134                        __itcm_lma = LOADADDR (.itcm)
+ *opus_vq.o(.text .text.*)
+ .text.exp_rotation1
+                0x60002644       0xdc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+ .text.normalise_residual
+                0x60002720       0xec /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+ .text.exp_rotation.part.0
+                0x6000280c      0x26c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+ .text.op_pvq_search_c
+                0x60002a78      0x390 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+                0x60002a78                op_pvq_search_c
+ .text.alg_quant
+                0x60002e08      0x1dc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+                0x60002e08                alg_quant
+ .text.alg_unquant
+                0x60002fe4      0x130 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+                0x60002fe4                alg_unquant
+ .text.renormalise_vector
+                0x60003114      0x108 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+                0x60003114                renormalise_vector
+ .text.stereo_itheta
+                0x6000321c      0x2dc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_vq.o
+                0x6000321c                stereo_itheta
+ *opus_cwrs.o(.text .text.*)
+ .text.encode_pulses
+                0x600034f8      0x1bc /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_cwrs.o
+                0x600034f8                encode_pulses
+ .text.decode_pulses
+                0x600036b4      0x2d0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_cwrs.o
+                0x600036b4                decode_pulses
+                0x60003984                        __itcm_end = .
+                0x50022ddc                        __itcm_lma = LOADADDR (.itcm)
 
 .sramdata
  *(.sram.rodata*)
 
-.rodata         0x00000000     0x98e4 load address 0x50026778
+.rodata         0x00000000     0x98e4 load address 0x50026760
                 0x00000000                        __fast_start = .
  *(.rodata*)
  .rodata.main.str1.4
@@ -2824,11 +2826,11 @@ LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32
                 0x000098dc        0x8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_hufftabs.o
                 0x000098dc                xmp3_quadTabOffset
 
-.rela.dyn       0x000098e4        0x0 load address 0x5003005c
+.rela.dyn       0x000098e4        0x0 load address 0x50030044
  .rela.text.init
                 0x000098e4        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_crt0.o
 
-.data           0x000098e4      0x298 load address 0x5003005c
+.data           0x000098e4      0x298 load address 0x50030044
  *(.data*)
  .data.pow2frac
                 0x000098e4       0x20 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/helix_dqchan.o
@@ -2865,9 +2867,9 @@ LOAD /opt/homebrew/Cellar/riscv64-elf-gcc/16.1.0/lib/gcc/riscv64-elf/16.1.0/rv32
  .sdata.trk_album
                 0x00009b78        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_ui.o
                 0x00009b7c                        __fast_end = .
-                0x50026778                        __fast_lma = LOADADDR (.rodata)
+                0x50026760                        __fast_lma = LOADADDR (.rodata)
 
-.bss            0x00009b80    0x12464 load address 0x500302f4
+.bss            0x00009b80    0x12464 load address 0x500302dc
                 0x00009b80                        __bss_start = .
  *(.bss*)
  .bss.tok       0x00009b80      0x141 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o

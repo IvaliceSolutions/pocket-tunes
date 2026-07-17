@@ -28,7 +28,7 @@ SECTIONS {
     *(.text.init)
     EXCLUDE_FILE(
       *opus_kiss_fft.o *opus_mdct.o *opus_celt.o *opus_entdec.o
-      *opus_entcode.o *opus_mathops.o *opus_laplace.o
+      *opus_entcode.o *opus_mathops.o *opus_laplace.o *opus_vq.o *opus_cwrs.o
     ) *(.text*)
   } > SRAM
 
@@ -43,6 +43,8 @@ SECTIONS {
     *opus_entcode.o(.text .text.*)
     *opus_mathops.o(.text .text.*)
     *opus_laplace.o(.text .text.*)
+    *opus_vq.o(.text .text.*)
+    *opus_cwrs.o(.text .text.*)
     __itcm_end = .;
   } > ITCM AT> SRAM
   __itcm_lma = LOADADDR(.itcm);
