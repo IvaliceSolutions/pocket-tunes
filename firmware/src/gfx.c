@@ -194,3 +194,8 @@ void *memset(void *dst, int c, unsigned long n) {
   while (n--) *d++ = (unsigned char)c;
   return dst;
 }
+
+// freestanding glue for libopus (fixed-point paths only)
+int abs(int v) { return v < 0 ? -v : v; }
+long labs(long v) { return v < 0 ? -v : v; }
+void abort(void) { for (;;) {} }

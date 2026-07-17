@@ -16,7 +16,7 @@
 #include "gfx.h"
 #include "lib.h"
 #include "palette.h"
-#include "mp3.h"
+#include "codec.h"
 #include "eq.h"
 #include "art.h"
 
@@ -156,14 +156,14 @@ static void start_play(int gidx, int alb) {
   int n = lib_fetch_path(t, pathbuf, sizeof pathbuf);
   anim = 0;
   pos_frames = 0;
-  if (n > 0 && t->format == FMT_MP3) {
-    last_start_err = mp3_start(pathbuf, n, t->fsize);
+  if (n > 0) {
+    last_start_err = codec_start(t->format, pathbuf, n, t->fsize);
     playing = (last_start_err == 0);
     art_load(gidx);  // real cover for the drawer/mini-bar (placeholder if none)
   } else {
-    last_start_err = (n <= 0) ? -20 : -21;  // -20 path, -21 non-MP3
+    last_start_err = -20;  // path unavailable
     playing = 0;
-    mp3_stop();
+    codec_stop();
   }
 }
 
@@ -250,16 +250,16 @@ int ui_input(uint16_t pressed) {
     }
     if (pressed & (KEY_LEFT | KEY_RIGHT)) {  // seek ±10 s
       const track_t *t = play_track_p();
-      uint32_t cur = mp3_pos_seconds();
+      uint32_t cur = codec_pos_seconds();
       uint32_t tgt = (pressed & KEY_RIGHT) ? cur + 10 : (cur > 10 ? cur - 10 : 0);
       if (t->dur_s && tgt >= t->dur_s) tgt = t->dur_s ? t->dur_s - 1 : 0;
-      mp3_seek(tgt, seek_byte_off(t, tgt));
+      codec_seek(tgt, seek_byte_off(t, tgt));
       pos_frames = tgt * 60u;
       return 1;
     }
     if (pressed & (KEY_A | KEY_Y)) {  // Y mirrors A here so Y = pause EVERYWHERE
       playing = !playing;
-      mp3_set_paused(!playing);
+      codec_set_paused(!playing);
       return 1;
     }
     if (pressed & KEY_B) {  // close overlay only — playback keeps running
@@ -274,7 +274,7 @@ int ui_input(uint16_t pressed) {
     if (pressed & KEY_X) { drawer_open = 1; return 1; }
     if (pressed & KEY_Y) {
       playing = !playing;
-      mp3_set_paused(!playing);
+      codec_set_paused(!playing);
       return 1;
     }
   }
@@ -342,15 +342,15 @@ int ui_tick(void) {
   anim++;
   if (playing) {
     if (drawer_open) eq_tick();  // bars freeze on pause / when hidden
-    pos_frames = mp3_pos_seconds() * 60u;
-    if (mp3_at_eof()) {
+    pos_frames = codec_pos_seconds() * 60u;
+    if (codec_at_eof()) {
       const album_t *pa = play_album_p();
       int cur_rel = play_gidx - pa->first_track;
       if (repeat_mode == REP_ONE) {
         start_play(play_gidx, play_alb);
       } else if (repeat_mode == REP_OFF && !shuffle && cur_rel == pa->n_tracks - 1) {
         playing = 0;
-        mp3_stop();
+        codec_stop();
       } else {
         int rel = next_rel(pa, cur_rel);
         start_play(pa->first_track + rel, play_alb);
@@ -675,7 +675,7 @@ void ui_get_state(uint32_t w[SS_WORDS]) {
   for (int i = 0; i < SS_WORDS; i++) w[i] = 0;
   w[0] = SS_MAGIC;
   w[1] = ((uint32_t)(uint16_t)play_gidx) | ((uint32_t)(uint16_t)play_alb << 16);
-  w[2] = mp3_pos_seconds();
+  w[2] = codec_pos_seconds();
   w[3] = (playing ? 1u : 0) | (drawer_open ? 2u : 0) | (shuffle ? 4u : 0) |
          ((uint32_t)repeat_mode << 3) | ((uint32_t)focus << 5);
   w[4] = ((uint32_t)(uint8_t)sb_cursor) | ((uint32_t)(uint8_t)cur_artist << 8) |
@@ -718,12 +718,12 @@ void ui_apply_state(const uint32_t w[SS_WORDS]) {
       uint32_t pos = w[2];
       if (t->dur_s && pos >= t->dur_s) pos = 0;
       if (pos > 0) {
-        mp3_seek(pos, seek_byte_off(t, pos));
+        codec_seek(pos, seek_byte_off(t, pos));
         pos_frames = pos * 60u;
       }
       if (!(w[3] & 1)) {  // was paused
         playing = 0;
-        mp3_set_paused(1);
+        codec_set_paused(1);
       }
       drawer_open = (w[3] >> 1) & 1;
     }

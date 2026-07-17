@@ -9,7 +9,7 @@
 #include "palette.h"
 #include "lib.h"
 #include "ui.h"
-#include "mp3.h"
+#include "codec.h"
 
 static uint16_t keys_now, keys_prev;
 
@@ -52,7 +52,7 @@ int main(void) {
   uint32_t last_frame = REG_FRAME;
   uint32_t ss_done = 0;  // our two done levels (bit0 save, bit1 load)
   for (;;) {
-    mp3_pump();  // keep the audio fifo topped up (returns fast when it's full)
+    codec_pump();  // keep the audio fifo topped up (returns fast when it's full)
 
     // sleep/wake: serve savestate requests (4-phase with ss_ctrl)
     uint32_t ss = REG_SS_STATUS;

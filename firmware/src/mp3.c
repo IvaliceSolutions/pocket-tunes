@@ -23,16 +23,24 @@ extern char lib_stage[];          // 12 KB, word-aligned (defined in lib.c)
 // ---- tiny arena for Helix's mallocs (MP3InitDecoder allocates ~20 KB once).
 // On the native host test we let libc's malloc serve Helix instead.
 #ifndef PT_HOST_TEST
-static char arena[24576] __attribute__((aligned(8)));  // Helix needs 23864; margin
+// Codec arena, SHARED with opus_play.c: only one decoder is ever live (starting
+// a track stops the other), so they take turns in the same memory instead of
+// each reserving its own. Sized for the larger tenant: libopus' decoder state
+// is 26520 bytes (opus_decoder_get_size(2)); Helix needs 23864. libopus' own
+// scratch is NOT here — VAR_ARRAYS (see build.sh) puts it on the real stack, so
+// this is state only. The ~28 KB freed vs the old 57344 becomes stack, which
+// the VLAs need (measured peak 10676 bytes).
+char codec_arena[27648] __attribute__((aligned(8)));
 static uint32_t arena_used;
 void *malloc(unsigned long n) {
   n = (n + 7u) & ~7u;
-  if (arena_used + n > sizeof(arena)) return 0;
-  void *p = &arena[arena_used];
+  if (arena_used + n > sizeof(codec_arena)) return 0;
+  void *p = &codec_arena[arena_used];
   arena_used += n;
   return p;
 }
 void free(void *p) { (void)p; }  // decoder is initialized once and kept
+unsigned long codec_arena_size(void) { return sizeof(codec_arena); }
 #else
 #include <stdlib.h>
 #endif
@@ -40,6 +48,12 @@ void free(void *p) { (void)p; }  // decoder is initialized once and kept
 // ---- state
 static HMP3Decoder hdec;
 static int inited;
+
+// Arena ownership: opus_start() resets the shared bump allocator, which
+// invalidates Helix's structs. mp3_start() re-inits when it doesn't own it.
+#ifndef PT_HOST_TEST
+extern int codec_arena_owner;  // 0 = none, 1 = mp3, 2 = opus (opus_play.c)
+#endif
 static uint32_t f_size, f_off;   // audio file
 static uint32_t f_audio_start;   // first byte after the ID3v2 tag
 static int in_len;               // valid bytes at INBUF[0..in_len)
@@ -71,6 +85,13 @@ static void in_compact_and_fill(void) {
 }
 
 int mp3_start(const char *path, int path_len, uint32_t file_size) {
+#ifndef PT_HOST_TEST
+  if (codec_arena_owner != 1) {  // Opus (or nobody) held the arena → rebuild
+    arena_used = 0;
+    inited = 0;
+    codec_arena_owner = 1;
+  }
+#endif
   if (!inited) {
     hdec = MP3InitDecoder();
     if (!hdec) return -10;

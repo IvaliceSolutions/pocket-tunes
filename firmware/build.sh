@@ -18,17 +18,39 @@ python3 "$D/scripts/bdf2c.py" "$D/src/fonts.h" \
   fontmain="$D/../third_party/cozette.bdf" fontsmall="$D/../third_party/5x8.bdf" >/dev/null
 
 HELIX="$D/helix"
+# -ffunction-sections/-fdata-sections + --gc-sections at link: libopus is
+# vendored whole (the encoder files are entangled in the build), so the linker
+# is what actually drops every encoder path the decoder never calls.
 CF="-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
+  -ffunction-sections -fdata-sections \
   -Wall -Wextra -Werror=implicit-function-declaration \
-  -I $D/shim -I $HELIX/pub -I $HELIX/real"
+  -I $D/shim -I $HELIX/pub -I $HELIX/real -I $D/opus/include"
 OBJ="$D/obj"; rm -rf "$OBJ"; mkdir -p "$OBJ"; OBJS=""
 
 # App/UI/decoder-glue at -Os: the 128 KB CPU RAM is tight, and this code is not
 # the DSP hot path, so trade a little speed for several KB of code space
 # (headroom for the stack + future features).
-for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/ui.c src/file.c src/mp3.c src/eq.c src/art.c; do
+for s in src/crt0.S src/main.c src/gfx.c src/lib.c src/ui.c src/file.c src/mp3.c src/eq.c src/art.c src/ogg.c src/opus_play.c src/codec.c; do
   o="$OBJ/app_$(basename "${s%.*}").o"
   "$CC" $CF -Os -c "$D/$s" -o "$o"; OBJS="$OBJS $o"
+done
+
+# libopus (M7b): fixed-point decoder, -O2 like Helix — it's a hot path too.
+# Encoder/float/demo files were dropped when vendoring; --gc-sections trims
+# whatever else the decoder never reaches.
+OPUS="$D/opus"
+# VAR_ARRAYS, not NONTHREADSAFE_PSEUDOSTACK: the pseudostack wants a
+# GLOBAL_STACK_SIZE-sized scratch block out of the codec arena, and that define
+# is a fixed 120000 in celt/arch.h — sized for the encoder, which we don't
+# build. VAR_ARRAYS instead puts libopus' scratch in C99 VLAs on the real
+# stack. Measured under qemu (scratchpad/derisk-opus, -O2, decoder-only):
+# 10676 bytes of stack peak and zero scratch allocation. The arena below is
+# then only the decoder state, and the bytes it gives back become stack.
+OPUS_DEFS="-DOPUS_BUILD -DFIXED_POINT -DDISABLE_FLOAT_API -DVAR_ARRAYS -DPT_FIRMWARE -DOPUS_VERSION=\"1.5.2-pt\""
+OPUS_INC="-I$OPUS/include -I$OPUS/celt -I$OPUS/silk -I$OPUS/silk/fixed -I$OPUS/src"
+for f in "$OPUS"/src/*.c "$OPUS"/celt/*.c "$OPUS"/silk/*.c "$OPUS"/silk/fixed/*.c; do
+  o="$OBJ/opus_$(basename "${f%.*}").o"
+  "$CC" $CF $OPUS_DEFS $OPUS_INC -O2 -c "$f" -o "$o"; OBJS="$OBJS $o"
 done
 
 # Helix stays at -O2 — it IS the real-time decode hot path; keep it fast.
@@ -40,7 +62,7 @@ for s in mp3dec.c mp3tabs.c real/bitstream.c real/buffers.c real/dct32.c \
   "$CC" $CF -O2 -c "$HELIX/$s" -o "$o"; OBJS="$OBJS $o"
 done
 
-"$CC" $CF $OBJS -T "$D/src/link.ld" -lgcc -Wl,-Map="$D/firmware.map" -o "$D/firmware.elf"
+"$CC" $CF $OBJS -T "$D/src/link.ld" -Wl,--gc-sections -lgcc -Wl,-Map="$D/firmware.map" -o "$D/firmware.elf"
 
 "$OBJCOPY" -O binary "$D/firmware.elf" "$D/firmware.bin"
 
