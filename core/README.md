@@ -70,6 +70,31 @@ counts) and renders a full frame to `out_frame.ppm`. `tb_loader` streams real
 library.json bytes through emulated APF bridge writes and verifies BRAM
 content + byte counter.
 
+### Full-SoC simulation (boot + UI + MP3 decode)
+
+`tb_soc` models the real APF boot order: firmware pushed to SRAM while the
+core is in reset, then Reset Exit, then the CPU boots, parses `mini_lib.json`
+and plays `audio_bytes.hex` through scripted button presses. Screens are
+captured to `out_soc_{a,b,c}.ppm` (Bibliothèque / Albums / Lecture) and the
+decoded PCM to `pcm_out.txt`. Inputs: `library_bytes.hex` (xxd of
+mini_lib.json), `audio_bytes.hex` (xxd of a test MP3), and
+`../projects/firmware_sram.hex` (written by `firmware/build.sh`).
+
+```
+cd core/sim
+iverilog -g2012 -o tb_soc.vvp tb_soc.sv sram_model.v \
+  ../target/pocket/pt_soc.sv ../target/pocket/pt_mem.sv ../target/pocket/vexriscv.v \
+  ../target/pocket/sram_ctrl.v ../target/pocket/bridge_rx_ram.sv ../target/pocket/ss_ctrl.v \
+  ../target/pocket/video_gen.sv ../target/pocket/fb_scanout.sv ../target/pocket/sync_fifo.sv \
+  ../target/pocket/data_loader.sv i2s_stub.sv ../platform/pocket/common.v vendor_stubs.sv
+vvp tb_soc.vvp    # ~20-30 min wall time
+```
+
+(`i2s_stub.sv` replaces `sound_i2s.sv`, which icarus can't elaborate.) The
+firmware load itself takes ~1 µs per halfword ≈ 6 frames for a 195 KB image —
+the TB script counts frames from reset release, never from an absolute
+frame number.
+
 ## Known M2 limits (by design)
 
 - library.json capped at 128 KB (`size_maximum` in data.json = BRAM size).

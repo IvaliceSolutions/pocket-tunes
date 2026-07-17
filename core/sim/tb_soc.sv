@@ -285,9 +285,16 @@ module tb_soc;
     end
   endtask
 
-  // Push the firmware image into SRAM through the bridge, exactly like the APF
-  // Firmware data slot does (16-bit words at 0x5000_0000), while in reset.
+  // Push the firmware image into SRAM through the bridge, exactly like the
+  // APF Firmware data slot does: one 32-bit bridge word carries TWO
+  // halfwords (bytes in file order), address advances by 4, while in reset.
+  // data_loader on the endian-big path byte-swaps the word then emits
+  // [15:0] at addr and [31:16] at addr+2, so the word is sent byte-swapped.
+  // (The old one-halfword-per-word model left every address holding the
+  // 0x0000 filler of the next write — an SRAM full of zeros and a CPU
+  // executing garbage. All-'x' framebuffer captures are the symptom.)
   reg [15:0] fw_img[0:131071];
+  reg [15:0] fw_v0, fw_v1;
   integer fw_words, fi;
   task load_firmware_via_bridge;
     begin
@@ -295,8 +302,12 @@ module tb_soc;
       fw_words = 0;
       while (fw_words < 131072 && fw_img[fw_words] !== 16'hxxxx) fw_words = fw_words + 1;
       $display("APF model: pushing %0d firmware halfwords to 0x5000_0000 (in reset)", fw_words);
-      for (fi = 0; fi < fw_words; fi = fi + 1)
-        do_bridge_write(32'h5000_0000 + fi * 2, {16'd0, fw_img[fi]});
+      for (fi = 0; fi < fw_words; fi = fi + 2) begin
+        fw_v0 = fw_img[fi];
+        fw_v1 = (fi + 1 < fw_words) ? fw_img[fi+1] : 16'd0;
+        do_bridge_write(32'h5000_0000 + fi * 2,
+                        {fw_v0[7:0], fw_v0[15:8], fw_v1[7:0], fw_v1[15:8]});
+      end
       $display("APF model: firmware load done at t=%0t", $time);
     end
   endtask
@@ -311,10 +322,17 @@ module tb_soc;
     cpu_run = 1;                  // slots complete → CPU released
     $display("APF model: reset released, CPU running");
 
-    // tiny library parses in ~2 frames
-    wait (frame_no == 6);
-    press(16'h0010);  // A → select artist 0, focus main
-    press(16'h0010);  // A → open drawer → mp3_start on track 0
+    // The firmware load itself spans frames (~1 µs per halfword ≈ 6 frames
+    // for a 195 KB image), so never anchor on an absolute frame number:
+    // count frames from reset release. Boot + parse + first render < 4.
+    wait_frames(4);
+    start_capture("out_soc_a.ppm");  // Bibliothèque (4a root list)
+    wait_frames(2);
+    press(16'h0010);                 // A → open artist 0 → Albums
+    start_capture("out_soc_b.ppm");
+    wait_frames(2);
+    press(16'h0010);                 // A → open album 0 → Titres
+    press(16'h0010);                 // A → play track 0 → Lecture
     start_capture("out_soc_c.ppm");
     wait_frames(2);
 
