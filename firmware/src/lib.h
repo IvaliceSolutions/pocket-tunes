@@ -20,7 +20,8 @@ typedef struct {
   uint32_t path_off;     // byte offset of the path string inside library.json
   uint32_t fsize;        // audio file size in bytes
   uint16_t path_len;
-  uint16_t dur_s;        // duration in seconds (0 = unknown)
+  uint32_t dur_s;        // duration in seconds (0 = unknown). 32-bit: a 20 h
+                         // audiobook is 72000 s, well past a uint16's 18.2 h.
   uint16_t kbps;         // nominal bitrate (0 = unknown)
   uint8_t  format;       // FMT_*
 } track_t;

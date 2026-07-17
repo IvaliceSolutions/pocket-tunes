@@ -9,6 +9,7 @@ import { scanLibrary } from "./scan.js";
 import { readMetadata } from "./metadata.js";
 import { findSidecar, writeThumbnails } from "./covers.js";
 import { hueForAlbum } from "./hue.js";
+import { readChapters } from "./chapters.js";
 
 const SCHEMA_VERSION = 1;
 const VERSION = "0.1.0";
@@ -161,6 +162,12 @@ async function main() {
           log(args.quiet, `  ! skip ${path.basename(file)} (${e.message})`);
           continue;
         }
+        // ID3 chapters (audiobooks) — start seconds + titles, for L/R nav
+        const chapters = (await readChapters(file)).map((c) => ({
+          s: Math.round(c.startMs / 1000),
+          t: c.title,
+        }));
+
         if (year == null && md.year != null) year = md.year;
         if (genre == null && md.genre != null) genre = md.genre;
 
@@ -188,6 +195,7 @@ async function main() {
           channels: md.channels,
           coverArt: tCover,
           coverArtSmall: tCoverSmall,
+          chapters,
           path: sdJoin(args.sdRoot, path.relative(musicRoot, file)),
         });
       }
@@ -215,6 +223,7 @@ async function main() {
         fileSize: sizes[i],
         coverArt: t.coverArt,
         coverArtSmall: t.coverArtSmall,
+        chapters: t.chapters,
         path: t.path,
       }));
 

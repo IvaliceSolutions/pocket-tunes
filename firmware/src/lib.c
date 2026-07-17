@@ -212,7 +212,7 @@ static int parse_track(void) {
       uint32_t ms;
       if (parse_uint(&ms)) return -1;
       uint32_t s = ms / 1000u;
-      t.dur_s = (s > 0xFFFF) ? 0xFFFF : (uint16_t)s;
+      t.dur_s = (uint32_t)s;  // seconds; 32-bit (20 h audiobooks)
     } else if (key_is("bitrateKbps")) {
       uint32_t v;
       if (parse_uint(&v)) return -1;
