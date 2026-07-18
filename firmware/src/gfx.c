@@ -25,12 +25,6 @@ void gfx_fill_rect(int x, int y, int w, int h, uint8_t color) {
 void gfx_hline(int x, int y, int w, uint8_t color) { gfx_fill_rect(x, y, w, 1, color); }
 void gfx_vline(int x, int y, int h, uint8_t color) { gfx_fill_rect(x, y, 1, h, color); }
 
-void gfx_rect(int x, int y, int w, int h, uint8_t color) {
-  gfx_hline(x, y, w, color);
-  gfx_hline(x, y + h - 1, w, color);
-  gfx_vline(x, y, h, color);
-  gfx_vline(x + w - 1, y, h, color);
-}
 
 // Vertical gradient fill: the LUT holds one palette index per band, top→bottom.
 void gfx_vgrad(int x, int y, int w, int h, const unsigned char *lut, int n) {
@@ -156,14 +150,6 @@ void gfx_text_scroll(int x, int y, const char *s, int len, int box_w,
   }
 }
 
-void u32_to_hex(uint32_t v, char out[9]) {
-  for (int i = 7; i >= 0; i--) {
-    unsigned d = v & 0xF;
-    out[i] = d < 10 ? '0' + d : 'a' + d - 10;
-    v >>= 4;
-  }
-  out[8] = 0;
-}
 
 void u32_to_dec(uint32_t v, char out[11]) {
   char tmp[11];

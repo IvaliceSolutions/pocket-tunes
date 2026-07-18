@@ -8,7 +8,6 @@ void gfx_clear(uint8_t color);
 void gfx_fill_rect(int x, int y, int w, int h, uint8_t color);
 void gfx_hline(int x, int y, int w, uint8_t color);
 void gfx_vline(int x, int y, int h, uint8_t color);
-void gfx_rect(int x, int y, int w, int h, uint8_t color);  // 1px outline
 void gfx_vgrad(int x, int y, int w, int h, const unsigned char *lut, int n);
 void gfx_fill_round(int x, int y, int w, int h, uint8_t color);  // 2px-cut corners
 void gfx_rect_round(int x, int y, int w, int h, uint8_t color);
@@ -26,7 +25,6 @@ int gfx_text_px_len(const char *s, int len, int small);
 void gfx_text_scroll(int x, int y, const char *s, int len, int box_w,
                      uint8_t color, int scroll_px, int small);
 
-void u32_to_hex(uint32_t v, char out[9]);
 void u32_to_dec(uint32_t v, char out[11]);
 
 #endif

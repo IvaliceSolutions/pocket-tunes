@@ -94,4 +94,3 @@ void codec_seek(uint32_t to_seconds, uint32_t byte_off) {
   else if (active == C_OPUS) opus_seek(to_seconds, byte_off);
 }
 
-int codec_is_seekable(void) { return active != C_NONE; }

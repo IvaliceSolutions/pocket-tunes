@@ -1,7 +1,12 @@
-// Pocket Tunes firmware — M3b: the amber library browser.
+// Pocket Tunes firmware — main loop.
 //
-// Parses library.json (loaded by the APF data slot), then runs the
-// sidebar/albums/drawer UI from the design handoff. No audio yet.
+// Boot: parse library.json (streamed through the APF Library data slot),
+// then run the iPod-style UI (ui.c) and the audio chain. The loop has one
+// job above all: call codec_pump() as often as possible (decode keeps the
+// PCM fifo fed) and only touch the UI once per video frame. Buttons are
+// edge-accumulated every iteration so a quick tap can never fall inside a
+// decode burst unseen. Sleep/wake (Pocket save states) is a 4-phase
+// handshake with ss_ctrl served from here.
 
 #include <stdint.h>
 #include "mmio.h"

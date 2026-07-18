@@ -176,7 +176,6 @@ void mp3_stop(void) {
 }
 
 void mp3_set_paused(int p) { paused = p; }
-int mp3_is_playing(void) { return playing && !paused; }
 
 int mp3_at_eof(void) {
   return playing && eof_decode;

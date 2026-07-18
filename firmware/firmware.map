@@ -23,10 +23,6 @@ Discarded input sections
  .text          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .data          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .bss           0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
- .text.gfx_rect
-                0x00000000       0xa8 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
- .text.u32_to_hex
-                0x00000000       0x38 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .text.labs     0x00000000       0x10 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .text.abort    0x00000000        0x4 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_gfx.o
  .text          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_lib.o
@@ -44,8 +40,6 @@ Discarded input sections
  .text          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
  .data          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
  .bss           0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
- .text.mp3_is_playing
-                0x00000000       0x1c /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_mp3.o
  .text          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_eq.o
  .data          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_eq.o
  .bss           0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_eq.o
@@ -61,8 +55,6 @@ Discarded input sections
  .text          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_codec.o
  .data          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_codec.o
  .bss           0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_codec.o
- .text.codec_is_seekable
-                0x00000000       0x10 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/app_codec.o
  .text          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_extensions.o
  .data          0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_extensions.o
  .bss           0x00000000        0x0 /Users/jeremy/test_fpga/pocket-tunes/firmware/obj/opus_extensions.o

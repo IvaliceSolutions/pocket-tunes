@@ -18,7 +18,6 @@ int codec_at_eof(void);
 int codec_pump(void);              // call often; decodes while the fifo has room
 uint32_t codec_pos_seconds(void);
 void codec_seek(uint32_t to_seconds, uint32_t byte_off);
-int codec_is_seekable(void);       // Opus (Ogg) seeks coarsely; MP3 by byte ratio
 
 // PCM fifo underruns since boot (audible gaps) — debug HUD.
 extern uint32_t codec_underrun_count;

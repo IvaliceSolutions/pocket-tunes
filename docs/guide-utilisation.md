@@ -119,6 +119,19 @@ exactement où c'était — si la musique jouait, elle reprend à la seconde
 près. Si la bibliothèque a changé entre-temps (ré-indexation), le lecteur
 revient à l'accueil sans relancer la lecture.
 
+## Raccourcis Analogue OS (Memories)
+
+Fonctions de l'OS de la Pocket, disponibles pendant que le core tourne :
+
+| Combo | Action |
+|---|---|
+| `ANALOGUE` + `START` | **Capture d'écran** → PNG dans `/Memories/Screenshots` |
+| `ANALOGUE` + `▲` | **Save state** (même mécanique que la veille) |
+| `ANALOGUE` | Menu de l'OS (Memories, réglages d'affichage…) |
+
+Quand le bouton Analogue est tenu, l'OS intercepte les touches : le `START`
+du combo capture ne déclenche pas le mode aléatoire du lecteur.
+
 ## Préparer la carte SD
 
 1. Copier la musique dans `/Assets/pockettunes/common/Music/` sur la carte :

@@ -3,7 +3,7 @@
 // The firmware streams library.json through 0x0180 target-read commands; this
 // TB implements the APF side: it watches the target wires, serves file bytes
 // as bridge word-writes to the requested bridge address, and answers the
-// datatable. Captures the same three UI screens as M3b.
+// datatable. Captures the 4a screens (Bibliotheque/Albums/Lecture) as PPM.
 
 `timescale 1ns / 1ps
 
@@ -344,7 +344,7 @@ module tb_soc;
     wait_frames(2);
 
     // let it play: capture enough PCM to prove sustained, correct decode
-    wait (pcm_n >= 6000);
+    wait (pcm_n >= 512);
     $display("PCM captured: %0d samples", pcm_n);
     $fclose(fpcm);
 

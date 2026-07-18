@@ -1,5 +1,6 @@
-// Pocket Tunes SoC: PicoRV32 + memories + framebuffer scanout + MMIO
-//                   + APF target-command controller + PCM audio FIFO.
+// Pocket Tunes SoC: VexRiscv (rv32im, 4 KB I-cache) + memories + framebuffer
+//                   scanout + MMIO + APF target-command controller
+//                   + PCM audio FIFO + 16 KB instruction TCM.
 //
 // Instantiated by core_top for synthesis and by the testbench for simulation,
 // so the simulated design is exactly what ships.

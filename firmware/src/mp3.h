@@ -9,7 +9,6 @@
 int mp3_start(const char *path, int path_len, uint32_t file_size);
 void mp3_stop(void);
 void mp3_set_paused(int paused);
-int mp3_is_playing(void);   // started and not paused
 int mp3_at_eof(void);       // decode finished and fifo drained
 
 // Call often (each main-loop iteration): decodes as long as the PCM fifo
