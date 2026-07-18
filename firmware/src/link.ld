@@ -28,8 +28,8 @@ SECTIONS {
   .text : {
     *(.text.init)
     EXCLUDE_FILE(
-      *opus_kiss_fft.o *opus_mdct.o *opus_celt.o *opus_entdec.o
-      *opus_entcode.o *opus_mathops.o *opus_laplace.o *opus_vq.o *opus_cwrs.o
+      *opus_kiss_fft.o *opus_mdct.o *opus_bands.o *opus_vq.o *opus_cwrs.o
+      *opus_entdec.o *opus_celt_decoder.o
       *helix_polyphase.o *helix_imdct.o *helix_dct32.o *helix_subband.o
     ) *(.text*)
   } > SRAM
@@ -47,16 +47,21 @@ SECTIONS {
    * codec_start() word-copies the active one to the TCM (I-cache flushed). */
   __image_end_lma = __fast_lma + (__fast_end - __fast_start);
   OVERLAY 0x60000000 : NOCROSSREFS AT ( __image_end_lma ) {
+    /* PROFILE-DRIVEN pin (host sampling of the CELT stereo demo): the
+     * per-SAMPLE loops live here; the per-frame skeletons (quant_all_bands,
+     * compute_theta, celt_synthesis, comb_filter) stay in SRAM where the 4 KB
+     * I-cache handles their smaller residual working set. 15.8 KB / 16 KB. */
     .itcm_opus {
-      *opus_kiss_fft.o(.text .text.*)
-      *opus_mdct.o(.text .text.*)
-      *opus_celt.o(.text .text.*)
-      *opus_entdec.o(.text .text.*)
-      *opus_entcode.o(.text .text.*)
-      *opus_mathops.o(.text .text.*)
-      *opus_laplace.o(.text .text.*)
-      *opus_vq.o(.text .text.*)
-      *opus_cwrs.o(.text .text.*)
+      *opus_kiss_fft.o(.text .text.*)                 /* fft_impl: 4.5 KB, hottest */
+      *opus_mdct.o(.text.clt_mdct_backward_c)
+      *opus_bands.o(.text.quant_band_stereo)
+      *opus_bands.o(.text.quant_partition)
+      *opus_bands.o(.text.quant_band)
+      *opus_bands.o(.text.denormalise_bands)
+      *opus_vq.o(.text.alg_unquant .text.exp_rotation .text.exp_rotation.* .text.exp_rotation1 .text.normalise_residual .text.renormalise_vector)
+      *opus_cwrs.o(.text.decode_pulses)
+      *opus_entdec.o(.text .text.*)                   /* range decoder, all hot */
+      *opus_celt_decoder.o(.text.deemphasis)
     }
     .itcm_mp3 {
       *helix_polyphase.o(.text .text.*)
@@ -69,6 +74,17 @@ SECTIONS {
   __itcm_load_mp3  = LOADADDR(.itcm_mp3);
   __itcm_opus_size = SIZEOF(.itcm_opus);
   __itcm_mp3_size  = SIZEOF(.itcm_mp3);
+
+  /* Cold leftovers of the function-split objects (encode-side already gc'd;
+   * per-frame skeletons): execute from SRAM like the rest of .text. */
+  __cold_lma = __image_end_lma + SIZEOF(.itcm_opus) + SIZEOF(.itcm_mp3);
+  .text_cold __cold_lma : AT ( __cold_lma ) {
+    *opus_mdct.o(.text .text.*)
+    *opus_bands.o(.text .text.*)
+    *opus_vq.o(.text .text.*)
+    *opus_cwrs.o(.text .text.*)
+    *opus_celt_decoder.o(.text .text.*)
+  }
 
   .bss (NOLOAD) : { __bss_start = .; *(.bss*) *(.sbss*) *(COMMON) ; __bss_end = .; } > RAM
 
