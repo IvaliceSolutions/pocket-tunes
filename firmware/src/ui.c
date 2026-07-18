@@ -27,6 +27,7 @@
 #include "eq.h"
 #include "art.h"
 #include "chap.h"
+#include "file.h"  // file_io_stats for the debug HUD
 
 // ----------------------------------------------------------------- layout
 #define STATUS_H 24
@@ -696,6 +697,23 @@ static void render_now_progress(void) {
     if (w > (uint32_t)NOW_BAR_W) w = NOW_BAR_W;
     if (w > 4) gfx_fill_round(NOW_BAR_X, NOW_BAR_Y, (int)w, 5, COL_PROGRESS_FILL);
   }
+  // debug HUD (M7e): worst/last SD-read latency + audible underruns.
+  // Confirms on hardware whether residual crackle is I/O latency (ms grows,
+  // underruns track it) or decode throughput (underruns with low ms).
+  {
+    uint32_t mx, la, cnt;
+    file_io_stats(&mx, &la, &cnt);
+    char h[40], *q = h;
+    q = s_append(q, "es ");
+    q = s_udec(q, mx / 72000u);   // cycles → ms at 72 MHz
+    *q++ = '/';
+    q = s_udec(q, la / 72000u);
+    q = s_append(q, "ms u");
+    s_udec(q, codec_underrun_count);
+    gfx_fill_rect(NOW_BAR_X, NOW_TIME_Y + 13, NOW_BAR_W, 9, COL_BG);
+    gfx_text_small(NOW_BAR_X, NOW_TIME_Y + 13, h, COL_HINT);
+  }
+
   gfx_fill_rect(NOW_BAR_X, NOW_TIME_Y, NOW_BAR_W, 9, COL_BG);
   char b[16], *p;
   s_time(b, sec);

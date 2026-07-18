@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "file.h"
 
 // ---- mock the target-command file engine (file.h interface) --------------
 #define RX_SIZE 16384
@@ -30,6 +31,21 @@ int file_read(uint16_t id, uint32_t off, uint32_t len) {
     rx_ram[i] = (off + i < g_file_size) ? g_file[off + i] : 0;
   return 0;
 }
+
+// ---- M7e async-read emulation: synchronous behind the same API ----
+static uint16_t as_id; static uint32_t as_off, as_len; static int as_busy;
+int file_read_start(uint16_t id, uint32_t off, uint32_t len) {
+  if (as_busy) return -1;
+  as_id = id; as_off = off; as_len = len; as_busy = 1;
+  return 0;
+}
+int file_read_busy(void) { return as_busy; }
+int file_read_poll(void) {
+  if (!as_busy) return -1;
+  as_busy = 0;
+  return file_read(as_id, as_off, as_len) ? -2 : FILE_POLL_DONE;
+}
+
 int file_open(uint16_t id, const char *path, int path_len) {
   (void)id; (void)path; (void)path_len; return 0;
 }

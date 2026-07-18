@@ -58,8 +58,52 @@ static uint32_t samples_pushed;      // at 48 kHz
 static uint32_t skip_samples;        // OpusHead pre-skip, dropped on start
 static int16_t pcm[960 * 2 * 3];     // up to 60 ms stereo @ 48 kHz
 static int pend_n, pend_i;           // decoded samples not yet in the fifo
-static uint32_t in_len, in_off;      // current chunk window inside INBUF
 static int pump_budget;              // samples this pump call may still push
+
+// M7e double-buffered ASYNC input: INBUF split in two 6 KB halves. The demux
+// consumes one half while the SD read of the next is in flight — a slow read
+// (FAT chain walk deep into a 700 MB audiobook) no longer stalls decode.
+// f_off advances only when a read is absorbed, so a read stolen by a
+// blocking op (path/art/chapter fetch) is re-issued at the same offset.
+#define HCHUNK (INBUF_SIZE / 2)
+static unsigned char *in_base, *nxt_base;
+static uint32_t in_len, in_off;      // window being demuxed, inside in_base
+static uint32_t nxt_len;             // bytes ready in nxt_base (0 = none)
+static uint32_t io_want;             // in-flight read size (0 = idle)
+
+// Non-blocking: absorb a finished read into the idle half, start the next.
+static void io_pump(void) {
+  if (io_want) {
+    int r = file_read_poll();
+    if (r == FILE_POLL_BUSY) return;
+    if (r == FILE_POLL_DONE) {
+      // word copy: HCHUNK chunks are 4-aligned and so are the halves
+      volatile const uint32_t *srcw = RX_BASE;
+      uint32_t *dstw = (uint32_t *)nxt_base;
+      uint32_t nwords = (io_want + 3u) >> 2;
+      for (uint32_t i = 0; i < nwords; i++) dstw[i] = srcw[i];
+      nxt_len = io_want;
+      f_off += io_want;
+    }
+    io_want = 0;  // done, stolen or error — idle either way (restart below)
+  }
+  if (!nxt_len && f_off < f_size) {
+    uint32_t want = f_size - f_off;
+    if (want > HCHUNK) want = HCHUNK;
+    if (file_read_start(SLOT_AUDIO, f_off, want) == 0) io_want = want;
+  }
+}
+
+// Drain any in-flight read whose data would belong to an abandoned position.
+static void io_reset(void) {
+  while (file_read_busy())
+    if (file_read_poll() != FILE_POLL_BUSY) break;
+  io_want = 0;
+  in_base = (unsigned char *)INBUF;
+  nxt_base = (unsigned char *)INBUF + HCHUNK;
+  in_len = in_off = 0;
+  nxt_len = 0;
+}
 
 // Push pending decoded samples into the fifo. 1 = fifo full, some remain.
 static int flush_pending(void) {
@@ -115,7 +159,7 @@ int opus_start(const char *path, int path_len, uint32_t file_size) {
   samples_pushed = 0;
   skip_samples = 0;
   pend_n = pend_i = 0;
-  in_len = in_off = 0;
+  io_reset();
   eof_decode = 0;
   playing = 1;
   paused = 0;
@@ -130,6 +174,17 @@ uint32_t opus_pos_seconds(void) { return samples_pushed / 48000u; }
 
 int opus_pump(void) {
   if (!playing || paused || eof_decode) return 0;
+
+#ifndef PT_HOST_TEST
+  {  // audible-gap detector: fifo ran empty while we were supposed to play
+    extern uint32_t codec_underrun_count;
+    static int was_empty;
+    if (samples_pushed && pcm_free() >= 4095) {
+      if (!was_empty) { codec_underrun_count++; was_empty = 1; }
+    } else was_empty = 0;
+  }
+#endif
+
   int worked = 0;
   pump_budget = 2880;  // ≤60 ms of audio per call: keep the UI loop live
 
@@ -140,9 +195,10 @@ int opus_pump(void) {
   // re-presented packet look new — it would be decoded (and heard) twice.
 
   for (;;) {
-    if (in_off < in_len) {  // (resume) demux the current chunk
+    io_pump();  // absorb a finished SD read / start the next one
+    if (in_off < in_len) {  // (resume) demux the current half
       uint8_t had_head = ogg.headers_done;
-      int r = ogg_push(&ogg, INBUF + in_off, (int)(in_len - in_off),
+      int r = ogg_push(&ogg, in_base + in_off, (int)(in_len - in_off),
                        emit_packet, 0);
       if (r < 0) { eof_decode = 1; return 1; }
       if (r > 0) worked = 1;
@@ -152,27 +208,22 @@ int opus_pump(void) {
       if (in_off < in_len || ogg.suspended || pump_budget <= 0)
         return worked;  // fifo full or budget spent — resume next call
     }
-    // chunk exhausted: read the next one
-    if (f_off >= f_size) {
+    // current half exhausted: switch to the prefetched one
+    if (nxt_len) {
+      unsigned char *t = in_base;
+      in_base = nxt_base;
+      nxt_base = t;
+      in_len = nxt_len;
+      in_off = 0;
+      nxt_len = 0;
+      worked = 1;
+      continue;
+    }
+    if (f_off >= f_size && !io_want) {  // nothing buffered, nothing coming
       if (!ogg.suspended && pend_i >= pend_n) eof_decode = 1;
       return 1;
     }
-    if (pcm_free() < 1200) return worked;  // let the fifo drain first
-    uint32_t want = f_size - f_off;
-    if (want > RX_SIZE / 2) want = RX_SIZE / 2;  // 8 KB chunks
-    if (file_read(SLOT_AUDIO, f_off, want)) return worked;
-
-    // Word copy out of the RX window: `want` is always a multiple of 4
-    // (RX_SIZE/2 chunks) and both buffers are word-aligned. This loop is hot
-    // (per profile), so 1 op per 4 bytes instead of per byte matters.
-    volatile const uint32_t *srcw = RX_BASE;
-    uint32_t *dstw = (uint32_t *)INBUF;
-    uint32_t nwords = (want + 3u) >> 2;
-    for (uint32_t i = 0; i < nwords; i++) dstw[i] = srcw[i];
-    f_off += want;
-    in_len = want;
-    in_off = 0;
-    worked = 1;
+    return worked;  // SD read still in flight — decode resumes next pump
   }
 }
 
@@ -184,7 +235,7 @@ void opus_seek(uint32_t to_seconds, uint32_t byte_off) {
   samples_pushed = to_seconds * 48000u;
   skip_samples = 0;
   pend_n = pend_i = 0;  // decoded leftovers belong to the old position
-  in_len = in_off = 0;  // so does the chunk window
+  io_reset();           // so do the buffered halves / any in-flight read
   // Resync: Ogg pages are self-framing (OggS capture pattern), so the demuxer
   // finds the next page boundary on its own; the decoder rebuilds its state
   // from the first intra packet. Keep the channel/pre-skip info we already have.

@@ -66,13 +66,53 @@ static short pcm[2 * 1152];      // one decoded MP3 frame (interleaved stereo)
 static uint32_t rs_phase, rs_step;
 static short rs_prev_l, rs_prev_r;
 
-static void in_compact_and_fill(void) {
-  // move remaining bytes to the front
+// ---- input ring refill -----------------------------------------------------
+// M7e: SD reads are ASYNC during playback. A read at a deep offset into a
+// 100+ MB file can take tens of ms on the Pocket (FAT chain walking) while
+// the PCM fifo holds only 85 ms — the old blocking refill was an audible
+// dropout. The ring (12 KB ≈ 300 ms of 320 kbps audio) rides the latency out
+// while the read is in flight. f_off advances ONLY when data is absorbed, so
+// a read stolen by a blocking op (path/art/chapter fetch) is simply
+// re-issued at the same offset.
+static uint32_t io_want;  // bytes requested by the in-flight read (0 = none)
+
+static void in_compact(void) {
   int rem = in_len - (int)(in_ptr - INBUF);
   for (int i = 0; i < rem; i++) INBUF[i] = in_ptr[i];
   in_len = rem;
   in_ptr = INBUF;
-  // top up from the file
+}
+
+// Non-blocking: absorb a finished read, then start the next one early
+// (whenever a chunk's worth of room exists — keep the ring FULL, don't wait
+// until it's nearly empty).
+static void in_refill_async(void) {
+  if (io_want) {
+    int r = file_read_poll();
+    if (r == FILE_POLL_BUSY) return;
+    if (r == FILE_POLL_DONE) {
+      in_compact();
+      volatile const uint8_t *src = RX_BYTES;
+      for (uint32_t i = 0; i < io_want; i++) INBUF[in_len + i] = src[i];
+      in_len += (int)io_want;
+      f_off += io_want;
+    }
+    io_want = 0;  // done, stolen or error: idle either way (retry below)
+  }
+  if (f_off >= f_size) return;
+  in_compact();
+  uint32_t room = (uint32_t)(INBUF_SIZE - in_len);
+  if (room < RX_SIZE / 2) return;
+  uint32_t want = f_size - f_off;
+  if (want > RX_SIZE / 2) want = RX_SIZE / 2;  // 8 KB chunks
+  if (file_read_start(SLOT_AUDIO, f_off, want) == 0) io_want = want;
+}
+
+// Blocking prime for start/seek (user-initiated; not the steady-state path).
+// file_read steals any in-flight async read; the next pump's poll sees
+// STOLEN and re-issues cleanly.
+static void in_compact_and_fill(void) {
+  in_compact();
   while (in_len < INBUF_SIZE - (int)RX_SIZE / 2 && f_off < f_size) {
     uint32_t want = f_size - f_off;
     if (want > RX_SIZE / 2) want = RX_SIZE / 2;  // 8 KB chunks
@@ -191,23 +231,40 @@ static void resample_push(int n, int sr, int nch) {
 int mp3_pump(void) {
   if (!playing || paused || eof_decode) return 0;
 
+#ifndef PT_HOST_TEST
+  {  // audible-gap detector: fifo ran empty while we were supposed to play
+    extern uint32_t codec_underrun_count;
+    static int was_empty;
+    if (samples_pushed && pcm_free() >= 4095) {
+      if (!was_empty) { codec_underrun_count++; was_empty = 1; }
+    } else was_empty = 0;
+  }
+#endif
+
   int worked = 0;
   int frames = 0;
+  in_refill_async();  // absorb a finished SD read / start the next one early
   // keep ~1 frame of headroom: one 44.1k frame → ≤1254 samples at 48k.
   // At most 2 frames per call: after a seek the fifo is empty and an
   // unbounded loop decodes 3-4 frames back to back (~50 ms) — long enough
   // for the main loop to miss a quick button tap.
   while (frames < 2 && pcm_free() >= 1400) {
-    if (in_len - (in_ptr - INBUF) < 2048) {
-      in_compact_and_fill();
-      if (in_len < 4 && f_off >= f_size) { eof_decode = 1; break; }
-    }
     int avail = in_len - (int)(in_ptr - INBUF);
+    if (avail < 2048) {
+      if (f_off >= f_size && !io_want) {
+        if (avail < 4) { eof_decode = 1; break; }
+        // tail of the file: decode what remains
+      } else if (avail < 2048) {
+        // low input, refill in flight: let the fifo carry us, come back
+        break;
+      }
+    }
+    avail = in_len - (int)(in_ptr - INBUF);
     int off = MP3FindSyncWord(in_ptr, avail);
     if (off < 0) {  // no sync in buffer: discard and refill
       in_ptr = INBUF + in_len;
-      if (f_off >= f_size) { eof_decode = 1; break; }
-      continue;
+      if (f_off >= f_size && !io_want) { eof_decode = 1; break; }
+      break;
     }
     in_ptr += off;
     avail -= off;
@@ -215,9 +272,8 @@ int mp3_pump(void) {
     int err = MP3Decode(hdec, &in_ptr, &bytes_left, pcm, 0);
     if (err) {
       if (err == ERR_MP3_INDATA_UNDERFLOW || err == ERR_MP3_MAINDATA_UNDERFLOW) {
-        if (f_off >= f_size) { eof_decode = 1; break; }
-        in_compact_and_fill();
-        continue;
+        if (f_off >= f_size && !io_want) { eof_decode = 1; break; }
+        break;  // needs more input: the async refill will bring it
       }
       in_ptr++;  // bad frame: force progress
       continue;

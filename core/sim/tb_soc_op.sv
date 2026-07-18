@@ -7,7 +7,7 @@
 
 `timescale 1ns / 1ps
 
-module tb_soc;
+module tb_soc_op;
 
   reg clk_sys = 0;
   always #10.417 clk_sys = ~clk_sys;  // 48 MHz
@@ -21,7 +21,7 @@ module tb_soc;
   reg pll_locked = 0;
   reg [15:0] cont1_key = 0;
 
-  localparam LIB_SIZE = 404;
+  localparam LIB_SIZE = 400;
 
   // bridge driven by the APF model
   reg        bridge_wr = 0;
@@ -123,9 +123,9 @@ module tb_soc;
 
   // --------------------------------------------------------- file images
   reg [7:0] lib_img[0:131071];
-  initial $readmemh("library_bytes.hex", lib_img);
+  initial $readmemh("opus_lib.hex", lib_img);
   reg [7:0] audio_img[0:65535];
-  initial $readmemh("audio_bytes.hex", audio_img);
+  initial $readmemh("opus_audio.hex", audio_img);
 
   // ------------------------------------------------------- APF model
   integer w, nwords, base;
@@ -226,7 +226,7 @@ module tb_soc;
 
   // ---------------------------------------------------------- PCM capture
   integer fpcm, pcm_n = 0;
-  initial fpcm = $fopen("pcm_out.txt", "w");
+  initial fpcm = $fopen("pcm_op.txt", "w");
   always @(posedge clk_sys) begin
     if (dut.pcm_tick && dut.pcm_level != 0) begin
       $fwrite(fpcm, "%0d %0d\n", $signed(dut.audio_l), $signed(dut.audio_r));
@@ -333,14 +333,14 @@ module tb_soc;
     // for a 195 KB image), so never anchor on an absolute frame number:
     // count frames from reset release. Boot + parse + first render < 4.
     wait_frames(4);
-    start_capture("out_soc_a.ppm");  // Bibliothèque (4a root list)
+    start_capture("op_a.ppm");  // Bibliothèque (4a root list)
     wait_frames(2);
     press(16'h0010);                 // A → open artist 0 → Albums
-    start_capture("out_soc_b.ppm");
+    start_capture("op_b.ppm");
     wait_frames(2);
     press(16'h0010);                 // A → open album 0 → Titres
     press(16'h0010);                 // A → play track 0 → Lecture
-    start_capture("out_soc_c.ppm");
+    start_capture("op_c.ppm");
     wait_frames(2);
 
     // let it play: capture enough PCM to prove sustained, correct decode
@@ -350,7 +350,7 @@ module tb_soc;
 
     // B: back to the list — the mini-bar must appear at the bottom
     press(16'h0020);
-    start_capture("out_soc_d.ppm");
+    start_capture("op_d.ppm");
     wait_frames(2);
 
     $display("DONE");

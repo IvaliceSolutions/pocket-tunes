@@ -1,21 +1,12 @@
-/* Pocket Tunes firmware entry — M7d: runs from external SRAM (0x50000000)
- * through the instruction cache. Sets the stack in BRAM, copies the hot Opus
- * code (.itcm) from SRAM to the instruction TCM (0x60000000), copies the fast
- * rodata+data image from SRAM to BRAM, zeros .bss, calls main. */
+/* Pocket Tunes firmware entry — M7e: runs from external SRAM (0x50000000)
+ * through the instruction cache. Sets the stack in BRAM, copies the fast
+ * rodata+data image from SRAM to BRAM, zeros .bss, calls main. The instruction
+ * TCM (0x60000000) is NOT filled here — codec_start() copies the active
+ * codec's overlay into it (see itcm_load_* in codec.c). */
 .section .text.init
 .globl _start
 _start:
     la      sp, _stack_top
-    /* copy .itcm: SRAM load image -> instruction TCM (region 6) */
-    la      t0, __itcm_lma
-    la      t1, __itcm_start
-    la      t2, __itcm_end
-1:  bge     t1, t2, 2f
-    lw      t3, 0(t0)
-    sw      t3, 0(t1)
-    addi    t0, t0, 4
-    addi    t1, t1, 4
-    j       1b
 2:  /* copy .rodata + .data: SRAM load image -> BRAM run addresses */
     la      t0, __fast_lma
     la      t1, __fast_start
