@@ -115,8 +115,19 @@ int ogg_push(ogg_t *o, const uint8_t *data, int n,
       case ST_PAYLOAD: {
         int take = n - i;
         if (take > o->seg_remain) take = o->seg_remain;
-        if (o->pkt_len + take > OGG_MAX_PACKET) return -1;
-        for (int k = 0; k < take; k++) o->pkt[o->pkt_len++] = data[i + k];
+        int room = OGG_MAX_PACKET - o->pkt_len;
+        if (take > room) {
+          // Oversized packet. Audio packets are small (a few hundred bytes);
+          // only the header packets run big — audiobooks put cover art and
+          // long metadata in OpusTags (seen: 4831 bytes), and we discard the
+          // header packets anyway. So for headers, cap the buffer but keep
+          // consuming the bytes to stay page-framed; only a genuinely
+          // oversized AUDIO packet is a real (decode-breaking) error.
+          if (o->headers_done) return -1;
+          for (int k = 0; k < room; k++) o->pkt[o->pkt_len++] = data[i + k];
+        } else {
+          for (int k = 0; k < take; k++) o->pkt[o->pkt_len++] = data[i + k];
+        }
         i += take;
         o->seg_remain -= (uint16_t)take;
         if (seg_advance(o, emit, user)) return i;
