@@ -1,127 +1,71 @@
 # Pocket Tunes
 
-A music player for the **Analogue Pocket**, as an openFPGA core.
+Un lecteur de musique pour l'**Analogue Pocket**.
 
-Browse your library iPod-style, play **MP3** and **Opus** files — including
-20-hour audiobooks with **chapter navigation** — with real cover art, a live
-FFT equalizer, and sleep/wake that resumes to the second. Everything runs on a
-soft RISC-V CPU inside the Pocket's FPGA: there is no OS, no Linux, no
-application processor behind the curtain.
+L'idée est simple : transformer la Pocket en petit iPod. On copie sa musique
+sur la carte SD, on lance le core, et on retrouve une interface à l'ancienne —
+listes plein écran, pochettes, égaliseur qui danse — pour écouter ses albums
+ou un livre audio de 20 heures, chapitre par chapitre.
 
-**➡️ [Guide d'utilisation (boutons & écrans)](docs/guide-utilisation.md)** (French)
+Le tout tourne entièrement dans la puce FPGA de la console. Pas de système
+d'exploitation caché derrière : juste du matériel reconfiguré en lecteur de
+musique.
 
-## Features
+**➡️ [Guide d'utilisation (boutons et écrans)](docs/guide-utilisation.md)**
 
-- **iPod Classic-style UI** — full-screen list stack (Library → Albums →
-  Tracks → Now Playing), amber-on-black pixel look, Cozette bitmap font,
-  marquee scrolling for long titles, real-time clock in the status bar.
-- **MP3 playback** (Helix fixed-point decoder) — up to 320 kbps CBR/VBR,
-  44.1/48 kHz, ID3v2-aware (skips tags with embedded cover art cleanly).
-- **Opus playback** (libopus fixed-point) — `.opus` audiobooks and music,
-  streamed and demuxed (Ogg) on the fly.
-- **Audiobooks** — files up to 4 GB / 20 h+, **chapter list read from the
-  file's metadata** (ID3v2 CHAP for MP3, vorbis `CHAPTERxxx` comments for
-  Opus), L/R to jump between chapters, resume-where-you-stopped.
-- **Cover art** — the indexer pre-renders embedded/sidecar art to raw RGB565;
-  the core shows a 96×96 cover on Now Playing and a thumbnail in the mini-bar.
-- **Live equalizer** — 256-point FFT over the decoded PCM, 18 log-spaced bands.
-- **Sleep/wake** — the Pocket's power button saves the whole player state
-  (track, position, screen, modes) and restores it on wake. Save states
-  (Analogue + Up) and OS screenshots (Analogue + Start) work too.
-- **Shuffle & repeat**, seek, auto-advance, per-track resume.
+## Ce que ça fait
 
-## Using it
+- Lit les **MP3** et les **Opus**, y compris les gros fichiers (un livre audio
+  de 20 h et 780 Mo, ça passe).
+- **Navigation par chapitres** dans les livres audio, avec les gâchettes L et R.
+- Affiche les **pochettes** de tes albums.
+- **Égaliseur animé** qui suit la musique.
+- **Mode veille** : on éteint, on rallume, la lecture reprend exactement où
+  elle en était — à la seconde près.
+- Aléatoire, répétition, avance/retour rapide, reprise de piste… tout ce qu'on
+  attend d'un lecteur.
+- Les captures d'écran de la Pocket fonctionnent aussi (ANALOGUE + START).
 
-### 1. Install the core
+## Installation
 
-Copy onto the Pocket SD card (from a [CI build artifact](../../actions) or
-your own build — see below):
+1. **Le core** : copier le dossier `Cores/jh.Tunes` et `Platforms/pockettunes.json`
+   sur la carte SD (récupérés depuis un build de ce dépôt).
+2. **La musique** : la déposer dans `/Assets/pockettunes/common/Music/` sur la
+   carte. Ranger par dossiers `Artiste/Album/` si on veut, mais un fichier posé
+   en vrac marche aussi.
+3. **L'indexeur** : la Pocket ne sait pas lister les dossiers toute seule, donc
+   un petit outil (à lancer sur un ordinateur, avec Node.js) prépare le
+   catalogue et les pochettes :
 
-```
-/Cores/jh.Tunes/                 ← core (bitstream.rbf_r + json)
-/Platforms/pockettunes.json
-```
+   ```
+   node indexer/src/index.js \
+     -m "/Volumes/CARTE/Assets/pockettunes/common/Music" \
+     -o "/Volumes/CARTE/Assets/pockettunes/common" \
+     -r /Assets/pockettunes/common/Music
+   ```
 
-`core/scripts/deploy_sd.sh <artifact-dir> <sd-mount>` does this for you.
+   À relancer chaque fois qu'on ajoute ou retire de la musique. Il s'occupe de
+   tout, y compris renommer les fichiers accentués que la Pocket ne sait pas
+   ouvrir (les titres affichés gardent leurs accents, rassurez-vous).
 
-### 2. Index your music
+4. Éjecter la carte, la remettre dans la Pocket, lancer **Tunes** dans le menu
+   openFPGA. C'est tout.
 
-The Pocket's openFPGA framework has **no directory listing at runtime**, so a
-small cross-platform indexer (Node.js, runs on macOS/Windows/Linux) scans your
-music folder and writes `library.json` + pre-rendered covers:
+## Pour les curieux et les développeurs
 
-```
-node indexer/src/index.js \
-  -m "/Volumes/POCKET/Assets/pockettunes/common/Music" \
-  -o "/Volumes/POCKET/Assets/pockettunes/common" \
-  -r /Assets/pockettunes/common/Music
-```
+Sous le capot, un petit processeur RISC-V créé dans le FPGA fait tout le
+travail : l'interface, et surtout le décodage audio en temps réel — ce qui a
+demandé quelques acrobaties racontées dans [`docs/architecture.md`](docs/architecture.md)
+(en anglais). Les instructions de compilation (firmware et bitstream) sont
+dans [`core/README.md`](core/README.md).
 
-Folder layout is free-form: `Artist/Album/tracks`, loose tracks directly in an
-artist folder, or files dropped at the root of `Music/` — the UI shows each at
-its natural depth. Re-run the indexer whenever the music changes.
+Au programme des prochaines versions, si l'envie et le temps s'y prêtent :
+lecture WAV/FLAC, pochettes dans les listes, et un portage MiSTer.
 
-> The indexer also transliterates accented filenames to ASCII **on disk**
-> (the Pocket's file-open API cannot match non-ASCII names); display titles
-> keep their accents.
+## Crédits et licences
 
-### 3. Play
-
-Launch **Tunes** from the Pocket's openFPGA menu. Controls are on one page in
-the [user guide](docs/guide-utilisation.md); the short version: D-pad + A/B
-navigate, Y is play/pause everywhere, X jumps back to Now Playing, L/R change
-chapters, START/SELECT toggle shuffle/repeat.
-
-## How it works
-
-The Pocket gives an openFPGA core a Cyclone V FPGA and a file-access bridge —
-nothing else. So ([`docs/architecture.md`](docs/architecture.md)):
-
-- A **soft VexRiscv** (rv32im, 72 MHz) runs *everything*: UI, JSON parsing,
-  Ogg demux, and the audio decoders themselves. The gateware provides video
-  scanout, an I2S output, the APF bridge, and memories.
-- **Code overlays**: firmware code lives in the cartridge-slot SRAM behind a
-  4 KB I-cache; the *hot decode kernels of the active codec* are copied into a
-  16 KB single-cycle **instruction TCM** at track start (profile-measured
-  function set — this is what makes 320 kbps MP3 and Opus decode real-time).
-- **Async SD streaming**: reads are fired asynchronously and absorbed between
-  decoded frames; deep-offset reads into a 700 MB audiobook can take ~50 ms
-  and never interrupt the audio.
-- The **indexer ↔ core contract** is a single `library.json`
-  ([format](docs/library-format.md)) plus raw RGB565 cover files named by
-  track order — the core never parses tags, images, or directories.
-
-## Building
-
-**Firmware** (RISC-V): needs `riscv64-elf-gcc` (Homebrew: `riscv64-elf-gcc` +
-`riscv64-elf-binutils`).
-
-```
-cd firmware && ./build.sh        # → firmware.bin (+ hex for simulation)
-```
-
-**Bitstream**: Quartus 21.1 — built by the GitHub Actions workflow
-(`build-core.yml`, manual dispatch), which packages a ready-to-copy SD tree as
-an artifact.
-
-**Tests**: host-native decoder tests compare the real firmware code paths
-byte-for-byte against ffmpeg (`firmware/test/run.sh`, `run_opus.sh`,
-`run_lib.sh`), and a full-SoC iverilog simulation boots the actual bitstream
-RTL + firmware and screenshots the UI (`core/sim/`, see `core/README.md`).
-
-## Status & roadmap
-
-Validated on a real Analogue Pocket (OS 2.6). Planned / not yet done:
-
-- WAV/FLAC playback (enum reserved, no decoder yet)
-- List-row cover thumbnails (needs external RAM for the framebuffer)
-- MiSTer port (decode on the HPS, same indexer + UI)
-
-## Credits & licenses
-
-- [Helix MP3 decoder](https://en.wikipedia.org/wiki/Helix_Universal_Server)
-  — RealNetworks RPSL/RCSL (see `firmware/helix/LICENSE.txt`).
-- [libopus](https://opus-codec.org) 1.5.2 — BSD-3.
-- [Cozette](https://github.com/the-moonwitch/Cozette) bitmap font — MIT.
-- Core scaffold derived from Analogue's openFPGA template.
-- UI design: `design_handoff_pocket_tunes_4a` (iPod Classic direction).
+- Décodeur MP3 [Helix](https://en.wikipedia.org/wiki/Helix_Universal_Server) —
+  licence RealNetworks RPSL/RCSL (`firmware/helix/LICENSE.txt`)
+- [libopus](https://opus-codec.org) 1.5.2 — licence BSD-3
+- Police [Cozette](https://github.com/the-moonwitch/Cozette) — licence MIT
+- Base du core issue du template openFPGA d'Analogue
