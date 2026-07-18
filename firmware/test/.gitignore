@@ -1,3 +1,9 @@
 host_mp3_test
+host_opus_test
 host_pcm.raw
 host_pcm.log
+out_opus.raw
+ref_opus.raw
+test_tone.opus
+reference_48k.raw
+ref_tone.raw

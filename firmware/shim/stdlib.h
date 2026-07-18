@@ -1,9 +1,10 @@
 #ifndef SHIM_STDLIB_H
 #define SHIM_STDLIB_H
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-typedef unsigned long size_t;
-void *malloc(unsigned long);
-void free(void*);
+#include <stddef.h>
+void *malloc(size_t);
+void *realloc(void *, size_t);
+void free(void *);
+void abort(void);
+int abs(int);
+long labs(long);
 #endif

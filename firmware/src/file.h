@@ -22,6 +22,28 @@ extern uint8_t rx_ram[];
 // RAM. Returns 0 on success, else the APF error code (1..7).
 int file_read(uint16_t id, uint32_t off, uint32_t len);
 
+// ---- async read (M7e): SD reads on real hardware can take tens of ms (FAT
+// chain walks deep into multi-hundred-MB files) while the PCM fifo only holds
+// 85 ms — a blocking read mid-playback is an audible dropout. The codecs
+// start a read, keep decoding from their buffered input, and poll.
+//
+// Contract: only ONE async read at a time, and any BLOCKING file op (path /
+// art / chapter fetches) may STEAL the engine: it completes the in-flight
+// read, discards the data, runs, and file_read_poll then reports
+// FILE_POLL_STOLEN. The codec must only advance its file offset when poll
+// says done — a stolen read is simply re-issued at the same offset, so no
+// byte is ever lost.
+#define FILE_POLL_BUSY 0
+#define FILE_POLL_DONE 1
+#define FILE_POLL_STOLEN (-100)
+int file_read_start(uint16_t id, uint32_t off, uint32_t len);  // 0 = started
+int file_read_poll(void);  // DONE / BUSY / STOLEN / <0 = APF error (idle)
+int file_read_busy(void);  // 1 while a started read is in flight
+
+// I/O latency instrumentation (cycles via REG_CYCLES): worst and last
+// complete-read duration since boot, and total reads. For the debug HUD.
+void file_io_stats(uint32_t *max_cycles, uint32_t *last_cycles, uint32_t *count);
+
 // Open the file at `path` (absolute on the SD card) into slot `id`.
 // Subsequent file_read(id, ...) stream from it. Returns 0 on success.
 int file_open(uint16_t id, const char *path, int path_len);

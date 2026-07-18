@@ -10,5 +10,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "sound_i2s.sv"]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "core_bridge_cmd.v"]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "ss_ctrl.v"]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "sram_ctrl.v"]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "itcm.v"]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "pt_pll.v"]
 set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) "core_constraints.sdc"]

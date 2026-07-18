@@ -1,23 +1,33 @@
-// Real cover art for the playing track (drawer + mini-bar).
+// Real cover art for the playing track (Lecture + mini-bar).
 //
-// The indexer writes covers/t{gidx:05}.rgb565 (48x48, RGB565 LE) named by the
-// track's enumeration order in library.json — the same order the firmware
+// The indexer writes covers/t{gidx:05}.rgb565 (RGB565 LE, no header) named by
+// the track's enumeration order in library.json — the same order the firmware
 // parses — so the path is derived from the global track index and nothing has
-// to be stored per track. List thumbnails stay hue placeholders for now (a
-// per-row cache doesn't fit the 128 KB RAM).
+// to be stored per track. Since v2 the file is 96x96 (18432 B); older 48x48
+// (4608 B) files are detected by size and pixel-doubled, so a card indexed
+// with the previous indexer still shows its covers.
+//
+// Memory: no full-size cache — 96x96 would cost 9 KB of the tight BRAM. The
+// Lecture blit streams the file through the RX window on each full render
+// (a keypress-rate event); only a 24x24 thumbnail for the mini-bar is cached.
 #ifndef ART_H
 #define ART_H
 
-#define ART_SIZE 48  // cover pixels (square)
+#define ART_BIG 96   // Lecture cover, drawn pixels
+#define ART_MINI 24  // mini-bar thumbnail (cached)
 
-// Fetch the cover of track `gidx` into the cache via the Art data slot.
-// Returns 1 if a cover is now cached, 0 if not (missing file → placeholder).
+// Open the cover of track `gidx` and cache the mini thumbnail.
+// Returns 1 if a cover is available, 0 if not (missing file → placeholder).
 int art_load(int gidx);
 
-// 1 when the cache holds the cover of the last art_load'ed track.
+// 1 when art_load found a cover for the current track.
 int art_ready(void);
 
-// Blit the cached cover at (x, y): shift=0 → 48x48, shift=1 → 24x24.
-void art_draw(int x, int y, int shift);
+// Stream-blit the cover at 96x96 (Lecture). Reads the file via the RX window;
+// call only from full renders, never per frame.
+void art_draw_big(int x, int y);
+
+// Blit the cached 24x24 thumbnail (mini-bar) — cheap, fine per frame.
+void art_draw_mini(int x, int y);
 
 #endif

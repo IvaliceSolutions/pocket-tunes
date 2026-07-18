@@ -3,7 +3,7 @@
 // The firmware streams library.json through 0x0180 target-read commands; this
 // TB implements the APF side: it watches the target wires, serves file bytes
 // as bridge word-writes to the requested bridge address, and answers the
-// datatable. Captures the same three UI screens as M3b.
+// datatable. Captures the 4a screens (Bibliotheque/Albums/Lecture) as PPM.
 
 `timescale 1ns / 1ps
 
@@ -17,9 +17,11 @@ module tb_soc;
   always #6.734 clk_74a = ~clk_74a;  // 74.25 MHz
 
   reg reset_n = 0;
+  reg cpu_run = 0;   // APF releases the CPU only once the Firmware slot landed
+  reg pll_locked = 0;
   reg [15:0] cont1_key = 0;
 
-  localparam LIB_SIZE = 390;
+  localparam LIB_SIZE = 404;
 
   // bridge driven by the APF model
   reg        bridge_wr = 0;
@@ -36,7 +38,7 @@ module tb_soc;
   wire [31:0] param_rd_data;
 
   wire [9:0] dt_addr;
-  localparam AUDIO_SIZE = 33062;
+  localparam AUDIO_SIZE = 65536;
   wire [31:0] dt_q = (dt_addr == 10'd1) ? LIB_SIZE
                    : (dt_addr == 10'd2) ? 32'd1        // slot id 1 (audio)
                    : (dt_addr == 10'd3) ? AUDIO_SIZE
@@ -45,16 +47,36 @@ module tb_soc;
   wire de, hs, vs;
   wire [23:0] rgb;
 
+  // M7a: firmware code lives in the external SRAM. The model starts EMPTY on
+  // purpose — the image must arrive the way the real APF delivers it: bridge
+  // writes to 0x5xxx_xxxx WHILE the core is still held in reset. Preloading it
+  // here (and forcing cpu_run) is what let a reset-gated sram_ctrl pass sim and
+  // black-screen on hardware.
+  wire [16:0] sram_a;
+  wire [15:0] sram_dq;
+  wire sram_oe_n, sram_we_n, sram_ub_n, sram_lb_n;
+  sram_model #(
+      .PRELOAD("")
+  ) sram (
+      .a(sram_a), .dq(sram_dq),
+      .oe_n(sram_oe_n), .we_n(sram_we_n), .ub_n(sram_ub_n), .lb_n(sram_lb_n)
+  );
+
   pt_soc #(
-      .FIRMWARE_B0 ("../projects/firmware_b0.hex"),
-      .FIRMWARE_B1 ("../projects/firmware_b1.hex"),
-      .FIRMWARE_B2 ("../projects/firmware_b2.hex"),
-      .FIRMWARE_B3 ("../projects/firmware_b3.hex"),
       .PALETTE_FILE("../projects/palette.hex")
   ) dut (
       .clk_sys(clk_sys),
       .clk_vid(clk_vid),
       .reset_n(reset_n),
+      .pll_locked(pll_locked),
+
+      .sram_a   (sram_a),
+      .sram_dq  (sram_dq),
+      .sram_oe_n(sram_oe_n),
+      .sram_we_n(sram_we_n),
+      .sram_ub_n(sram_ub_n),
+      .sram_lb_n(sram_lb_n),
+      .cpu_run  (cpu_run),
 
       .clk_74a             (clk_74a),
       .bridge_wr           (bridge_wr),
@@ -82,6 +104,13 @@ module tb_soc;
 
       .cont1_key(cont1_key),
       .rtc_time_bcd(32'h00123456),  // 12:34:56 BCD for the clock readout
+      // Sleep handshake idle. Left unconnected these float 'x' into
+      // REG_SS_STATUS and the CPU branches on x — a phantom savestate
+      // restore with garbage words that starts playback all by itself.
+      .ss_save_req(1'b0),
+      .ss_load_req(1'b0),
+      .ss_save_done(),
+      .ss_load_done(),
 
       .audio_l(),
       .audio_r(),
@@ -263,14 +292,54 @@ module tb_soc;
     end
   endtask
 
+  // Push the firmware image into SRAM through the bridge, exactly like the
+  // APF Firmware data slot does: one 32-bit bridge word carries TWO
+  // halfwords (bytes in file order), address advances by 4, while in reset.
+  // data_loader on the endian-big path byte-swaps the word then emits
+  // [15:0] at addr and [31:16] at addr+2, so the word is sent byte-swapped.
+  // (The old one-halfword-per-word model left every address holding the
+  // 0x0000 filler of the next write — an SRAM full of zeros and a CPU
+  // executing garbage. All-'x' framebuffer captures are the symptom.)
+  reg [15:0] fw_img[0:131071];
+  reg [15:0] fw_v0, fw_v1;
+  integer fw_words, fi;
+  task load_firmware_via_bridge;
+    begin
+      $readmemh("../projects/firmware_sram.hex", fw_img);
+      fw_words = 0;
+      while (fw_words < 131072 && fw_img[fw_words] !== 16'hxxxx) fw_words = fw_words + 1;
+      $display("APF model: pushing %0d firmware halfwords to 0x5000_0000 (in reset)", fw_words);
+      for (fi = 0; fi < fw_words; fi = fi + 2) begin
+        fw_v0 = fw_img[fi];
+        fw_v1 = (fi + 1 < fw_words) ? fw_img[fi+1] : 16'd0;
+        do_bridge_write(32'h5000_0000 + fi * 2,
+                        {fw_v0[7:0], fw_v0[15:8], fw_v1[7:0], fw_v1[15:8]});
+      end
+      $display("APF model: firmware load done at t=%0t", $time);
+    end
+  endtask
+
   initial begin
     repeat (20) @(posedge clk_sys);
-    reset_n = 1;
+    pll_locked = 1;               // clock stable: the memory subsystem is alive
+    repeat (10) @(posedge clk_sys);
+    load_firmware_via_bridge;     // ... all of this happens while reset_n = 0
+    repeat (20) @(posedge clk_sys);
+    reset_n = 1;                  // "Reset Exit"
+    cpu_run = 1;                  // slots complete → CPU released
+    $display("APF model: reset released, CPU running");
 
-    // tiny library parses in ~2 frames
-    wait (frame_no == 6);
-    press(16'h0010);  // A → select artist 0, focus main
-    press(16'h0010);  // A → open drawer → mp3_start on track 0
+    // The firmware load itself spans frames (~1 µs per halfword ≈ 6 frames
+    // for a 195 KB image), so never anchor on an absolute frame number:
+    // count frames from reset release. Boot + parse + first render < 4.
+    wait_frames(4);
+    start_capture("out_soc_a.ppm");  // Bibliothèque (4a root list)
+    wait_frames(2);
+    press(16'h0010);                 // A → open artist 0 → Albums
+    start_capture("out_soc_b.ppm");
+    wait_frames(2);
+    press(16'h0010);                 // A → open album 0 → Titres
+    press(16'h0010);                 // A → play track 0 → Lecture
     start_capture("out_soc_c.ppm");
     wait_frames(2);
 
@@ -278,6 +347,11 @@ module tb_soc;
     wait (pcm_n >= 512);
     $display("PCM captured: %0d samples", pcm_n);
     $fclose(fpcm);
+
+    // B: back to the list — the mini-bar must appear at the bottom
+    press(16'h0020);
+    start_capture("out_soc_d.ppm");
+    wait_frames(2);
 
     $display("DONE");
     $finish;

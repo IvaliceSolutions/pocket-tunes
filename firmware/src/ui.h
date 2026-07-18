@@ -1,4 +1,6 @@
-// Browser UI state machine + renderer (design handoff 1b).
+// iPod Classic-style UI (design handoff 4a): state machine + renderer.
+// Screen stack Bibliothèque → Albums → Titres → Lecture; playback is
+// independent of the browse cursors. See ui.c's header for the button map.
 #ifndef UI_H
 #define UI_H
 

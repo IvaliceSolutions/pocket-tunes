@@ -9,9 +9,16 @@ import { scanLibrary } from "./scan.js";
 import { readMetadata } from "./metadata.js";
 import { findSidecar, writeThumbnails } from "./covers.js";
 import { hueForAlbum } from "./hue.js";
+import { readChapters } from "./chapters.js";
 
-const SCHEMA_VERSION = 1;
-const VERSION = "0.1.0";
+// v2 (design 4a): loose tracks keep their real depth — top-level "rootTracks"
+// (files directly in the music root) and per-artist "rootTracks" (files
+// directly in an artist folder), instead of synthetic "(unknown)"/"(singles)"
+// buckets. "chapters" is only emitted when non-empty. KEY ORDER MATTERS: the
+// firmware numbers tracks in file order (albums before rootTracks, artists
+// before the top-level rootTracks) and cover files are named after that order.
+const SCHEMA_VERSION = 2;
+const VERSION = "0.2.0";
 
 function parseArgs(argv) {
   const args = { music: null, out: null, sdRoot: "/Music", quiet: false };
@@ -144,79 +151,103 @@ async function main() {
   let coverHits = 0;
   let coverSeq = 0; // global id for per-track cover thumbnails
 
-  for (let ai = 0; ai < scanned.length; ai++) {
-    const sArtist = scanned[ai];
+  /** Read one audio file → raw track record (null if unreadable). */
+  async function readTrack(file) {
+    let md;
+    try {
+      md = await readMetadata(file);
+    } catch (e) {
+      log(args.quiet, `  ! skip ${path.basename(file)} (${e.message})`);
+      return null;
+    }
+    // ID3 chapters (audiobooks) — start seconds + titles, for L/R nav
+    const chapters = (await readChapters(file)).map((c) => ({
+      s: Math.round(c.startMs / 1000),
+      t: c.title,
+    }));
+
+    // Per-track cover from this file's own embedded art.
+    let tCover = null, tCoverSmall = null;
+    if (md.picture) {
+      const tstem = `x${String(coverSeq++).padStart(5, "0")}`;  // temp; renamed to t{gidx} in the final pass
+      if (await writeThumbnails(md.picture, coversDir, tstem)) {
+        tCover = `covers/${tstem}.rgb565`;
+        tCoverSmall = `covers/${tstem}.s.rgb565`;
+        coverHits++;
+      }
+    }
+
+    return {
+      _diskNo: md.diskNo ?? 0,
+      _trackNo: md.trackNo ?? 9999,
+      _file: file,
+      _year: md.year,
+      _genre: md.genre,
+      title: md.title || path.basename(file, path.extname(file)),
+      durationMs: md.durationMs,
+      format: md.format,
+      codec: md.codec,
+      bitrateKbps: md.bitrateKbps,
+      sampleRate: md.sampleRate,
+      channels: md.channels,
+      coverArt: tCover,
+      coverArtSmall: tCoverSmall,
+      chapters,
+      path: sdJoin(args.sdRoot, path.relative(musicRoot, file)),
+    };
+  }
+
+  /** Sort into play order, stat sizes, strip the working fields. */
+  async function finishTracks(tracks) {
+    // Play order: disc, then track number, then filename.
+    tracks.sort(
+      (a, b) =>
+        a._diskNo - b._diskNo ||
+        a._trackNo - b._trackNo ||
+        a._file.localeCompare(b._file, undefined, { numeric: true })
+    );
+    const sizes = await Promise.all(
+      tracks.map((t) => fs.stat(t._file).then((s) => s.size).catch(() => null))
+    );
+    return tracks.map((t, i) => ({
+      index: i,
+      title: t.title,
+      durationMs: t.durationMs,
+      format: t.format,
+      codec: t.codec,
+      bitrateKbps: t.bitrateKbps,
+      sampleRate: t.sampleRate,
+      channels: t.channels,
+      fileSize: sizes[i],
+      coverArt: t.coverArt,
+      coverArtSmall: t.coverArtSmall,
+      ...(t.chapters.length ? { chapters: t.chapters } : {}),
+      path: t.path,
+    }));
+  }
+
+  /** readTrack over a file list, dropping unreadable ones. */
+  async function readTracks(files) {
+    const out = [];
+    for (const f of files) {
+      const t = await readTrack(f);
+      if (t) out.push(t);
+    }
+    return out;
+  }
+
+  let rootTrackTotal = 0;
+
+  for (let ai = 0; ai < scanned.artists.length; ai++) {
+    const sArtist = scanned.artists[ai];
     const albums = [];
 
     for (const sAlbum of sArtist.albums) {
-      const tracks = [];
-      let year = null;
-      let genre = null;
-
-      for (const file of sAlbum.files) {
-        let md;
-        try {
-          md = await readMetadata(file);
-        } catch (e) {
-          log(args.quiet, `  ! skip ${path.basename(file)} (${e.message})`);
-          continue;
-        }
-        if (year == null && md.year != null) year = md.year;
-        if (genre == null && md.genre != null) genre = md.genre;
-
-        // Per-track cover from this file's own embedded art.
-        let tCover = null, tCoverSmall = null;
-        if (md.picture) {
-          const tstem = `x${String(coverSeq++).padStart(5, "0")}`;  // temp; renamed to t{gidx} in the final pass
-          if (await writeThumbnails(md.picture, coversDir, tstem)) {
-            tCover = `covers/${tstem}.rgb565`;
-            tCoverSmall = `covers/${tstem}.s.rgb565`;
-            coverHits++;
-          }
-        }
-
-        tracks.push({
-          _diskNo: md.diskNo ?? 0,
-          _trackNo: md.trackNo ?? 9999,
-          _file: file,
-          title: md.title || path.basename(file, path.extname(file)),
-          durationMs: md.durationMs,
-          format: md.format,
-          codec: md.codec,
-          bitrateKbps: md.bitrateKbps,
-          sampleRate: md.sampleRate,
-          channels: md.channels,
-          coverArt: tCover,
-          coverArtSmall: tCoverSmall,
-          path: sdJoin(args.sdRoot, path.relative(musicRoot, file)),
-        });
-      }
-
+      const tracks = await readTracks(sAlbum.files);
       if (!tracks.length) continue;
-
-      // Play order: disc, then track number, then filename.
-      tracks.sort(
-        (a, b) =>
-          a._diskNo - b._diskNo ||
-          a._trackNo - b._trackNo ||
-          a._file.localeCompare(b._file, undefined, { numeric: true })
-      );
-      let fileSizePromises = tracks.map((t) => fs.stat(t._file).then((s) => s.size).catch(() => null));
-      const sizes = await Promise.all(fileSizePromises);
-      const outTracks = tracks.map((t, i) => ({
-        index: i,
-        title: t.title,
-        durationMs: t.durationMs,
-        format: t.format,
-        codec: t.codec,
-        bitrateKbps: t.bitrateKbps,
-        sampleRate: t.sampleRate,
-        channels: t.channels,
-        fileSize: sizes[i],
-        coverArt: t.coverArt,
-        coverArtSmall: t.coverArtSmall,
-        path: t.path,
-      }));
+      const year = tracks.find((t) => t._year != null)?._year ?? null;
+      const genre = tracks.find((t) => t._genre != null)?._genre ?? null;
+      const outTracks = await finishTracks(tracks);
 
       // Album cover: a sidecar image in the folder wins; otherwise reuse the
       // first track's cover as the representative thumbnail (no re-render).
@@ -248,11 +279,34 @@ async function main() {
 
     // Albums: by year then title.
     albums.sort((a, b) => (a.year ?? 99999) - (b.year ?? 99999) || a.title.localeCompare(b.title));
-    if (albums.length) artists.push({ id: ai, name: sArtist.name, albums });
+
+    // Loose tracks directly in the artist folder (design 4a: appended after
+    // the albums on the artist's screen).
+    const artistRootTracks = await finishTracks(await readTracks(sArtist.rootTracks));
+    rootTrackTotal += artistRootTracks.length;
+    trackTotal += artistRootTracks.length;
+    if (artistRootTracks.length)
+      log(args.quiet, `  ${sArtist.name} — ${artistRootTracks.length} loose track(s)`);
+
+    if (albums.length || artistRootTracks.length)
+      artists.push({
+        id: ai,
+        name: sArtist.name,
+        albums,
+        ...(artistRootTracks.length ? { rootTracks: artistRootTracks } : {}),
+      });
   }
 
   // Re-number artist ids to their final array position.
   artists.forEach((a, i) => (a.id = i));
+
+  // Loose tracks directly in the music root (rows mixed into the top-level
+  // Bibliothèque list). Emitted AFTER "artists" — the firmware numbers tracks
+  // in file order and the cover rename pass below relies on it.
+  const rootTracks = await finishTracks(await readTracks(scanned.rootTracks));
+  rootTrackTotal += rootTracks.length;
+  trackTotal += rootTracks.length;
+  if (rootTracks.length) log(args.quiet, `  <root> — ${rootTracks.length} loose track(s)`);
 
   // Rename cover files to their FINAL enumeration order: t{gidx:05} for tracks
   // and a{aidx:04} for album sidecars, where gidx/aidx count tracks/albums in
@@ -270,18 +324,21 @@ async function main() {
         return false;
       }
     };
+    const renTrack = async (t) => {
+      if (t.coverArt) {
+        const stem = `covers/t${String(gidx).padStart(5, "0")}`;
+        await ren(t.coverArt, `${stem}.rgb565`);
+        await ren(t.coverArtSmall, `${stem}.s.rgb565`);
+        t.coverArt = `${stem}.rgb565`;
+        t.coverArtSmall = `${stem}.s.rgb565`;
+      }
+      gidx++;
+    };
+    // Same order the firmware numbers tracks in: each artist's albums then
+    // its rootTracks, then the library-root rootTracks last.
     for (const a of artists) {
       for (const al of a.albums) {
-        for (const t of al.tracks) {
-          if (t.coverArt) {
-            const stem = `covers/t${String(gidx).padStart(5, "0")}`;
-            await ren(t.coverArt, `${stem}.rgb565`);
-            await ren(t.coverArtSmall, `${stem}.s.rgb565`);
-            t.coverArt = `${stem}.rgb565`;
-            t.coverArtSmall = `${stem}.s.rgb565`;
-          }
-          gidx++;
-        }
+        for (const t of al.tracks) await renTrack(t);
         if (al.coverArt && al.coverArt.startsWith("covers/y")) {
           const stem = `covers/a${String(aidx).padStart(4, "0")}`;
           await ren(al.coverArt, `${stem}.rgb565`);
@@ -295,7 +352,9 @@ async function main() {
         }
         aidx++;
       }
+      for (const t of a.rootTracks ?? []) await renTrack(t);
     }
+    for (const t of rootTracks) await renTrack(t);
     log(args.quiet, `Covers renamed to enumeration order (${renames} file renames)`);
   }
 
@@ -308,14 +367,24 @@ async function main() {
     schemaVersion: SCHEMA_VERSION,
     generator: `pocket-tunes-indexer ${VERSION}`,
     root: args.sdRoot,
-    counts: { artists: artists.length, albums: albumId, tracks: trackTotal, trackCovers: coverHits },
+    counts: {
+      artists: artists.length,
+      albums: albumId,
+      tracks: trackTotal,
+      rootTracks: rootTrackTotal,
+      trackCovers: coverHits,
+    },
     artists,
+    // Keep last: the firmware numbers tracks in file order (covers depend on it).
+    ...(rootTracks.length ? { rootTracks } : {}),
   };
 
   const jsonPath = path.join(outDir, "library.json");
   await fs.writeFile(jsonPath, JSON.stringify(library, null, 2));
   log(args.quiet, `\nWrote ${jsonPath}`);
-  log(args.quiet, `  ${artists.length} artists, ${albumId} albums, ${trackTotal} tracks, ${coverHits} track covers`);
+  log(args.quiet,
+    `  ${artists.length} artists, ${albumId} albums, ${trackTotal} tracks` +
+    ` (${rootTrackTotal} loose), ${coverHits} track covers`);
 }
 
 main().catch((e) => {

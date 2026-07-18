@@ -268,12 +268,7 @@ module core_top (
   assign dram_cas_n              = 'h1;
   assign dram_we_n               = 'h1;
 
-  assign sram_a                  = 'h0;
-  assign sram_dq                 = {16{1'bZ}};
-  assign sram_oe_n               = 1;
-  assign sram_we_n               = 1;
-  assign sram_ub_n               = 1;
-  assign sram_lb_n               = 1;
+  // sram pins driven by pt_soc's sram_ctrl (M7a: firmware code in SRAM)
 
   assign dbg_tx                  = 1'bZ;
   assign user1                   = 1'bZ;
@@ -479,6 +474,7 @@ module core_top (
   wire               soc_audio_stb;
 
   pt_soc soc (
+      .pll_locked(pll_core_locked),
       .clk_sys(clk_sys_48),
       .clk_vid(clk_vid_12),
       .reset_n(reset_n),
@@ -510,6 +506,14 @@ module core_top (
       .cont1_key(cont1_key),
 
       .rtc_time_bcd(rtc_time),
+
+      .sram_a   (sram_a),
+      .sram_dq  (sram_dq),
+      .sram_oe_n(sram_oe_n),
+      .sram_we_n(sram_we_n),
+      .sram_ub_n(sram_ub_n),
+      .sram_lb_n(sram_lb_n),
+      .cpu_run  (dataslot_allcomplete),
 
       .ss_save_req (ss_save_req),
       .ss_load_req (ss_load_req),
