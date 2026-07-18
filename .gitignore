@@ -30,3 +30,7 @@ firmware/test/host_lib_test
 firmware/test/host_pcm.raw
 firmware/test/fixture-v2/
 firmware/test/fixture-out/
+
+# indexer: runtime Node portable téléchargé + config utilisateur
+indexer/runtime/
+indexer/indexer.config.json

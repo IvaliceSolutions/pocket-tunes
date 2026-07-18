@@ -32,6 +32,16 @@ node src/index.js -m "/Volumes/POCKET/Assets/pockettunes/common/Music" -o "/Volu
 
 Re-run whenever the library changes ("library refresh").
 
+## Lancement sans installation (recommandé)
+
+Copiez le dossier `indexer/` sur la carte SD et double-cliquez le lanceur de
+votre système : `Indexer macOS.command`, `Indexer Windows.bat` ou
+`indexer-linux.sh`. Le lanceur utilise Node s'il est présent, sinon il
+télécharge une version portable dans `indexer/runtime/` (rien n'est installé
+sur la machine), et les chemins sont détectés automatiquement depuis la carte.
+Hors carte, un `indexer.config.json` est créé au premier lancement pour y
+renseigner ses chemins. Tout le code reste en clair et modifiable (`src/`).
+
 ## What it reads
 
 - Tree from folder structure: `Artist/Album/track`. Nested album subfolders (CD1/CD2)

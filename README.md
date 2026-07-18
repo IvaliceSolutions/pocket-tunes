@@ -34,19 +34,19 @@ musique.
    carte. Ranger par dossiers `Artiste/Album/` si on veut, mais un fichier posé
    en vrac marche aussi.
 3. **L'indexeur** : la Pocket ne sait pas lister les dossiers toute seule, donc
-   un petit outil (à lancer sur un ordinateur, avec Node.js) prépare le
-   catalogue et les pochettes :
-
-   ```
-   node indexer/src/index.js \
-     -m "/Volumes/CARTE/Assets/pockettunes/common/Music" \
-     -o "/Volumes/CARTE/Assets/pockettunes/common" \
-     -r /Assets/pockettunes/common/Music
-   ```
+   un petit outil prépare le catalogue et les pochettes. Le plus simple :
+   copier le dossier `indexer/` sur la carte SD, puis **double-cliquer** le
+   lanceur de son système — `Indexer macOS.command`, `Indexer Windows.bat`,
+   ou `indexer-linux.sh`. Aucune installation : s'il manque quelque chose, le
+   lanceur le télécharge tout seul dans son propre dossier, et les chemins
+   sont détectés automatiquement puisque l'indexeur est sur la carte.
 
    À relancer chaque fois qu'on ajoute ou retire de la musique. Il s'occupe de
    tout, y compris renommer les fichiers accentués que la Pocket ne sait pas
    ouvrir (les titres affichés gardent leurs accents, rassurez-vous).
+
+   Les habitués de la ligne de commande peuvent toujours faire
+   `node indexer/src/index.js -m … -o … -r …` (voir `indexer/README.md`).
 
 4. Éjecter la carte, la remettre dans la Pocket, lancer **Tunes** dans le menu
    openFPGA. C'est tout.
